@@ -1,0 +1,7 @@
+{
+  "name": "signalement",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
