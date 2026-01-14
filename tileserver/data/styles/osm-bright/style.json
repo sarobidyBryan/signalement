@@ -1,0 +1,19 @@
+{
+  "version": 8,
+  "name": "antananarivo-raster",
+  "sources": {
+    "antananarivo": {
+      "type": "raster",
+      "url": "mbtiles://antananarivo"
+    }
+  },
+  "layers": [
+    {
+      "id": "base",
+      "type": "raster",
+      "source": "antananarivo",
+      "minzoom": 0,
+      "maxzoom": 22
+    }
+  ]
+}

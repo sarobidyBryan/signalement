@@ -1,0 +1,59 @@
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.vite/
+/.parcel-cache
+/.next
+/out
+
+# Production
+
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.settings/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+
+# Docker
+docker-compose.override.yml
+
+
+# Misc
+coverage/
+.cache
+*.seed
+
+
+# Keep package-lock and yarn.lock under version control (do not ignore)
+# If node_modules were previously committed, remove them from the index:
+#   git rm -r --cached node_modules
+#   git commit -m "Remove node_modules from repo"
