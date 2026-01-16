@@ -21,9 +21,12 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# copy health-wait script and make it executable
-COPY wait-for-postgres.sh /usr/local/bin/wait-for-postgres.sh
-RUN chmod +x /usr/local/bin/wait-for-postgres.sh
+# Copy wait-for-postgres.sh and fix Windows line endings
+COPY wait-for-postgres.sh /tmp/wait.sh
+RUN sed -i 's/\r$//' /tmp/wait.sh && \
+    mv /tmp/wait.sh /usr/local/bin/wait-for-postgres.sh && \
+    chmod +x /usr/local/bin/wait-for-postgres.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/wait-for-postgres.sh"]
+CMD ["java", "-jar", "app.jar"]
