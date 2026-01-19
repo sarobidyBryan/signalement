@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,12 +18,14 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Authentication", description = "API for user authentication")
 public class AuthenticationController {
 
     @Autowired
     private AuthenticationService authenticationService;
 
     @PostMapping("/register")
+    @Operation(summary = "Register a new user", description = "Creates a new user account with the provided details")
     public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
         try {
             User user = authenticationService.register(
@@ -39,6 +44,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Login with email and password", description = "Authenticates a user and starts a session")
     public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request, HttpSession session) {
         boolean success = authenticationService.login(request.getEmail(), request.getPassword(), session);
         if (success) {
@@ -58,6 +64,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login/firebase")
+    @Operation(summary = "Login with Firebase UID", description = "Authenticates a user using Firebase UID")
     public ResponseEntity<ApiResponse> loginByFirebase(@RequestBody FirebaseLoginRequest request, HttpSession session) {
         boolean success = authenticationService.loginByFirebase(request.getFirebaseUid(), session);
         if (success) {
@@ -77,12 +84,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "Logout user", description = "Ends the current user session")
     public ResponseEntity<ApiResponse> logout(HttpSession session) {
         authenticationService.logout(session);
         return ResponseEntity.ok(ApiResponse.success("Logout successful"));
     }
 
     @GetMapping("/current-user")
+    @Operation(summary = "Get current user", description = "Retrieves information about the currently authenticated user")
     public ResponseEntity<ApiResponse> getCurrentUser(HttpSession session) {
         Optional<User> user = authenticationService.getCurrentUser(session);
         if (user.isPresent()) {
@@ -98,6 +107,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Refresh session", description = "Refreshes the current user session")
     public ResponseEntity<ApiResponse> refreshSession(HttpSession session) {
         if (authenticationService.isAuthenticated(session)) {
             authenticationService.refreshSession(session);

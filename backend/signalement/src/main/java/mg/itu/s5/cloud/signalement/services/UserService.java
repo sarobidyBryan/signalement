@@ -71,7 +71,7 @@ public class UserService {
         UserStatusType newStatusType = statusTypeOpt.get();
 
         // Vérifier si le statut a changé
-        if (!user.getUserStatusType().getId().equals(newStatusType.getId())) {
+        if (!user.getUserStatusType().getStatusCode().equals(newStatusType.getStatusCode())) {
             // Créer une nouvelle entrée dans user_status
             UserStatus userStatus = new UserStatus();
             userStatus.setUser(user);
