@@ -1,0 +1,77 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: var(--border-radius-md);
+  white-space: nowrap;
+}
+
+/* Badge Variants */
+.badge-default {
+  background-color: var(--color-gray-200);
+  color: var(--color-secondary);
+}
+
+.badge-primary {
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+.badge-success {
+  background-color: #10b981;
+  color: var(--color-primary);
+}
+
+.badge-danger {
+  background-color: #ef4444;
+  color: var(--color-primary);
+}
+
+.badge-warning {
+  background-color: #f59e0b;
+  color: var(--color-secondary);
+}
+
+.badge-info {
+  background-color: #3b82f6;
+  color: var(--color-primary);
+}
+
+.badge-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+/* Badge Sizes */
+.badge-xs {
+  padding: 2px 6px;
+  font-size: var(--font-size-xs);
+}
+
+.badge-sm {
+  padding: 4px 8px;
+  font-size: var(--font-size-sm);
+}
+
+.badge-md {
+  padding: 6px 12px;
+  font-size: var(--font-size-md);
+}
+
+.badge-lg {
+  padding: 8px 16px;
+  font-size: var(--font-size-lg);
+}
+
+/* Responsive Badge Sizes */
+@media (max-width: 480px) {
+  .badge-md {
+    padding: 4px 8px;
+  }
+
+  .badge-lg {
+    padding: 6px 12px;
+  }
+}
