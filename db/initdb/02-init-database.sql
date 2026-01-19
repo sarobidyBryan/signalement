@@ -14,7 +14,9 @@ INSERT INTO configurations (key, value, type) VALUES
 ('budget_min', '500000', 'integer'),
 ('budget_max', '50000000', 'integer'),
 ('currency', 'MGA', 'string'),
-('notification_email', 'contact@signalements-tana.mg', 'string');
+('notification_email', 'contact@signalements-tana.mg', 'string'),
+('max_attempt', '3', 'integer'),
+('session_duration', '150', 'integer');
 
 
 CREATE TABLE companies(
