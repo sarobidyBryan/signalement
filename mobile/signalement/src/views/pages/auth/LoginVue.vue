@@ -66,8 +66,8 @@ export default defineComponent({
           console.log("Données utilisateur:", userData);
 
           // 4. Vérification du statut
-          if (userData.user === 'ACTIVE') {
-            this.$router.push('/home');
+          if (userData.status === 'ACTIVE') {
+            this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
             alert("Votre compte est suspendu. Contactez l'administrateur.");

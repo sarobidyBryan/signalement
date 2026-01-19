@@ -102,7 +102,7 @@ export default defineComponent({
         });
         
         // Redirection vers la page d'accueil
-        this.router.push('/home');
+        this.router.push('/map');
         
       } catch (error: any) {
         console.error('Erreur d\'inscription:', error);
