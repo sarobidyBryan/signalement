@@ -1,7 +1,6 @@
 package mg.itu.s5.cloud.signalement.entities;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "users")

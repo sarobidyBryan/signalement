@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +80,7 @@ public class UserController {
         }
 
         try {
-            User updatedUser = userService.updateUserStatus(id, request.getStatusCode());
+            User updatedUser = userService.updateUserStatus(id, request.getStatusCode(), request.getRegistrationDate());
             Map<String, Object> data = new HashMap<>();
             data.put("message", "User status updated successfully");
             data.put("user", updatedUser);
@@ -116,6 +118,36 @@ public class UserController {
         }
     }
 
+    @GetMapping("/blocked")
+    public ResponseEntity<ApiResponse> getUsersBlocked(
+            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(value = "perPage", required = false, defaultValue = "10") int perPage,
+            HttpSession session) {
+
+        if (!authenticationService.isAuthenticated(session)) {
+            return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
+        }
+
+        if (!authenticationService.hasRole(session, "MANAGER")) {
+            return ResponseEntity.status(403).body(ApiResponse.error(ApiResponse.ErrorCodes.FORBIDDEN, "Access denied - MANAGER role required"));
+        }
+
+        List<User> blocked = userService.getAllUserBlocked("SUSPENDED");
+        List<Map<String, Object>> usersDto = new java.util.ArrayList<>();
+        for (User u : blocked) {
+            Map<String, Object> uMap = new HashMap<>();
+            uMap.put("id", u.getId());
+            uMap.put("name", u.getName());
+            uMap.put("email", u.getEmail());
+            uMap.put("role", u.getRole() != null ? u.getRole().getRoleCode() : null);
+            uMap.put("statusCode", u.getUserStatusType() != null ? u.getUserStatusType().getStatusCode() : null);
+            usersDto.add(uMap);
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("users", usersDto);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
     // Classes de requête
     public static class UpdateUserRequest {
         private String name;
@@ -131,8 +163,15 @@ public class UserController {
 
     public static class UpdateStatusRequest {
         private String statusCode;
+        private LocalDateTime registrationDate;
 
         // Getters and setters
+        public void setRegistrationDate(LocalDateTime registrationDate) {
+            this.registrationDate = registrationDate;
+        }
+        public LocalDateTime getRegistrationDate() {
+            return registrationDate;
+        }
         public String getStatusCode() { return statusCode; }
         public void setStatusCode(String statusCode) { this.statusCode = statusCode; }
     }

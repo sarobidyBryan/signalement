@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,8 +56,19 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public List<User> getAllUserBlocked(String statusBlocked) {
+        List<User> all = getAllUsers();
+        List<User> blocked = new ArrayList<>();
+        for (User user : all) {
+            if(user.getUserStatusType().getStatusCode().equals(statusBlocked)) {
+                blocked.add(user);
+            }
+        }
+        return blocked;
+    }
+
     // Méthode pour mettre à jour le statut d'un utilisateur et insérer dans user_status
-    public User updateUserStatus(int userId, String statusCode) {
+    public User updateUserStatus(int userId, String statusCode, LocalDateTime registrationDate) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
@@ -71,12 +83,12 @@ public class UserService {
         UserStatusType newStatusType = statusTypeOpt.get();
 
         // Vérifier si le statut a changé
-        if (!user.getUserStatusType().getId().equals(newStatusType.getId())) {
+        if (user.getUserStatusType().getId() != newStatusType.getId()) {
             // Créer une nouvelle entrée dans user_status
             UserStatus userStatus = new UserStatus();
             userStatus.setUser(user);
             userStatus.setUserStatusType(newStatusType);
-            userStatus.setRegistrationDate(LocalDateTime.now());
+            userStatus.setRegistrationDate(registrationDate);
 
             userStatusService.saveUserStatus(userStatus);
 
