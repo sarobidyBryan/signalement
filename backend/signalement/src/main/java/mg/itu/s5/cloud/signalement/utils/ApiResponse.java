@@ -78,6 +78,7 @@ public class ApiResponse {
         public static final String FORBIDDEN = "FORBIDDEN";
         public static final String CONFIGURATION_NOT_FOUND = "CONFIGURATION_NOT_FOUND";
         public static final String INVALID_REQUEST = "INVALID_REQUEST";
+        public static final String INVALID_DATA = "INVALID_DATA";
         public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
         public static final String STATUS_TYPE_NOT_FOUND = "STATUS_TYPE_NOT_FOUND";
         public static final String ROLE_NOT_FOUND = "ROLE_NOT_FOUND";

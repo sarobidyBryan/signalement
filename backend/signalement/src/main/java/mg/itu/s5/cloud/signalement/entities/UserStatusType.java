@@ -1,9 +1,11 @@
 package mg.itu.s5.cloud.signalement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "user_status_types")
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class UserStatusType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
