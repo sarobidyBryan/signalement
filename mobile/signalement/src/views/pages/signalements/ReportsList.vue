@@ -60,7 +60,7 @@
                 </div>
                 <div>
                   <h3 class="font-bold text-gray-900">{{ signalement.titre }}</h3>
-                  <p class="text-sm text-gray-600">{{ signalement.area }} m2</p>
+                  <p class="text-sm text-gray-600">{{ signalement.area }} m²</p>
                 </div>
               </div>
               <span :class="statusPillClass(signalement.status)">

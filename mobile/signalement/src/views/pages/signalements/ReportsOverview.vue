@@ -315,7 +315,7 @@ export default defineComponent({
           icon: signalementIcon(iconColor)
         });
 
-        // Préparer affichage company / budget
+        // Préparer affichage company / budget / surface
         const company = signalement.company_name ?? (signalement.raw && (signalement.raw.company_name ?? signalement.raw.companyName)) ?? '—';
         let budgetDisplay = '—';
         if (signalement.budget != null) {
@@ -327,6 +327,16 @@ export default defineComponent({
             budgetDisplay = String(signalement.budget);
           }
         }
+        let areaDisplay = '—';
+        if (signalement.area != null) {
+          try {
+            areaDisplay = typeof signalement.area === 'number'
+              ? new Intl.NumberFormat('fr-FR').format(signalement.area) + ' m²'
+              : String(signalement.area) + ' m²';
+          } catch (e) {
+            areaDisplay = String(signalement.area) + ' m²';
+          }
+        }
 
         // Ajouter un popup
         const resolved = isResolved(signalement.status);
@@ -334,6 +344,7 @@ export default defineComponent({
           <div class="p-2">
             <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
             <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
+            <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
             <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
             <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
             <div class="flex items-center justify-between">
@@ -387,9 +398,10 @@ export default defineComponent({
             status: d.status ?? 'SUBMITTED',
             position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
             date: formatDate(d.report_date),
-            // Added budget and company_name mapping
+            // Added budget, company_name and area mapping
             budget: d.budget ?? null,
             company_name: d.company_name ?? null,
+            area: d.area ?? d.surface ?? null,
             raw: d
           };
         });
