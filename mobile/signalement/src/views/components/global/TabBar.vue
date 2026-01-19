@@ -96,6 +96,7 @@ export default defineComponent({
   right: 0;
   z-index: 1000;
   padding-bottom: env(safe-area-inset-bottom);
+  background-color: #ffffff;
 }
 
 .tab-bar {
