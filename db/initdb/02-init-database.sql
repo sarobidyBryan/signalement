@@ -138,3 +138,18 @@ CREATE TABLE reports_assignation_progress(
     comment TEXT,
     registration_date TIMESTAMP
 );
+
+INSERT INTO users (name, email, password, role_id, user_status_type_id)
+VALUES ('Manager One','manager@example.com','managerpass',
+  (SELECT id FROM roles WHERE role_code='MANAGER'),
+  (SELECT id FROM user_status_types WHERE status_code='ACTIVE'));
+
+INSERT INTO users (name, email, password, role_id, user_status_type_id)
+VALUES ('Alice','alice@example.com','alicepass',
+  (SELECT id FROM roles WHERE role_code='USER'),
+  (SELECT id FROM user_status_types WHERE status_code='ACTIVE'));
+
+INSERT INTO users (name, email, password, role_id, user_status_type_id)
+VALUES ('Bob','bob@example.com','bobpass',
+  (SELECT id FROM roles WHERE role_code='USER'),
+  (SELECT id FROM user_status_types WHERE status_code='SUSPENDED'));
