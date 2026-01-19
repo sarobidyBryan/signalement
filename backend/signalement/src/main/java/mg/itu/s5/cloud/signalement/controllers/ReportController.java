@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reports")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Reports Management", description = "API for managing road reports")
 public class ReportController {
 
     @Autowired
@@ -28,12 +32,14 @@ public class ReportController {
     private ReportsStatusService reportsStatusService;
 
     @GetMapping
+    @Operation(summary = "Get all reports", description = "Retrieves a list of all reports")
     public ResponseEntity<ApiResponse> getAll() {
         List<Report> all = reportService.getAllReports();
         return ResponseEntity.ok(ApiResponse.success("reports", all));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get report by ID", description = "Retrieves a specific report by its ID")
     public ResponseEntity<ApiResponse> getById(@PathVariable int id) {
         return reportService.getReportById(id)
                 .map(r -> ResponseEntity.ok(ApiResponse.success(r)))
@@ -41,6 +47,7 @@ public class ReportController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new report", description = "Creates a new road report")
     public ResponseEntity<ApiResponse> create(@RequestBody Report r) {
         Report saved = reportService.saveReport(r);
         return ResponseEntity.ok(ApiResponse.success(saved));

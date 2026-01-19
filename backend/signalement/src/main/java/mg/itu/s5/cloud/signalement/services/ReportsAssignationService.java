@@ -31,5 +31,9 @@ public class ReportsAssignationService {
         java.math.BigDecimal v = repository.sumBudgetByReportId(reportId);
         return v == null ? java.math.BigDecimal.ZERO : v;
     }
+
+    public Optional<Integer> getReportIdByAssignationId(int assignationId) {
+        return getById(assignationId).map(a -> a.getReport().getId());
+    }
 }
 
