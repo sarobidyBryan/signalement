@@ -17,15 +17,17 @@
     <ion-content :fullscreen="true" class="bg-gray-50">
       <!-- Filtres -->
       <div class="px-4 pt-4">
-        <div class="flex space-x-2 mb-4">
+        <div class="flex space-x-2 mb-4 filter-chips">
           <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'">
             <ion-label>Tous</ion-label>
           </ion-chip>
-          <ion-chip :outline="filter !== 'en-cours'" @click="filter = 'en-cours'">
-            <ion-label>En cours</ion-label>
-          </ion-chip>
-          <ion-chip :outline="filter !== 'resolus'" @click="filter = 'resolus'">
-            <ion-label>Résolus</ion-label>
+          <ion-chip
+            v-for="sf in statusFilters"
+            :key="sf.code"
+            :outline="filter !== sf.code"
+            @click="filter = sf.code"
+          >
+            <ion-label>{{ sf.label }}</ion-label>
           </ion-chip>
         </div>
       </div>
@@ -50,20 +52,19 @@
           >
             <div class="flex items-start justify-between mb-3">
               <div class="flex items-center space-x-3">
-                <div :class="`p-2 rounded-lg ${signalement.status === 'resolu' ? 'bg-green-100' : 'bg-red-100'}`">
-                  <ion-icon 
-                    :icon="signalement.status === 'resolu' ? checkmarkCircle : warning" 
-                    :class="signalement.status === 'resolu' ? 'text-green-600' : 'text-red-600'"
-                    class="text-xl"
+                <div :class="`p-2 rounded-lg ${statusPillBg(signalement.status)}`">
+                  <ion-icon
+                    :icon="statusIcon(signalement.status)"
+                    :class="statusIconClass(signalement.status) + ' text-xl'"
                   ></ion-icon>
                 </div>
                 <div>
                   <h3 class="font-bold text-gray-900">{{ signalement.titre }}</h3>
-                  <p class="text-sm text-gray-600">{{ signalement.categorie }}</p>
+                  <p class="text-sm text-gray-600">{{ signalement.area }} m2</p>
                 </div>
               </div>
-              <span :class="`px-3 py-1 rounded-full text-xs font-medium ${signalement.status === 'resolu' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`">
-                {{ signalement.status === 'resolu' ? 'Résolu' : 'En cours' }}
+              <span :class="statusPillClass(signalement.status)">
+                {{ statusLabel(signalement.status) }}
               </span>
             </div>
             
@@ -103,15 +104,28 @@ import {
   IonChip,
   IonLabel
 } from '@ionic/vue';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import { 
   add, 
   refresh, 
   documentText,
   warning, 
   checkmarkCircle,
+  closeCircle,
   location,
   time
 } from 'ionicons/icons';
+
+type Report = {
+  id: any;
+  titre: string;
+  area: string | null;
+  description: string;
+  adresse: string;
+  date: string;
+  status: string;
+};
 
 export default defineComponent({
   name: 'ReportsList',
@@ -133,35 +147,16 @@ export default defineComponent({
   data() {
     return {
       filter: 'tous',
-      signalements: [
-        {
-          id: 1,
-          titre: 'Nid-de-poule important',
-          description: 'Nid-de-poule de 30cm de diamètre sur la chaussée',
-          categorie: 'Chaussée',
-          adresse: 'Rue de la Paix, Paris',
-          date: 'Il y a 2h',
-          status: 'en-cours'
-        },
-        {
-          id: 2,
-          titre: 'Éclairage défectueux',
-          description: 'Lampe publique clignotante',
-          categorie: 'Éclairage',
-          adresse: 'Avenue des Champs-Élysées',
-          date: 'Il y a 1j',
-          status: 'resolu'
-        },
-        {
-          id: 3,
-          titre: 'Poubelle renversée',
-          description: 'Poubelle publique renversée, déchets sur la voie',
-          categorie: 'Propreté',
-          adresse: 'Boulevard Saint-Germain',
-          date: 'Il y a 3h',
-          status: 'en-cours'
-        }
+      statusFilters: [
+        { code: 'SUBMITTED', label: 'Soumis' },
+        { code: 'UNDER_REVIEW', label: "En cours d'examen" },
+        { code: 'ASSIGNED', label: 'Assigné' },
+        { code: 'IN_PROGRESS', label: 'Travaux en cours' },
+        { code: 'COMPLETED', label: 'Terminé' },
+        { code: 'CANCELLED', label: 'Annulé' },
+        { code: 'VERIFIED', label: 'Vérifié' }
       ],
+      signalements: [] as Report[],
       add,
       refresh,
       documentText,
@@ -180,20 +175,146 @@ export default defineComponent({
   },
   
   methods: {
+    async loadSignalements() {
+      try {
+        const q = query(collection(db, 'reports'), orderBy('report_date', 'desc'));
+        const snapshot = await getDocs(q);
+        const results: Report[] = snapshot.docs.map(doc => {
+          const d: any = doc.data();
+
+          const formatDate = (ts: any) => {
+            if (!ts) return '';
+            const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+            return dateObj.toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          };
+
+          const titre = d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`;
+          return {
+            id: d.id ?? doc.id,
+            titre,
+            area: d.area ?? null,
+            description: d.description ?? '',
+            adresse: (d.latitude !== undefined && d.longitude !== undefined) ? `${d.latitude}, ${d.longitude}` : '',
+            date: formatDate(d.report_date),
+            status: d.status ?? 'SUBMITTED'
+          } as Report;
+        });
+        this.signalements = results;
+      } catch (err) {
+        console.error('Erreur chargement reports:', err);
+      }
+    },
     nouveauSignalement() {
       console.log('Nouveau signalement');
       // Navigation vers le formulaire
     },
     
-    rafraichir() {
+    async rafraichir() {
       console.log('Rafraîchir la liste');
-      // Recharger les données
+      await this.loadSignalements();
     },
     
     voirSignalement(id: number) {
       console.log('Voir signalement', id);
       // Navigation vers le détail
     }
+    ,
+    statusLabel(status: string) {
+      if (!status) return '';
+      switch (status) {
+        case 'SUBMITTED':
+          return 'Soumis';
+        case 'UNDER_REVIEW':
+          return "En cours d'examen";
+        case 'ASSIGNED':
+          return 'Assigné à une entreprise';
+        case 'IN_PROGRESS':
+          return 'Travaux en cours';
+        case 'COMPLETED':
+          return 'Terminé';
+        case 'CANCELLED':
+          return 'Annulé';
+        case 'VERIFIED':
+          return 'Vérifié et validé';
+        default:
+          return status;
+      }
+    },
+    statusPillClass(status: string) {
+      const color = (() => {
+        switch (status) {
+          case 'COMPLETED':
+          case 'VERIFIED':
+            return 'bg-green-100 text-green-700';
+          case 'CANCELLED':
+            return 'bg-red-100 text-red-700';
+          case 'IN_PROGRESS':
+          case 'ASSIGNED':
+          case 'UNDER_REVIEW':
+            return 'bg-yellow-100 text-yellow-700';
+          case 'SUBMITTED':
+            return 'bg-blue-100 text-blue-700';
+          default:
+            return 'bg-gray-100 text-gray-700';
+        }
+      })();
+      return `px-3 py-1 rounded-full text-xs font-medium ${color}`;
+    },
+    statusPillBg(status: string) {
+      switch (status) {
+        case 'COMPLETED':
+        case 'VERIFIED':
+          return 'bg-green-100';
+        case 'CANCELLED':
+          return 'bg-red-100';
+        case 'IN_PROGRESS':
+        case 'ASSIGNED':
+        case 'UNDER_REVIEW':
+          return 'bg-yellow-100';
+        case 'SUBMITTED':
+          return 'bg-blue-100';
+        default:
+          return 'bg-gray-100';
+      }
+    },
+    statusIcon(status: string) {
+      switch (status) {
+        case 'COMPLETED':
+        case 'VERIFIED':
+          return checkmarkCircle;
+        case 'CANCELLED':
+          return closeCircle;
+        case 'IN_PROGRESS':
+        case 'ASSIGNED':
+        case 'UNDER_REVIEW':
+          return warning;
+        case 'SUBMITTED':
+          return documentText;
+        default:
+          return documentText;
+      }
+    },
+    statusIconClass(status: string) {
+      switch (status) {
+        case 'COMPLETED':
+        case 'VERIFIED':
+          return 'text-green-600';
+        case 'CANCELLED':
+          return 'text-red-600';
+        case 'IN_PROGRESS':
+        case 'ASSIGNED':
+        case 'UNDER_REVIEW':
+          return 'text-yellow-600';
+        case 'SUBMITTED':
+          return 'text-blue-600';
+        default:
+          return 'text-gray-600';
+      }
+    }
+  }
+  ,
+  created() {
+    this.loadSignalements();
   }
 });
 </script>
@@ -221,5 +342,34 @@ export default defineComponent({
   --background: #000000;
   --color: #ffffff;
   --border-color: #000000;
+}
+
+/* Responsive filter chips */
+:deep(.filter-chips) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.25rem;
+}
+
+:deep(.filter-chips ion-chip) {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  :deep(.filter-chips) {
+    gap: 0.35rem;
+  }
+  :deep(.filter-chips ion-label) {
+    font-size: 0.75rem;
+  }
+  :deep(.filter-chips ion-chip) {
+    --padding-top: 4px;
+    --padding-bottom: 4px;
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }
 }
 </style>
