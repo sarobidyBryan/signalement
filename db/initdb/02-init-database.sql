@@ -44,11 +44,11 @@ CREATE TABLE status(
 
 INSERT INTO status (status_code, label) VALUES
 ('SUBMITTED', 'Soumis'),
-('UNDER_REVIEW', 'En cours d''examen'),
+--('UNDER_REVIEW', 'En cours d''examen'),
 ('ASSIGNED', 'Assigné à une entreprise'),
 ('IN_PROGRESS', 'Travaux en cours'),
 ('COMPLETED', 'Terminé'),
-('CANCELLED', 'Annulé'),
+--('CANCELLED', 'Annulé'),
 ('VERIFIED', 'Vérifié et validé');
 
 
