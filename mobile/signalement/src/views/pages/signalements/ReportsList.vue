@@ -17,7 +17,7 @@
     <ion-content :fullscreen="true" class="bg-gray-50">
       <!-- Filtres -->
       <div class="px-4 pt-4">
-        <div class="flex space-x-2 mb-4">
+        <div class="flex space-x-2 mb-4 filter-chips">
           <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'">
             <ion-label>Tous</ion-label>
           </ion-chip>
@@ -342,5 +342,34 @@ export default defineComponent({
   --background: #000000;
   --color: #ffffff;
   --border-color: #000000;
+}
+
+/* Responsive filter chips */
+:deep(.filter-chips) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.25rem;
+}
+
+:deep(.filter-chips ion-chip) {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  :deep(.filter-chips) {
+    gap: 0.35rem;
+  }
+  :deep(.filter-chips ion-label) {
+    font-size: 0.75rem;
+  }
+  :deep(.filter-chips ion-chip) {
+    --padding-top: 4px;
+    --padding-bottom: 4px;
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }
 }
 </style>
