@@ -79,6 +79,7 @@ CREATE TABLE users (
     name VARCHAR(100),
     email VARCHAR(100),
     password VARCHAR(100),
+    firebase_uid VARCHAR(100),
     role_id INTEGER NOT NULL REFERENCES roles(id), -- Colonne denormalisee
     user_status_type_id INTEGER NOT NULL REFERENCES user_status_types(id) -- Colonne denormalisee
 );
