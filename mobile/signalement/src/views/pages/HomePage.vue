@@ -296,7 +296,6 @@ import {
   IonTitle, 
   IonToolbar, 
   IonButton,
-  IonButtons,
   IonIcon 
 } from '@ionic/vue';
 
@@ -320,7 +319,6 @@ export default defineComponent({
     IonTitle, 
     IonToolbar, 
     IonButton,
-    IonButtons,
     IonIcon
   },
   

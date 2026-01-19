@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import HomePage from '../views/HomePage.vue';
+import HomePage from '../views/pages/HomePage.vue';
 import LoginVue from '@/views/pages/auth/LoginVue.vue'; // Import statique
 import RegisterVue from '@/views/pages/auth/RegisterVue.vue';
 
@@ -10,7 +10,7 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/home'
   },
   {
-    path: '/home',
+    path: '',
     name: 'Home',
     component: HomePage // ✅ Affiche HomePage
   },
@@ -23,6 +23,21 @@ const routes: Array<RouteRecordRaw> = [
     path: '/register',  
     name: 'Register',
     component: RegisterVue 
+  },
+  {
+    path: '/list',  
+    name: 'List',
+    component:() => import('@/views/pages/signalements/ReportsList.vue')  
+  },
+  {
+    path: '/menu',  
+    name: 'Menu',
+    component: () => import('@/views/pages/MenuPage.vue')
+  },
+  {
+    path: '/map',
+    name: 'Carte',  
+        component: () => import('@/views/pages/signalements/ReportsOverview.vue')
   },
 ];
 
