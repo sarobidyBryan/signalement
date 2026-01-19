@@ -111,8 +111,9 @@ import {
 } from 'ionicons/icons';
 
 // Import Firebase
-import { db } from '@/config/firebase'; // Assurez-vous que ce chemin est correct
+import { auth, db } from '@/config/firebase'; // Assurez-vous que ce chemin est correct
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 interface MenuItem {
     id: number;
@@ -277,8 +278,10 @@ export default defineComponent({
         },
 
         deconnexion() {
+            signOut(auth);
             localStorage.removeItem('uid');
             localStorage.removeItem('user');
+            
             this.$router.push('/');
         }
     },
