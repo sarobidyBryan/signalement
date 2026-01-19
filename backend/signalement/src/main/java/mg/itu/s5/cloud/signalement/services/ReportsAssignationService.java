@@ -26,5 +26,10 @@ public class ReportsAssignationService {
     public List<ReportsAssignation> findByReportIdWithFilters(int reportId, java.time.LocalDate startDate, java.math.BigDecimal budgetMin, java.math.BigDecimal budgetMax) {
         return repository.findByReportIdWithFilters(reportId, startDate, budgetMin, budgetMax);
     }
+
+    public java.math.BigDecimal sumBudgetByReportId(int reportId) {
+        java.math.BigDecimal v = repository.sumBudgetByReportId(reportId);
+        return v == null ? java.math.BigDecimal.ZERO : v;
+    }
 }
 
