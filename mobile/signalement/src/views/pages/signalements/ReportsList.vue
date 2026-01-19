@@ -68,7 +68,17 @@
               </span>
             </div>
             
-            <p class="text-gray-600 text-sm mb-3">{{ signalement.description }}</p>
+            <p class="text-gray-600 text-sm mb-2">{{ signalement.description }}</p>
+            <div class="flex items-start justify-between text-sm text-gray-500 mb-3">
+              <!-- <div>
+                <span class="font-medium">Entreprise: </span>
+                <span>{{ signalement.company_name || '-' }}</span>
+              </div>
+              <div>
+                <span class="font-medium">Budget: </span>
+                <span>{{ signalement.budget ? (signalement.budget + ' Ar') : '-' }}</span>
+              </div> -->
+            </div>
             
             <div class="flex items-center justify-between text-sm text-gray-500">
               <div class="flex items-center">
@@ -125,6 +135,8 @@ type Report = {
   adresse: string;
   date: string;
   status: string;
+  budget?: number | null;
+  company_name?: string | null;
 };
 
 export default defineComponent({
@@ -203,6 +215,8 @@ export default defineComponent({
             titre,
             area: d.area ?? null,
             description: d.description ?? '',
+            budget: d.budget ?? d.budget_amount ?? null,
+            company_name: d.company_name ?? d.companyName ?? null,
             adresse: (d.latitude !== undefined && d.longitude !== undefined) ? `${d.latitude}, ${d.longitude}` : '',
             date: formatDate(d.report_date),
             status: d.status ?? 'SUBMITTED'

@@ -54,6 +54,18 @@
               color="success"
             ></ion-toggle>
           </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
+              <span class="text-gray-700">Mes signalements uniquement</span>
+            </div>
+            <ion-toggle
+              :checked="filtres.onlyMine"
+              @ionChange="filtres.onlyMine = $event.detail.checked; filtrerSignalements()"
+              color="primary"
+            ></ion-toggle>
+          </div>
           
           <div class="pt-2 border-t border-gray-100">
             <ion-button @click="reinitialiserFiltres" expand="block" fill="outline" class="mt-2">
@@ -119,6 +131,9 @@ import {
   filter,
   close
 } from 'ionicons/icons';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/config/firebase';
 
 // Configuration des icônes Leaflet
 const DefaultIcon = L.icon({
@@ -168,79 +183,83 @@ export default defineComponent({
     let map: L.Map | null = null;
     let markers: L.Marker[] = [];
 
-    // Position par défaut (Paris)
-    const defaultCenter: L.LatLngExpression = [48.8566, 2.3522];
+    // Position par défaut (Antananarivo, Madagascar)
+    const defaultCenter: L.LatLngExpression = [-18.8792, 47.5079];
     const defaultZoom = 13;
 
-    // Données des signalements
-    const signalements = ref([
-      {
-        id: 1,
-        titre: 'Nid-de-poule',
-        description: 'Nid-de-poule important sur la chaussée',
-        status: 'en-cours',
-        position: { lat: 48.8566, lng: 2.3522 },
-        date: '2024-01-15',
-        categorie: 'route'
-      },
-      {
-        id: 2,
-        titre: 'Éclairage public défectueux',
-        description: 'Lampadaire ne fonctionnant plus',
-        status: 'resolu',
-        position: { lat: 48.8584, lng: 2.2945 },
-        date: '2024-01-10',
-        categorie: 'eclairage'
-      },
-      {
-        id: 3,
-        titre: 'Poubelle débordante',
-        description: 'Poubelle publique pleine depuis plusieurs jours',
-        status: 'en-cours',
-        position: { lat: 48.8606, lng: 2.3376 },
-        date: '2024-01-12',
-        categorie: 'proprete'
-      },
-      {
-        id: 4,
-        titre: 'Graffiti',
-        description: 'Graffiti sur mur public',
-        status: 'en-cours',
-        position: { lat: 48.8625, lng: 2.3193 },
-        date: '2024-01-14',
-        categorie: 'vandalisme'
-      },
-      {
-        id: 5,
-        titre: 'Feu tricolore HS',
-        description: 'Feu tricolore clignotant en permanence',
-        status: 'resolu',
-        position: { lat: 48.8534, lng: 2.3488 },
-        date: '2024-01-08',
-        categorie: 'signalisation'
-      }
-    ]);
+    // Données des signalements (chargées depuis Firestore)
+    const signalements = ref<any[]>([]);
 
     const showFiltres = ref(false);
     const filtres = ref({
       enCours: true,
-      resolus: true
+      resolus: true,
+      onlyMine: false
     });
+
+    const currentUserId = ref<string | null>(auth.currentUser ? auth.currentUser.uid : null);
+
+    const statuses = ref<Array<{ id?: number; status_code: string; label: string }>>([]);
 
     const signalementsFiltres = ref([...signalements.value]);
 
     const compteurEnCours = ref(0);
     const compteurResolus = ref(0);
 
+    const isResolved = (status: string) => {
+      return status === 'COMPLETED' || status === 'VERIFIED';
+    };
+
+    const statusLabel = (status: string) => {
+      if (!status) return '';
+      const found = statuses.value.find(s => s.status_code === status);
+      if (found && found.label) return found.label;
+      // fallback
+      switch (status) {
+        case 'SUBMITTED': return 'Soumis';
+        case 'UNDER_REVIEW': return "En cours d'examen";
+        case 'ASSIGNED': return 'Assigné à une entreprise';
+        case 'IN_PROGRESS': return 'Travaux en cours';
+        case 'COMPLETED': return 'Terminé';
+        case 'CANCELLED': return 'Annulé';
+        case 'VERIFIED': return 'Vérifié et validé';
+        default: return status;
+      }
+    };
+
+    const loadStatuses = async () => {
+      try {
+        const q = query(collection(db, 'status'), orderBy('id'));
+        const snap = await getDocs(q);
+        const items = snap.docs.map(doc => {
+          const d: any = doc.data();
+          return {
+            id: d.id ?? doc.id,
+            status_code: d.status_code ?? d.statusCode ?? d.code,
+            label: d.label ?? ''
+          };
+        });
+        statuses.value = items;
+      } catch (err) {
+        console.error('Erreur chargement statuses (map):', err);
+      }
+    };
+
     const calculerCompteurs = () => {
-      compteurEnCours.value = signalementsFiltres.value.filter(s => s.status === 'en-cours').length;
-      compteurResolus.value = signalementsFiltres.value.filter(s => s.status === 'resolu').length;
+      compteurEnCours.value = signalementsFiltres.value.filter(s => !isResolved(s.status)).length;
+      compteurResolus.value = signalementsFiltres.value.filter(s => isResolved(s.status)).length;
     };
 
     const filtrerSignalements = () => {
       signalementsFiltres.value = signalements.value.filter(signalement => {
-        if (signalement.status === 'en-cours' && !filtres.value.enCours) return false;
-        if (signalement.status === 'resolu' && !filtres.value.resolus) return false;
+        const resolved = isResolved(signalement.status);
+        if (resolved && !filtres.value.resolus) return false;
+        if (!resolved && !filtres.value.enCours) return false;
+        // Filtrer par utilisateur connecté si demandé
+        if (filtres.value.onlyMine) {
+          const owner = signalement.raw && (signalement.raw.user_id ?? signalement.raw.userId ?? signalement.raw.user?.uid ?? null);
+          if (!currentUserId.value || owner !== currentUserId.value) return false;
+        }
         return true;
       });
       calculerCompteurs();
@@ -263,6 +282,24 @@ export default defineComponent({
       updateMarkers();
     };
 
+    const statusColor = (status: string) => {
+      switch (status) {
+        case 'COMPLETED':
+        case 'VERIFIED':
+          return '#10b981'; // green
+        case 'CANCELLED':
+          return '#ef4444'; // red
+        case 'IN_PROGRESS':
+        case 'ASSIGNED':
+        case 'UNDER_REVIEW':
+          return '#f59e0b'; // yellow
+        case 'SUBMITTED':
+          return '#3b82f6'; // blue
+        default:
+          return '#ef4444';
+      }
+    };
+
     const updateMarkers = () => {
       // Supprimer les anciens marqueurs
       markers.forEach(marker => {
@@ -272,28 +309,53 @@ export default defineComponent({
 
       // Ajouter les nouveaux marqueurs
       signalementsFiltres.value.forEach(signalement => {
-        const iconColor = signalement.status === 'resolu' ? '#10b981' : '#ef4444';
+        if (!signalement.position || signalement.position.lat == null || signalement.position.lng == null) return;
+        const iconColor = statusColor(signalement.status);
         const marker = L.marker([signalement.position.lat, signalement.position.lng], {
           icon: signalementIcon(iconColor)
         });
 
+        // Préparer affichage company / budget
+        const company = signalement.company_name ?? (signalement.raw && (signalement.raw.company_name ?? signalement.raw.companyName)) ?? '—';
+        let budgetDisplay = '—';
+        if (signalement.budget != null) {
+          try {
+            budgetDisplay = typeof signalement.budget === 'number'
+              ? new Intl.NumberFormat('fr-FR').format(signalement.budget) + ' Ar'
+              : String(signalement.budget);
+          } catch (e) {
+            budgetDisplay = String(signalement.budget);
+          }
+        }
+
         // Ajouter un popup
+        const resolved = isResolved(signalement.status);
         marker.bindPopup(`
           <div class="p-2">
             <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
             <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
+            <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
+            <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
             <div class="flex items-center justify-between">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                signalement.status === 'resolu' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }">
-                ${signalement.status === 'resolu' ? '✓ Résolu' : 'En cours'}
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}
               </span>
               <span class="text-xs text-gray-500">${signalement.date}</span>
             </div>
           </div>
         `);
+        // Ouvrir le popup au survol (desktop) et le fermer au mouseout
+        marker.on('mouseover', () => {
+          try { marker.openPopup(); } catch (e) { /* no-op */ }
+        });
+        marker.on('mouseout', () => {
+          try { marker.closePopup(); } catch (e) { /* no-op */ }
+        });
+
+        // Sur mobile/tactile, le clic ouvrira toujours le popup
+        marker.on('click', () => {
+          try { marker.openPopup(); } catch (e) { /* no-op */ }
+        });
 
         marker.addTo(map!);
         markers.push(marker);
@@ -303,6 +365,41 @@ export default defineComponent({
       if (markers.length > 0 && map) {
         const group = L.featureGroup(markers);
         map.fitBounds(group.getBounds().pad(0.1));
+      }
+    };
+
+    const formatDate = (ts: any) => {
+      if (!ts) return '';
+      const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+      return dateObj.toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const loadReports = async () => {
+      try {
+        const q = query(collection(db, 'reports'), orderBy('report_date', 'desc'));
+        const snap = await getDocs(q);
+        const items = snap.docs.map(doc => {
+          const d: any = doc.data();
+          return {
+            id: d.id ?? doc.id,
+            titre: d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`,
+            description: d.description ?? '',
+            status: d.status ?? 'SUBMITTED',
+            position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
+            date: formatDate(d.report_date),
+            // Added budget and company_name mapping
+            budget: d.budget ?? null,
+            company_name: d.company_name ?? null,
+            raw: d
+          };
+        });
+        signalements.value = items;
+        // initialiser le filtré et marqueurs
+        signalementsFiltres.value = [...signalements.value];
+        calculerCompteurs();
+        updateMarkers();
+      } catch (err) {
+        console.error('Erreur chargement reports (map):', err);
       }
     };
 
@@ -370,8 +467,23 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      initialiserCarte();
-      calculerCompteurs();
+      // écouter l'auth pour récupérer l'uid courant
+      try {
+        onAuthStateChanged(auth, (user) => {
+          currentUserId.value = user ? user.uid : null;
+        });
+      } catch (e) {
+        console.warn('Impossible d écouter l état auth:', e);
+      }
+      // charger d'abord les status puis les reports, ensuite initialiser la carte
+      loadStatuses().then(() => {
+        return loadReports();
+      }).then(() => {
+        initialiserCarte();
+      }).catch(() => {
+        // en cas d'erreur, initialiser la carte quand même
+        initialiserCarte();
+      });
     });
 
     return {
@@ -380,6 +492,7 @@ export default defineComponent({
       signalementsFiltres,
       showFiltres,
       filtres,
+      currentUserId,
       compteurEnCours,
       compteurResolus,
       locate,
