@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "User Management", description = "API for managing users")
 public class UserController {
 
     @Autowired
@@ -26,6 +30,7 @@ public class UserController {
     private AuthenticationService authenticationService;
 
     @GetMapping
+    @Operation(summary = "Get all users", description = "Retrieves a list of all users (MANAGER role required)")
     public ResponseEntity<ApiResponse> getAllUsers(HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
@@ -40,6 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Retrieves a specific user by their ID")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable int id, HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
@@ -54,6 +60,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update user", description = "Updates user information (name and email)")
     public ResponseEntity<ApiResponse> updateUser(@PathVariable int id, @RequestBody UpdateUserRequest request, HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
@@ -68,6 +75,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/status")
+    @Operation(summary = "Update user status", description = "Updates the status of a user (MANAGER role required)")
     public ResponseEntity<ApiResponse> updateUserStatus(@PathVariable int id, @RequestBody UpdateStatusRequest request, HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
@@ -89,6 +97,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete user", description = "Deletes a user (MANAGER role required)")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable int id, HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
@@ -107,6 +116,7 @@ public class UserController {
     }
 
     @GetMapping("/profile")
+    @Operation(summary = "Get current user profile", description = "Retrieves the profile of the currently authenticated user")
     public ResponseEntity<ApiResponse> getCurrentUserProfile(HttpSession session) {
         Optional<User> user = authenticationService.getCurrentUser(session);
         if (user.isPresent()) {

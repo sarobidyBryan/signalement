@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - apt-cache:/var/cache/apt
+      - apt-cache:/var/lib/apt
     ports:
       - "5532:5432"
     healthcheck:
@@ -21,6 +23,10 @@ services:
     build: 
       context: ./backend/signalement
       network: host
+      cache_from:
+        - maven-cache
+    volumes:
+      - maven-cache:/root/.m2
     ports:
       - "8180:8080"
     depends_on:
@@ -42,6 +48,10 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: "http://backend:8080"
+      cache_from:
+        - npm-cache
+    volumes:
+      - npm-cache:/root/.npm
     ports:
       - "3000:80"
     depends_on:
@@ -60,3 +70,6 @@ services:
 
 volumes:
   pgdata:
+  maven-cache:
+  npm-cache:
+  apt-cache:
