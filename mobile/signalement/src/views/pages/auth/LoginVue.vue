@@ -64,7 +64,7 @@ export default defineComponent({
         if (userDoc.exists()) {
           const userData = userDoc.data();
           console.log("Données utilisateur:", userData);
-
+          
           // 4. Vérification du statut
           if (userData.status === 'ACTIVE') {
             // Réinitialiser les tentatives de mot de passe après connexion réussie
@@ -79,7 +79,9 @@ export default defineComponent({
             } catch (e) {
               console.warn('Impossible de réinitialiser password_attempts:', e);
             }
-
+            
+            localStorage.setItem('uid',uid);
+            localStorage.setItem('user',JSON.stringify(userData));
             this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
