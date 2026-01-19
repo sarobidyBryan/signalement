@@ -22,10 +22,10 @@
             <ion-label>Tous</ion-label>
           </ion-chip>
           <ion-chip
-            v-for="sf in statusFilters"
-            :key="sf.code"
-            :outline="filter !== sf.code"
-            @click="filter = sf.code"
+            v-for="sf in statuses"
+            :key="sf.status_code"
+            :outline="filter !== sf.status_code"
+            @click="filter = sf.status_code"
           >
             <ion-label>{{ sf.label }}</ion-label>
           </ion-chip>
@@ -147,15 +147,7 @@ export default defineComponent({
   data() {
     return {
       filter: 'tous',
-      statusFilters: [
-        { code: 'SUBMITTED', label: 'Soumis' },
-        { code: 'UNDER_REVIEW', label: "En cours d'examen" },
-        { code: 'ASSIGNED', label: 'Assigné' },
-        { code: 'IN_PROGRESS', label: 'Travaux en cours' },
-        { code: 'COMPLETED', label: 'Terminé' },
-        { code: 'CANCELLED', label: 'Annulé' },
-        { code: 'VERIFIED', label: 'Vérifié' }
-      ],
+      statuses: [] as Array<{ id?: number; status_code: string; label: string }>,
       signalements: [] as Report[],
       add,
       refresh,
@@ -175,6 +167,23 @@ export default defineComponent({
   },
   
   methods: {
+    async loadStatuses() {
+      try {
+        const q = query(collection(db, 'status'), orderBy('id'));
+        const snap = await getDocs(q);
+        const items = snap.docs.map(doc => {
+          const d: any = doc.data();
+          return {
+            id: d.id ?? doc.id,
+            status_code: d.status_code ?? d.statusCode ?? d.code,
+            label: d.label ?? ''
+          };
+        });
+        this.statuses = items;
+      } catch (err) {
+        console.error('Erreur chargement statuses:', err);
+      }
+    },
     async loadSignalements() {
       try {
         const q = query(collection(db, 'reports'), orderBy('report_date', 'desc'));
@@ -204,6 +213,7 @@ export default defineComponent({
         console.error('Erreur chargement reports:', err);
       }
     },
+    
     nouveauSignalement() {
       console.log('Nouveau signalement');
       // Navigation vers le formulaire
@@ -221,24 +231,8 @@ export default defineComponent({
     ,
     statusLabel(status: string) {
       if (!status) return '';
-      switch (status) {
-        case 'SUBMITTED':
-          return 'Soumis';
-        case 'UNDER_REVIEW':
-          return "En cours d'examen";
-        case 'ASSIGNED':
-          return 'Assigné à une entreprise';
-        case 'IN_PROGRESS':
-          return 'Travaux en cours';
-        case 'COMPLETED':
-          return 'Terminé';
-        case 'CANCELLED':
-          return 'Annulé';
-        case 'VERIFIED':
-          return 'Vérifié et validé';
-        default:
-          return status;
-      }
+      const found = this.statuses.find((s: any) => s.status_code === status);
+      if (found && found.label) return found.label;
     },
     statusPillClass(status: string) {
       const color = (() => {
@@ -314,7 +308,8 @@ export default defineComponent({
   }
   ,
   created() {
-    this.loadSignalements();
+    // charger d'abord les status puis les reports
+    this.loadStatuses().then(() => this.loadSignalements()).catch(() => this.loadSignalements());
   }
 });
 </script>
