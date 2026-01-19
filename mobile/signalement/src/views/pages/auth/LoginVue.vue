@@ -13,7 +13,7 @@ import {
   IonCol,
   IonIcon 
 } from '@ionic/vue';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 
 export default defineComponent({
   name: 'LoginPage',
@@ -67,6 +67,19 @@ export default defineComponent({
 
           // 4. Vérification du statut
           if (userData.status === 'ACTIVE') {
+            // Réinitialiser les tentatives de mot de passe après connexion réussie
+            try {
+              const attemptsRef = doc(db, 'password_attempts', uid);
+              const attemptsSnap = await getDoc(attemptsRef);
+              if (attemptsSnap.exists()) {
+                await updateDoc(attemptsRef, { nb_attempt: 0 });
+              } else {
+                await setDoc(attemptsRef, { nb_attempt: 0, user_id: uid });
+              }
+            } catch (e) {
+              console.warn('Impossible de réinitialiser password_attempts:', e);
+            }
+
             this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
@@ -87,8 +100,94 @@ export default defineComponent({
           case 'auth/user-disabled':
             this.errorMessage = 'Ce compte a été désactivé';
             break;
-          case 'auth/user-not-found':
+          case 'auth/invalid-credential':
           case 'auth/wrong-password':
+            // Si l'email existe côté application (collection users), incrémenter les tentatives
+            try {
+              const usersQ = query(collection(db, 'users'), where('email', '==', this.email));
+              const usersSnap = await getDocs(usersQ);
+
+              if (!usersSnap.empty) {
+                const userDocSnap = usersSnap.docs[0];
+                const userId = userDocSnap.id;
+
+                const attemptsRef = doc(db, 'password_attempts', userId);
+                const attemptsSnap = await getDoc(attemptsRef);
+
+                // Charger la configuration max_password_attempts
+                let maxAttempts = 3; // fallback
+                try {
+                  const confQ = query(collection(db, 'configurations'), where('key', '==', 'max_password_attempts'));
+                  const confSnap = await getDocs(confQ);
+                  if (!confSnap.empty) {
+                    const conf = confSnap.docs[0].data();
+                    if (conf && conf.value) {
+                      const parsed = parseInt(conf.value, 10);
+                      if (!isNaN(parsed)) maxAttempts = parsed;
+                    }
+                  }
+                } catch (confErr) {
+                  console.warn('Impossible de charger la configuration:', confErr);
+                }
+
+                const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nb_attempt || 0) : 0;
+
+                // N'incrémenter que si on n'a pas encore atteint la limite
+                if (currentAttempts >= maxAttempts) {
+                  alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
+                  try {
+                    const userRef = doc(db, 'users', userId);
+                    const userSnap2 = await getDoc(userRef);
+                    const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                    if (currentStatus !== 'SUSPENDED') {
+                      await updateDoc(userRef, { status: 'SUSPENDED' });
+                    }
+                  } catch (sErr) {
+                    console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                  }
+                } else {
+                  // Incrémenter
+                  if (attemptsSnap.exists()) {
+                    await updateDoc(attemptsRef, { nb_attempt: increment(1) });
+                    // augmenter la valeur locale
+                    const newAttempts = currentAttempts + 1;
+                    if (newAttempts < maxAttempts) {
+                      alert('Les informations que vous avez entrées sont incorrectes. Il vous reste ' + (maxAttempts - newAttempts) + ' tentative(s).');
+                    } else {
+                      alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
+                      try {
+                        const userRef = doc(db, 'users', userId);
+                        const userSnap2 = await getDoc(userRef);
+                        const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                        if (currentStatus !== 'SUSPENDED') {
+                          await updateDoc(userRef, { status: 'SUSPENDED' });
+                        }
+                      } catch (sErr) {
+                        console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                      }
+                    }
+                  } else {
+                    await setDoc(attemptsRef, { nb_attempt: 1, user_id: userId });
+                    if (1 < maxAttempts) {
+                      alert('Les informations que vous avez entrées sont incorrectes. Il vous reste ' + (maxAttempts - 1) + ' tentative(s).');
+                    } else {
+                      alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
+                      try {
+                        await updateDoc(doc(db, 'users', userId), { status: 'SUSPENDED' });
+                      } catch (sErr) {
+                        console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (incErr) {
+              console.error('Erreur lors de l\'incrément des tentatives:', incErr);
+            }
+
+            this.errorMessage = 'Email ou mot de passe incorrect';
+            break;
+          case 'auth/user-not-found':
             this.errorMessage = 'Email ou mot de passe incorrect';
             break;
           default:
