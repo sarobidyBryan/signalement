@@ -5,6 +5,7 @@ import mg.itu.s5.cloud.signalement.entities.Role;
 import mg.itu.s5.cloud.signalement.entities.UserStatusType;
 import mg.itu.s5.cloud.signalement.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpSession;
@@ -22,25 +23,27 @@ public class AuthenticationService {
     @Autowired
     private UserStatusTypeService userStatusTypeService;
 
+    @Value("${app.session.timeout.seconds}")
+    private int sessionTimeoutSeconds;
+
     private static final String USER_SESSION_KEY = "currentUser";
-    private static final int SESSION_TIMEOUT_SECONDS = 1800; // 30 minutes
 
     // Inscription d'un nouvel utilisateur
     public User register(String name, String email, String password, String firebaseUid) {
         if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email déjà utilisé");
+            throw new RuntimeException("Email already in use");
         }
 
         // Récupérer le rôle par défaut (USER)
         Optional<Role> defaultRole = roleService.getRoleByCode("USER");
         if (defaultRole.isEmpty()) {
-            throw new RuntimeException("Rôle par défaut non trouvé");
+            throw new RuntimeException("Default role not found");
         }
 
         // Récupérer le statut par défaut (ACTIVE)
         Optional<UserStatusType> defaultStatus = userStatusTypeService.getUserStatusTypeByCode("ACTIVE");
         if (defaultStatus.isEmpty()) {
-            throw new RuntimeException("Statut par défaut non trouvé");
+            throw new RuntimeException("Default status not found");
         }
 
         User user = new User();
@@ -62,7 +65,7 @@ public class AuthenticationService {
             // TODO: Vérifier le mot de passe hashé
             if (password.equals(user.getPassword()) && isUserActive(user)) {
                 session.setAttribute(USER_SESSION_KEY, user);
-                session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+                session.setMaxInactiveInterval(sessionTimeoutSeconds);
                 return true;
             }
         }
@@ -75,7 +78,7 @@ public class AuthenticationService {
         if (userOpt.isPresent() && isUserActive(userOpt.get())) {
             User user = userOpt.get();
             session.setAttribute(USER_SESSION_KEY, user);
-            session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+            session.setMaxInactiveInterval(sessionTimeoutSeconds);
             return true;
         }
         return false;
@@ -112,7 +115,7 @@ public class AuthenticationService {
     // Régénérer la session (pour prolonger la durée de vie)
     public void refreshSession(HttpSession session) {
         if (isAuthenticated(session)) {
-            session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+            session.setMaxInactiveInterval(sessionTimeoutSeconds);
         }
     }
 }

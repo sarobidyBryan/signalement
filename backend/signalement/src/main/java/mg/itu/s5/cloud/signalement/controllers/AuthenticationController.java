@@ -2,6 +2,7 @@ package mg.itu.s5.cloud.signalement.controllers;
 
 import mg.itu.s5.cloud.signalement.entities.User;
 import mg.itu.s5.cloud.signalement.services.AuthenticationService;
+import mg.itu.s5.cloud.signalement.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class AuthenticationController {
     private AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
         try {
             User user = authenticationService.register(
                 request.getName(),
@@ -28,58 +29,61 @@ public class AuthenticationController {
                 request.getPassword(),
                 request.getFirebaseUid()
             );
-            return ResponseEntity.ok(Map.of("message", "Utilisateur créé avec succès", "userId", user.getId()));
+            Map<String, Object> data = new HashMap<>();
+            data.put("message", "User created successfully");
+            data.put("userId", user.getId());
+            return ResponseEntity.ok(ApiResponse.success(data));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.USER_ALREADY_EXISTS, e.getMessage()));
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpSession session) {
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request, HttpSession session) {
         boolean success = authenticationService.login(request.getEmail(), request.getPassword(), session);
         if (success) {
             Optional<User> user = authenticationService.getCurrentUser(session);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Connexion réussie");
-            response.put("user", Map.of(
+            Map<String, Object> data = new HashMap<>();
+            data.put("message", "Login successful");
+            data.put("user", Map.of(
                 "id", user.get().getId(),
                 "name", user.get().getName(),
                 "email", user.get().getEmail(),
                 "role", user.get().getRole().getRoleCode()
             ));
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(data));
         } else {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email ou mot de passe incorrect"));
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_CREDENTIALS, "Invalid email or password"));
         }
     }
 
     @PostMapping("/login/firebase")
-    public ResponseEntity<?> loginByFirebase(@RequestBody FirebaseLoginRequest request, HttpSession session) {
+    public ResponseEntity<ApiResponse> loginByFirebase(@RequestBody FirebaseLoginRequest request, HttpSession session) {
         boolean success = authenticationService.loginByFirebase(request.getFirebaseUid(), session);
         if (success) {
             Optional<User> user = authenticationService.getCurrentUser(session);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Connexion Firebase réussie");
-            response.put("user", Map.of(
+            Map<String, Object> data = new HashMap<>();
+            data.put("message", "Firebase login successful");
+            data.put("user", Map.of(
                 "id", user.get().getId(),
                 "name", user.get().getName(),
                 "email", user.get().getEmail(),
                 "role", user.get().getRole().getRoleCode()
             ));
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(data));
         } else {
-            return ResponseEntity.badRequest().body(Map.of("error", "Utilisateur Firebase non trouvé"));
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.USER_NOT_FOUND, "Firebase user not found"));
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
+    public ResponseEntity<ApiResponse> logout(HttpSession session) {
         authenticationService.logout(session);
-        return ResponseEntity.ok(Map.of("message", "Déconnexion réussie"));
+        return ResponseEntity.ok(ApiResponse.success("Logout successful"));
     }
 
     @GetMapping("/current-user")
-    public ResponseEntity<?> getCurrentUser(HttpSession session) {
+    public ResponseEntity<ApiResponse> getCurrentUser(HttpSession session) {
         Optional<User> user = authenticationService.getCurrentUser(session);
         if (user.isPresent()) {
             Map<String, Object> userData = new HashMap<>();
@@ -87,19 +91,19 @@ public class AuthenticationController {
             userData.put("name", user.get().getName());
             userData.put("email", user.get().getEmail());
             userData.put("role", user.get().getRole().getRoleCode());
-            return ResponseEntity.ok(userData);
+            return ResponseEntity.ok(ApiResponse.success(userData));
         } else {
-            return ResponseEntity.status(401).body(Map.of("error", "Utilisateur non authentifié"));
+            return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
         }
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshSession(HttpSession session) {
+    public ResponseEntity<ApiResponse> refreshSession(HttpSession session) {
         if (authenticationService.isAuthenticated(session)) {
             authenticationService.refreshSession(session);
-            return ResponseEntity.ok(Map.of("message", "Session prolongée"));
+            return ResponseEntity.ok(ApiResponse.success("Session refreshed"));
         } else {
-            return ResponseEntity.status(401).body(Map.of("error", "Utilisateur non authentifié"));
+            return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
         }
     }
 
