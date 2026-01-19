@@ -4,7 +4,7 @@
       <ion-toolbar>
         <ion-title class="font-bold text-black">Signalements</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="nouveauSignalement" class="custom-btn">
+          <ion-button @click="toggleSignalementForm" class="custom-btn">
             <ion-icon slot="icon-only" :icon="add"></ion-icon>
           </ion-button>
           <ion-button @click="rafraichir" class="custom-btn">
@@ -38,7 +38,7 @@
           <ion-icon :icon="documentText" class="text-gray-400 text-6xl mb-4"></ion-icon>
           <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun signalement</h3>
           <p class="text-gray-600">Commencez par signaler un problème</p>
-          <ion-button @click="nouveauSignalement" class="mt-4 custom-primary-btn">
+          <ion-button @click="toggleSignalementForm" class="mt-4 custom-primary-btn">
             Nouveau signalement
           </ion-button>
         </div>
@@ -84,6 +84,7 @@
         </div>
       </div>
     </ion-content>
+    <ReportForm v-if="showCreationForm" @close="showCreationForm = false" @submit="handleSubmit"/>
     <TabBar />
     
   </ion-page>
@@ -92,6 +93,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import TabBar from '@/views/components/global/TabBar.vue';
+import ReportForm from '@/views/components/global/signalement/ReportForm.vue';
 import { 
   IonPage, 
   IonHeader, 
@@ -104,7 +106,7 @@ import {
   IonChip,
   IonLabel
 } from '@ionic/vue';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, setDoc, doc, addDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { 
   add, 
@@ -141,11 +143,13 @@ export default defineComponent({
     IonIcon,
     IonChip,
     IonLabel,
-    TabBar
+    TabBar,
+    ReportForm
   },
   
   data() {
     return {
+      showCreationForm : false,
       filter: 'tous',
       statuses: [] as Array<{ id?: number; status_code: string; label: string }>,
       signalements: [] as Report[],
@@ -213,9 +217,18 @@ export default defineComponent({
         console.error('Erreur chargement reports:', err);
       }
     },
+
+    async handleSubmit(payload) {
+      payload.resetForm();
+      console.log("Nous allons sauvegarder le payload:",payload);
+      const docRef = await addDoc(collection(db, "reports"), payload);
+      console.log("Signalement créé avec ID:", docRef.id);
+    },
     
-    nouveauSignalement() {
+    toggleSignalementForm() {
       console.log('Nouveau signalement');
+      this.showCreationForm = !this.showCreationForm;
+      console.log('isShowing',this.showCreationForm);
       // Navigation vers le formulaire
     },
     
