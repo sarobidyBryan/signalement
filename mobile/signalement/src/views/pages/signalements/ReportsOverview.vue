@@ -66,7 +66,14 @@
               color="primary"
             ></ion-toggle>
           </div>
-          
+
+          <!-- Tableau récapitulatif dépendant des filtres -->
+          <div class="pt-3">
+            <div class="max-h-64 overflow-y-auto border rounded-lg p-2 bg-gray-50">
+              <TableauRecapitulatif :signalements="signalementsFiltres" />
+            </div>
+          </div>
+
           <div class="pt-2 border-t border-gray-100">
             <ion-button @click="reinitialiserFiltres" expand="block" fill="outline" class="mt-2">
               Réinitialiser
@@ -100,7 +107,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, watch } from 'vue';
+import { defineComponent, onMounted, ref, nextTick } from 'vue';
 import TabBar from '@/views/components/global/TabBar.vue';
 import { 
   IonPage, 
@@ -131,6 +138,7 @@ import {
   filter,
   close
 } from 'ionicons/icons';
+import TableauRecapitulatif from '@/views/components/global/TableauRecapitulatif.vue';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/config/firebase';
@@ -175,13 +183,15 @@ export default defineComponent({
     IonButtons,
     IonIcon,
     IonToggle,
-    TabBar
+    TabBar,
+    TableauRecapitulatif
   },
   
   setup() {
     const mapContainer = ref<HTMLElement>();
     let map: L.Map | null = null;
     let markers: L.Marker[] = [];
+    const isMapInitialized = ref(false);
 
     // Position par défaut (Antananarivo, Madagascar)
     const defaultCenter: L.LatLngExpression = [-18.8792, 47.5079];
@@ -266,20 +276,30 @@ export default defineComponent({
       updateMarkers();
     };
 
-    const initialiserCarte = () => {
+    const initialiserCarte = async () => {
       if (!mapContainer.value || map) return;
 
-      // Créer la carte
-      map = L.map(mapContainer.value).setView(defaultCenter, defaultZoom);
+      // Attendre que le DOM soit prêt
+      await nextTick();
 
-      // Ajouter une couche de carte (OpenStreetMap)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      }).addTo(map);
+      try {
+        // Créer la carte
+        map = L.map(mapContainer.value).setView(defaultCenter, defaultZoom);
 
-      // Ajouter les marqueurs initiaux
-      updateMarkers();
+        // Ajouter une couche de carte (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+
+        isMapInitialized.value = true;
+        console.log('Carte initialisée avec succès');
+
+        // Ajouter les marqueurs initiaux
+        updateMarkers();
+      } catch (err) {
+        console.error('Erreur initialisation carte:', err);
+      }
     };
 
     const statusColor = (status: string) => {
@@ -301,93 +321,130 @@ export default defineComponent({
     };
 
     const updateMarkers = () => {
+      // Vérifier que la carte est initialisée
+      if (!map || !isMapInitialized.value) {
+        console.log('Carte non initialisée, marqueurs non ajoutés');
+        return;
+      }
+
       // Supprimer les anciens marqueurs
       markers.forEach(marker => {
-        if (map) map.removeLayer(marker);
+        try {
+          if (map) map.removeLayer(marker);
+        } catch (err) {
+          console.warn('Erreur suppression marqueur:', err);
+        }
       });
       markers = [];
 
       // Ajouter les nouveaux marqueurs
       signalementsFiltres.value.forEach(signalement => {
-        if (!signalement.position || signalement.position.lat == null || signalement.position.lng == null) return;
-        const iconColor = statusColor(signalement.status);
-        const marker = L.marker([signalement.position.lat, signalement.position.lng], {
-          icon: signalementIcon(iconColor)
-        });
-
-        // Préparer affichage company / budget / surface
-        const company = signalement.company_name ?? (signalement.raw && (signalement.raw.company_name ?? signalement.raw.companyName)) ?? '—';
-        let budgetDisplay = '—';
-        if (signalement.budget != null) {
-          try {
-            budgetDisplay = typeof signalement.budget === 'number'
-              ? new Intl.NumberFormat('fr-FR').format(signalement.budget) + ' Ar'
-              : String(signalement.budget);
-          } catch (e) {
-            budgetDisplay = String(signalement.budget);
-          }
-        }
-        let areaDisplay = '—';
-        if (signalement.area != null) {
-          try {
-            areaDisplay = typeof signalement.area === 'number'
-              ? new Intl.NumberFormat('fr-FR').format(signalement.area) + ' m²'
-              : String(signalement.area) + ' m²';
-          } catch (e) {
-            areaDisplay = String(signalement.area) + ' m²';
-          }
+        if (!signalement.position || signalement.position.lat == null || signalement.position.lng == null) {
+          console.log('Signalement sans position, ignoré:', signalement.id);
+          return;
         }
 
-        // Ajouter un popup
-        const resolved = isResolved(signalement.status);
-        marker.bindPopup(`
-          <div class="p-2">
-            <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
-            <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
-            <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
-            <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
-            <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
-            <div class="flex items-center justify-between">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}
-              </span>
-              <span class="text-xs text-gray-500">${signalement.date}</span>
+        try {
+          const iconColor = statusColor(signalement.status);
+          const marker = L.marker([signalement.position.lat, signalement.position.lng], {
+            icon: signalementIcon(iconColor)
+          });
+
+          // Préparer affichage company / budget / surface
+          const company = signalement.company_name ?? (signalement.raw && (signalement.raw.company_name ?? signalement.raw.companyName)) ?? '—';
+          let budgetDisplay = '—';
+          if (signalement.budget != null) {
+            try {
+              budgetDisplay = typeof signalement.budget === 'number'
+                ? new Intl.NumberFormat('fr-FR').format(signalement.budget) + ' Ar'
+                : String(signalement.budget);
+            } catch (e) {
+              budgetDisplay = String(signalement.budget);
+            }
+          }
+          let areaDisplay = '—';
+          if (signalement.area != null) {
+            try {
+              areaDisplay = typeof signalement.area === 'number'
+                ? new Intl.NumberFormat('fr-FR').format(signalement.area) + ' m²'
+                : String(signalement.area) + ' m²';
+            } catch (e) {
+              areaDisplay = String(signalement.area) + ' m²';
+            }
+          }
+
+          // Ajouter un popup
+          const resolved = isResolved(signalement.status);
+          marker.bindPopup(`
+            <div class="p-2">
+              <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
+              <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
+              <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
+              <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
+              <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                  ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}
+                </span>
+                <span class="text-xs text-gray-500">${signalement.date}</span>
+              </div>
             </div>
-          </div>
-        `);
-        // Ouvrir le popup au survol (desktop) et le fermer au mouseout
-        marker.on('mouseover', () => {
-          try { marker.openPopup(); } catch (e) { /* no-op */ }
-        });
-        marker.on('mouseout', () => {
-          try { marker.closePopup(); } catch (e) { /* no-op */ }
-        });
+          `);
+          
+          // Ouvrir le popup au survol (desktop) et le fermer au mouseout
+          marker.on('mouseover', () => {
+            try { marker.openPopup(); } catch (e) { /* no-op */ }
+          });
+          marker.on('mouseout', () => {
+            try { marker.closePopup(); } catch (e) { /* no-op */ }
+          });
 
-        // Sur mobile/tactile, le clic ouvrira toujours le popup
-        marker.on('click', () => {
-          try { marker.openPopup(); } catch (e) { /* no-op */ }
-        });
+          // Sur mobile/tactile, le clic ouvrira toujours le popup
+          marker.on('click', () => {
+            try { marker.openPopup(); } catch (e) { /* no-op */ }
+          });
 
-        marker.addTo(map!);
-        markers.push(marker);
+          if (map) {
+            marker.addTo(map);
+            markers.push(marker);
+          }
+        } catch (err) {
+          console.error('Erreur ajout marqueur pour signalement', signalement.id, err);
+        }
       });
 
       // Ajuster la vue pour montrer tous les marqueurs
       if (markers.length > 0 && map) {
-        const group = L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.1));
+        try {
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
+        } catch (err) {
+          console.warn('Erreur ajustement vue carte:', err);
+        }
       }
     };
 
     const formatDate = (ts: any) => {
       if (!ts) return '';
-      const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-      return dateObj.toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      try {
+        const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+        return dateObj.toLocaleString('fr-FR', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      } catch (error) {
+        console.warn('Erreur formatage date:', error);
+        return '';
+      }
     };
 
     const loadReports = async () => {
       try {
-        const q = query(collection(db, 'reports'), orderBy('report_date', 'desc'));
+        // Ne pas trier par report_date si le champ peut être manquant
+        const q = query(collection(db, 'reports'));
         const snap = await getDocs(q);
         const items = snap.docs.map(doc => {
           const d: any = doc.data();
@@ -397,19 +454,32 @@ export default defineComponent({
             description: d.description ?? '',
             status: d.status ?? 'SUBMITTED',
             position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
-            date: formatDate(d.report_date),
-            // Added budget, company_name and area mapping
-            budget: d.budget ?? null,
-            company_name: d.company_name ?? null,
-            area: d.area ?? d.surface ?? null,
+            date: formatDate(d.report_date ?? d.created_at ?? d.createdAt),
+            budget: d.budget ?? d.budget_amount ?? null,
+            company_name: d.company_name ?? d.companyName ?? null,
+            area: d.area ?? d.surface ?? d.treated_area ?? null,
             raw: d
           };
         });
-        signalements.value = items;
-        // initialiser le filtré et marqueurs
+        
+        // Trier en mémoire par date
+        signalements.value = items.sort((a, b) => {
+          if (!a.date && !b.date) return 0;
+          if (!a.date) return 1;
+          if (!b.date) return -1;
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        
+        // initialiser le filtré
         signalementsFiltres.value = [...signalements.value];
         calculerCompteurs();
-        updateMarkers();
+        
+        console.log(`${signalements.value.length} signalement(s) chargé(s)`);
+        
+        // Mettre à jour les marqueurs seulement si la carte est initialisée
+        if (isMapInitialized.value) {
+          updateMarkers();
+        }
       } catch (err) {
         console.error('Erreur chargement reports (map):', err);
       }
@@ -420,24 +490,26 @@ export default defineComponent({
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            map.setView([latitude, longitude], 15);
-            
-            // Ajouter un marqueur pour la position actuelle
-            L.marker([latitude, longitude], {
-              icon: L.divIcon({
-                className: 'current-location-marker',
-                html: `
-                  <div class="relative">
-                    <div class="w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-lg"></div>
-                    <div class="absolute inset-0 animate-ping bg-blue-400 rounded-full"></div>
-                  </div>
-                `,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
+            if (map) {
+              map.setView([latitude, longitude], 15);
+              
+              // Ajouter un marqueur pour la position actuelle
+              L.marker([latitude, longitude], {
+                icon: L.divIcon({
+                  className: 'current-location-marker',
+                  html: `
+                    <div class="relative">
+                      <div class="w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-lg"></div>
+                      <div class="absolute inset-0 animate-ping bg-blue-400 rounded-full"></div>
+                    </div>
+                  `,
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12]
+                })
               })
-            })
-            .bindPopup('Votre position actuelle')
-            .addTo(map);
+              .bindPopup('Votre position actuelle')
+              .addTo(map);
+            }
           },
           (error) => {
             console.error('Erreur de géolocalisation:', error);
@@ -452,9 +524,8 @@ export default defineComponent({
       if (!map) return;
       
       // Exemple simple : alterner entre différentes couches
-      const currentLayer = map.getPane('tilePane');
-      // Dans une vraie implémentation, vous alterneriez entre différentes couches TileLayer
       console.log('Changement de type de carte');
+      // Dans une vraie implémentation, vous alterneriez entre différentes couches TileLayer
     };
 
     const nouveauSignalement = () => {
@@ -473,29 +544,32 @@ export default defineComponent({
     const reinitialiserFiltres = () => {
       filtres.value = {
         enCours: true,
-        resolus: true
+        resolus: true,
+        onlyMine: false
       };
       filtrerSignalements();
     };
 
-    onMounted(() => {
+    onMounted(async () => {
       // écouter l'auth pour récupérer l'uid courant
       try {
         onAuthStateChanged(auth, (user) => {
           currentUserId.value = user ? user.uid : null;
         });
       } catch (e) {
-        console.warn('Impossible d écouter l état auth:', e);
+        console.warn('Impossible d\'écouter l\'état auth:', e);
       }
-      // charger d'abord les status puis les reports, ensuite initialiser la carte
-      loadStatuses().then(() => {
-        return loadReports();
-      }).then(() => {
-        initialiserCarte();
-      }).catch(() => {
-        // en cas d'erreur, initialiser la carte quand même
-        initialiserCarte();
-      });
+      
+      // Charger d'abord les statuses et les reports
+      try {
+        await loadStatuses();
+        await loadReports();
+      } catch (err) {
+        console.error('Erreur chargement données:', err);
+      }
+      
+      // Ensuite initialiser la carte
+      await initialiserCarte();
     });
 
     return {

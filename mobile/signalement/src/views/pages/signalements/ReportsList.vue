@@ -60,7 +60,7 @@
                 </div>
                 <div>
                   <h3 class="font-bold text-gray-900">{{ signalement.titre }}</h3>
-                  <p class="text-sm text-gray-600">{{ signalement.area }} m²</p>
+                  <p class="text-sm text-gray-600" v-if="signalement.area">{{ signalement.area }} m²</p>
                 </div>
               </div>
               <span :class="statusPillClass(signalement.status)">
@@ -69,23 +69,13 @@
             </div>
             
             <p class="text-gray-600 text-sm mb-2">{{ signalement.description }}</p>
-            <div class="flex items-start justify-between text-sm text-gray-500 mb-3">
-              <!-- <div>
-                <span class="font-medium">Entreprise: </span>
-                <span>{{ signalement.company_name || '-' }}</span>
-              </div>
-              <div>
-                <span class="font-medium">Budget: </span>
-                <span>{{ signalement.budget ? (signalement.budget + ' Ar') : '-' }}</span>
-              </div> -->
-            </div>
             
             <div class="flex items-center justify-between text-sm text-gray-500">
-              <div class="flex items-center">
+              <div class="flex items-center" v-if="signalement.adresse">
                 <ion-icon :icon="location" class="mr-1"></ion-icon>
                 <span>{{ signalement.adresse }}</span>
               </div>
-              <div class="flex items-center">
+              <div class="flex items-center" v-if="signalement.date">
                 <ion-icon :icon="time" class="mr-1"></ion-icon>
                 <span>{{ signalement.date }}</span>
               </div>
@@ -202,31 +192,57 @@ export default defineComponent({
     },
     async loadSignalements() {
       try {
-        const q = query(collection(db, 'reports'), orderBy('report_date', 'desc'));
+        // Ne pas trier par report_date si le champ peut être manquant
+        const q = query(collection(db, 'reports'));
         const snapshot = await getDocs(q);
+        
         const results: Report[] = snapshot.docs.map(doc => {
           const d: any = doc.data();
 
           const formatDate = (ts: any) => {
             if (!ts) return '';
-            const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-            return dateObj.toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            try {
+              const dateObj = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+              return dateObj.toLocaleString('fr-FR', { 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+            } catch (error) {
+              console.warn('Erreur formatage date pour doc', doc.id, error);
+              return '';
+            }
           };
 
-          const titre = d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`;
+          const titre = d.description ? 
+            (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : 
+            `Signalement ${d.id ?? doc.id}`;
+          
           return {
             id: d.id ?? doc.id,
             titre,
-            area: d.area ?? null,
+            area: d.area ? String(d.area) : null,
             description: d.description ?? '',
             budget: d.budget ?? d.budget_amount ?? null,
             company_name: d.company_name ?? d.companyName ?? null,
-            adresse: (d.latitude !== undefined && d.longitude !== undefined) ? `${d.latitude}, ${d.longitude}` : '',
-            date: formatDate(d.report_date),
+            adresse: (d.latitude !== undefined && d.longitude !== undefined) ? 
+              `${d.latitude.toFixed(6)}, ${d.longitude.toFixed(6)}` : '',
+            date: formatDate(d.report_date ?? d.created_at ?? d.createdAt),
             status: d.status ?? 'SUBMITTED'
           } as Report;
         });
-        this.signalements = results;
+        
+        // Trier les résultats en mémoire par date (les plus récents en premier)
+        this.signalements = results.sort((a, b) => {
+          if (!a.date && !b.date) return 0;
+          if (!a.date) return 1;
+          if (!b.date) return -1;
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        
+        console.log(`${this.signalements.length} signalement(s) chargé(s)`);
       } catch (err) {
         console.error('Erreur chargement reports:', err);
       }
@@ -254,13 +270,14 @@ export default defineComponent({
     voirSignalement(id: number) {
       console.log('Voir signalement', id);
       // Navigation vers le détail
-    }
-    ,
-    statusLabel(status: string) {
-      if (!status) return '';
-      const found = this.statuses.find((s: any) => s.status_code === status);
-      if (found && found.label) return found.label;
     },
+    
+    statusLabel(status: string) {
+      if (!status) return 'Non défini';
+      const found = this.statuses.find((s: any) => s.status_code === status);
+      return found?.label ?? status;
+    },
+    
     statusPillClass(status: string) {
       const color = (() => {
         switch (status) {
@@ -281,6 +298,7 @@ export default defineComponent({
       })();
       return `px-3 py-1 rounded-full text-xs font-medium ${color}`;
     },
+    
     statusPillBg(status: string) {
       switch (status) {
         case 'COMPLETED':
@@ -298,6 +316,7 @@ export default defineComponent({
           return 'bg-gray-100';
       }
     },
+    
     statusIcon(status: string) {
       switch (status) {
         case 'COMPLETED':
@@ -315,6 +334,7 @@ export default defineComponent({
           return documentText;
       }
     },
+    
     statusIconClass(status: string) {
       switch (status) {
         case 'COMPLETED':
@@ -332,10 +352,9 @@ export default defineComponent({
           return 'text-gray-600';
       }
     }
-  }
-  ,
+  },
+  
   created() {
-    // charger d'abord les status puis les reports
     this.loadStatuses().then(() => this.loadSignalements()).catch(() => this.loadSignalements());
   }
 });
