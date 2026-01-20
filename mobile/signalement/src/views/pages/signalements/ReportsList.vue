@@ -84,7 +84,7 @@
         </div>
       </div>
     </ion-content>
-    <ReportForm v-if="showCreationForm" @close="showCreationForm = false" @submit="handleSubmit"/>
+    <ReportForm ref="reportFormRef" v-if="showCreationForm" @close="showCreationForm = false" @submit="handleSubmit"/>
     <TabBar />
     
   </ion-page>
@@ -155,6 +155,7 @@ export default defineComponent({
       filter: 'tous',
       statuses: [] as Array<{ id?: number; status_code: string; label: string }>,
       signalements: [] as Report[],
+      reportFormRef: null,
       add,
       refresh,
       documentText,
@@ -249,10 +250,25 @@ export default defineComponent({
     },
 
     async handleSubmit(payload) {
-      // payload.resetForm();
-      console.log("Nous allons sauvegarder le payload:",payload);
-      const docRef = await addDoc(collection(db, "reports"), payload);
-      console.log("Signalement créé avec ID:", docRef.id);
+      console.log("Nous allons sauvegarder le payload:", payload);
+      try {
+        const docRef = await addDoc(collection(db, "reports"), payload);
+        console.log("Signalement créé avec ID:", docRef.id);
+        
+        // Reset le formulaire
+        if (this.$refs.reportFormRef) {
+          this.$refs.reportFormRef.resetForm();
+        }
+        
+        // Fermer le formulaire
+        this.showCreationForm = false;
+        
+        // Recharger la liste des signalements
+        await this.loadSignalements();
+      } catch (error) {
+        console.error("Erreur lors de la création du signalement:", error);
+        // Gérer l'erreur (afficher un message, etc.)
+      }
     },
     
     toggleSignalementForm() {

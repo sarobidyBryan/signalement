@@ -100,7 +100,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, ref } from 'vue';
+import { defineComponent, onMounted, onBeforeUnmount, ref, defineExpose } from 'vue';
 import { 
   IonList, IonItem, IonLabel, IonInput, IonTextarea, IonButton,
   IonIcon, IonSpinner 
@@ -202,6 +202,7 @@ export default defineComponent({
         description: description.value || '',
         status: "SUBMITTED",
         user_id : localStorage.getItem('uid') || '' 
+
       };
 
       // Émettre l'événement au parent
@@ -237,6 +238,8 @@ export default defineComponent({
       map = null;
       marker = null;
     });
+
+    defineExpose({ resetForm });
 
     return {
       area,
