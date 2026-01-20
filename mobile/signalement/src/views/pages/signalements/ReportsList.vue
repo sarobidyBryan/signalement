@@ -226,12 +226,12 @@ export default defineComponent({
             titre,
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
-            budget: d.budget ?? d.budget_amount ?? null,
-            company_name: d.company_name ?? d.companyName ?? null,
+            budget: d.assignation?.budget ?? null,
+            company_name: d.assignation?.company.name ?? null,
             adresse: (d.latitude !== undefined && d.longitude !== undefined) ? 
               `${d.latitude.toFixed(6)}, ${d.longitude.toFixed(6)}` : '',
-            date: formatDate(d.report_date ?? d.created_at ?? d.createdAt),
-            status: d.status ?? 'SUBMITTED'
+            date: formatDate(d.createdAt),
+            status: d.status?.statusCode ?? 'SUBMITTED'
           } as Report;
         });
         

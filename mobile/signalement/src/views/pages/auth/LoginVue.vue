@@ -66,7 +66,7 @@ export default defineComponent({
           console.log("Données utilisateur:", userData);
           
           // 4. Vérification du statut
-          if (userData.status === 'ACTIVE') {
+          if (userData.userStatusType.statusCode === 'ACTIVE') {
             // Réinitialiser les tentatives de mot de passe après connexion réussie
             try {
               const attemptsRef = doc(db, 'password_attempts', uid);

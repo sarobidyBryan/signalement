@@ -237,13 +237,13 @@ export default defineComponent({
 
                 const myReportsQuery = query(
                     collection(db, 'reports'),
-                    where("user_id", "==", uid),
+                    where("user.firebaseUid", "==", uid),
                 );
 
                 const myEndedReportsQuery = query(
                     collection(db, 'reports'),
-                    where("user_id", "==", uid),
-                    where("status", "==", "DONE")
+                    where("user.firebaseUid", "==", uid),
+                    where("status.status_code", "==", "COMPLETED")
                 );
 
                 const reports = await getDocs(myReportsQuery);
@@ -292,6 +292,7 @@ export default defineComponent({
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
+                console.log("parsed user",parsedUser);
                 this.utilisateur.name = parsedUser.name || this.utilisateur.name;
                 this.utilisateur.email = parsedUser.email || this.utilisateur.email;
             } catch (e) {

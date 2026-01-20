@@ -452,12 +452,12 @@ export default defineComponent({
             id: d.id ?? doc.id,
             titre: d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`,
             description: d.description ?? '',
-            status: d.status ?? 'SUBMITTED',
+            status: d.status.statusCode ?? 'SUBMITTED',
             position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
-            date: formatDate(d.report_date ?? d.created_at ?? d.createdAt),
-            budget: d.budget ?? d.budget_amount ?? null,
-            company_name: d.company_name ?? d.companyName ?? null,
-            area: d.area ?? d.surface ?? d.treated_area ?? null,
+            date: formatDate(d.createdAt),
+            budget: d.assignation.budget ?? null,
+            company_name: d.assignation.company.name ?? null,
+            area: d.area ?? null,
             raw: d
           };
         });
