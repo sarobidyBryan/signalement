@@ -3,28 +3,33 @@
     <!-- Header avec navigation -->
     <ion-header :translucent="true" class="ion-no-border">
       <ion-toolbar>
-        <!-- Utiliser les classes Tailwind sur le conteneur parent -->
-        <div class="flex items-center justify-between w-full px-4">
-          <!-- Titre avec styles Ionic + Tailwind -->
-          <ion-title class="text-black font-bold text-xl">
-            Signalements
-          </ion-title>
+        <!-- Conteneur principal flex en colonne sur mobile -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between w-full px-2 sm:px-4 md:px-6 py-2 md:py-0">
           
-          <!-- Boutons dans un div séparé -->
-          <div class="flex items-center space-x-4">
+          <!-- Titre - toujours en première ligne -->
+          <div class="text-black font-bold text-xl w-full md:w-auto text-center md:text-left mb-2 md:mb-0">
+            Signalements
+          </div>
+          
+          <!-- Boutons - passe à la ligne sur mobile -->
+          <div class="flex items-center justify-center md:justify-end space-x-4 w-full md:w-auto">
             <ion-button 
               @click="goToLogin" 
-              fill="clear"
               class="custom-btn"
+              fill="outline"
+              size="small"
             >
-              <span class="text-black font-medium">Connexion</span>
+              <span class="text-black font-medium text-sm md:text-base">Connexion</span>
             </ion-button>
             
             <ion-button 
               @click="goToRegister" 
-              class="custom-btn-register"
+              class="custom-btn"
+              color="dark"
+              size="small"
+              fill="solid"
             >
-              <span class="text-white font-medium">S'inscrire</span>
+              <span class="text-white font-medium text-sm md:text-base">S'inscrire</span>
             </ion-button>
           </div>
         </div>
