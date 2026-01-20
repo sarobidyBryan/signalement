@@ -249,7 +249,7 @@ export default defineComponent({
     },
 
     async handleSubmit(payload) {
-      payload.resetForm();
+      // payload.resetForm();
       console.log("Nous allons sauvegarder le payload:",payload);
       const docRef = await addDoc(collection(db, "reports"), payload);
       console.log("Signalement créé avec ID:", docRef.id);

@@ -23,7 +23,9 @@ COPY --from=build /app/target/*.jar app.jar
 
 # copy health-wait script and make it executable
 COPY wait-for-postgres.sh /usr/local/bin/wait-for-postgres.sh
-RUN chmod +x /usr/local/bin/wait-for-postgres.sh
+# Convertir CRLF en LF et rendre exécutable
+RUN sed -i 's/\r$//' /usr/local/bin/wait-for-postgres.sh && \
+    chmod +x /usr/local/bin/wait-for-postgres.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/wait-for-postgres.sh"]
