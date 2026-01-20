@@ -36,6 +36,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS}
     healthcheck: 
       test: ["CMD-SHELL", "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/8080' || exit 1"]
       interval: 10s

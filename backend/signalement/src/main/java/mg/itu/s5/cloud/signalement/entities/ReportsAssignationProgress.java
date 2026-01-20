@@ -25,6 +25,15 @@ public class ReportsAssignationProgress {
 
     private LocalDateTime registrationDate;
 
+    @Column(name = "firebase_id", length = 100)
+    private String firebaseId;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public ReportsAssignationProgress() {}
 
     public int getId() { return id; }
@@ -41,4 +50,13 @@ public class ReportsAssignationProgress {
 
     public LocalDateTime getRegistrationDate() { return registrationDate; }
     public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
+
+    public String getFirebaseId() { return firebaseId; }
+    public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

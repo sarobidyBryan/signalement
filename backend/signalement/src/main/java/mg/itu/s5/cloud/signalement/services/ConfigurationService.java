@@ -5,6 +5,7 @@ import mg.itu.s5.cloud.signalement.repositories.ConfigurationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,10 @@ public class ConfigurationService {
         return configurationRepository.findByKey(key);
     }
 
+    public Optional<Configuration> getConfigurationByFirebaseId(String firebaseId) {
+        return configurationRepository.findByFirebaseId(firebaseId);
+    }
+
     public String getConfigurationValue(String key) {
         return getConfigurationByKey(key).map(Configuration::getValue).orElse(null);
     }
@@ -35,6 +40,9 @@ public class ConfigurationService {
     }
 
     public Configuration saveConfiguration(Configuration configuration) {
+        if (configuration.getId() == 0) {
+            configuration.setCreatedAt(java.time.LocalDateTime.now());
+        }
         return configurationRepository.save(configuration);
     }
 
@@ -63,5 +71,9 @@ public class ConfigurationService {
     public void deleteConfigurationByKey(String key) {
         Optional<Configuration> config = getConfigurationByKey(key);
         config.ifPresent(c -> deleteConfiguration(c.getId()));
+    }
+
+    public List<Configuration> findModifiedSince(LocalDateTime since) {
+        return configurationRepository.findModifiedSince(since);
     }
 }

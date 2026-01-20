@@ -27,6 +27,15 @@ public class ReportsAssignation {
     private LocalDate startDate;
     private LocalDate deadline;
 
+    @Column(name = "firebase_id", length = 100)
+    private String firebaseId;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public ReportsAssignation() {}
 
     public int getId() { return id; }
@@ -46,5 +55,14 @@ public class ReportsAssignation {
 
     public LocalDate getDeadline() { return deadline; }
     public void setDeadline(LocalDate deadline) { this.deadline = deadline; }
+
+    public String getFirebaseId() { return firebaseId; }
+    public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
 

@@ -14,6 +14,15 @@ public class Company {
     private String name;
     private String email;
 
+    @Column(name = "firebase_id", length = 100)
+    private String firebaseId;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public Company() {}
 
     public int getId() { return id; }
@@ -24,4 +33,13 @@ public class Company {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getFirebaseId() { return firebaseId; }
+    public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -32,6 +32,19 @@ public class Report {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id", nullable = false)
+    private Status status;
+
+    @Column(name = "firebase_id", length = 100)
+    private String firebaseId;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public Report() {}
 
     public int getId() { return id; }
@@ -54,4 +67,16 @@ public class Report {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+
+    public String getFirebaseId() { return firebaseId; }
+    public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

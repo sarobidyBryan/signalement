@@ -17,6 +17,12 @@ public class ReportsStatusService {
     @Autowired
     private ReportsStatusRepository repository;
 
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
+    private mg.itu.s5.cloud.signalement.repositories.StatusRepository statusRepository;
+
     public List<ReportsStatus> getAll() { return repository.findAll(); }
     public Optional<ReportsStatus> getById(int id) { return repository.findById(id); }
     public ReportsStatus save(ReportsStatus r) { return repository.save(r); }
@@ -27,12 +33,27 @@ public class ReportsStatusService {
     }
 
     public ReportsStatus addStatusToReport(int reportId, int statusId, LocalDateTime registrationDate) {
+        // Récupérer le report
+        Optional<Report> reportOpt = reportService.getReportById(reportId);
+        if (!reportOpt.isPresent()) {
+            throw new IllegalArgumentException("Report non trouvé");
+        }
+        Report report = reportOpt.get();
+
+        // Récupérer le statut
+        Optional<Status> statusOpt = statusRepository.findById(statusId);
+        if (!statusOpt.isPresent()) {
+            throw new IllegalArgumentException("Statut non trouvé");
+        }
+        Status status = statusOpt.get();
+
+        // Mettre à jour le statut du report
+        report.setStatus(status);
+        reportService.saveReport(report);
+
+        // Créer l'entrée dans l'historique
         ReportsStatus rs = new ReportsStatus();
-        Report report = new Report();
-        report.setId(reportId);
         rs.setReport(report);
-        Status status = new Status();
-        status.setId(statusId);
         rs.setStatus(status);
         rs.setRegistrationDate(registrationDate);
         return repository.save(rs);

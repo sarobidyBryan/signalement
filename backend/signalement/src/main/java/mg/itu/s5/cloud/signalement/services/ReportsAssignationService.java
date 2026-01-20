@@ -5,6 +5,7 @@ import mg.itu.s5.cloud.signalement.repositories.ReportsAssignationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,12 @@ public class ReportsAssignationService {
 
     public List<ReportsAssignation> getAll() { return repository.findAll(); }
     public Optional<ReportsAssignation> getById(int id) { return repository.findById(id); }
-    public ReportsAssignation save(ReportsAssignation r) { return repository.save(r); }
+    public ReportsAssignation save(ReportsAssignation r) {
+        if (r.getId() == 0) {
+            r.setCreatedAt(java.time.LocalDateTime.now());
+        }
+        return repository.save(r);
+    }
     public void delete(int id) { repository.deleteById(id); }
 
     public List<ReportsAssignation> findByReportId(int reportId) {
@@ -34,6 +40,14 @@ public class ReportsAssignationService {
 
     public Optional<Integer> getReportIdByAssignationId(int assignationId) {
         return getById(assignationId).map(a -> a.getReport().getId());
+    }
+
+    public Optional<ReportsAssignation> getByFirebaseId(String firebaseId) {
+        return repository.findByFirebaseId(firebaseId);
+    }
+
+    public List<ReportsAssignation> findModifiedSince(LocalDateTime since) {
+        return repository.findModifiedSince(since);
     }
 }
 
