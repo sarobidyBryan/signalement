@@ -3,7 +3,7 @@
         <ion-header :translucent="true">
             <ion-toolbar>
                 <ion-buttons slot="start">
-                    <ion-button fill="clear" @click="goBack" aria-label="Retour">
+                    <ion-button fill="clear" @click="goBack" aria-label="Retour" color="dark">
                         <ion-icon :icon="arrowBack"></ion-icon>
                     </ion-button>
                 </ion-buttons>
@@ -165,11 +165,11 @@ export default defineComponent({
             menuItems: [
                 {
                     id: 1,
-                    title: 'Paramètres',
-                    description: 'Gérer vos préférences',
+                    title: 'Informations personnelles',
+                    description: 'Gérer mes informations personnelles',
                     icon: settings,
                     color: 'bg-blue-100',
-                    route: '/parametres'
+                    route: '/personal-data'
                 },
                 {
                     id: 2,

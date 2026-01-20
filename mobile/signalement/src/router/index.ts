@@ -41,6 +41,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Carte',  
         component: () => import('@/views/pages/signalements/ReportsOverview.vue')
   },
+  {
+    path: '/personal-data',
+    name: 'PersonalData',
+    component: () => import('@/views/pages/PersonalData.vue')
+  },
+  {
+    path: '/personal-data/update',
+    name: 'PersonalDataUpdate',
+    component: () => import('@/views/pages/PersonalDataUpdate.vue')
+  }
 ];
 
 const router = createRouter({
