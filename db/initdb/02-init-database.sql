@@ -2,27 +2,36 @@ CREATE TABLE configurations(
     id SERIAL PRIMARY KEY,
     key VARCHAR(100),
     value VARCHAR(100),
-    type VARCHAR(100)
+    type VARCHAR(100),
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO configurations (key, value, type) VALUES
-('app_name', 'Signalements Routes Tana', 'string'),
-('max_report_area', '1000', 'integer'),
-('default_deadline_days', '30', 'integer'),
-('map_center_lat', '-18.8792', 'decimal'),
-('map_center_lng', '47.5079', 'decimal'),
-('budget_min', '500000', 'integer'),
-('budget_max', '50000000', 'integer'),
-('currency', 'MGA', 'string'),
-('notification_email', 'contact@signalements-tana.mg', 'string'),
 ('max_attempt', '3', 'integer'),
-('session_duration', '150', 'integer');
+('session_duration', '1800', 'integer');
+
+
+-- Trigger pour updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_configurations_updated_at BEFORE UPDATE ON configurations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 CREATE TABLE companies(
     id SERIAL PRIMARY KEY,
     name VARCHAR(100),
-    email VARCHAR(100)
+    email VARCHAR(100),
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO companies (name, email) VALUES
@@ -33,6 +42,8 @@ INSERT INTO companies (name, email) VALUES
 ('BTP Madagascar', 'btp@btpmadagascar.mg'),
 ('Mad''Artisan', 'contact@madartisan.mg'),
 ('Road Masters Tana', 'contact@roadmasters.mg');
+
+CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 CREATE TABLE status(
@@ -83,7 +94,9 @@ CREATE TABLE users (
     password VARCHAR(100),
     firebase_uid VARCHAR(100),
     role_id INTEGER NOT NULL REFERENCES roles(id), -- Colonne denormalisee
-    user_status_type_id INTEGER NOT NULL REFERENCES user_status_types(id) -- Colonne denormalisee
+    user_status_type_id INTEGER NOT NULL REFERENCES user_status_types(id), -- Colonne denormalisee
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -112,8 +125,14 @@ CREATE TABLE reports(
     area DECIMAL(10,2), -- en m^2
     longitude DECIMAL(9,6),
     latitude DECIMAL(9,6),
-    description TEXT
+    description TEXT,
+    status_id INTEGER NOT NULL REFERENCES status(id),
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TABLE reports_assignation(
     id SERIAL PRIMARY KEY,
@@ -121,8 +140,13 @@ CREATE TABLE reports_assignation(
     report_id INTEGER NOT NULL REFERENCES reports(id),
     budget DECIMAL(15,2),
     start_date DATE,
-    deadline DATE  
+    deadline DATE,
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TRIGGER update_reports_assignation_updated_at BEFORE UPDATE ON reports_assignation FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TABLE reports_status(
     id SERIAL PRIMARY KEY,
@@ -136,7 +160,18 @@ CREATE TABLE reports_assignation_progress(
     reports_assignation_id INTEGER NOT NULL REFERENCES reports_assignation(id),
     treated_area DECIMAL(10,2),
     comment TEXT,
-    registration_date TIMESTAMP
+    registration_date TIMESTAMP,
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE synchronization_logs(
+    id SERIAL PRIMARY KEY,
+    sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    table_name VARCHAR(100),
+    records_synced INTEGER DEFAULT 0,
+    sync_type VARCHAR(50) -- POSTGRES_TO_FIREBASE, FIREBASE_TO_POSTGRES
 );
 
 INSERT INTO users (name, email, password, role_id, user_status_type_id)
@@ -153,3 +188,5 @@ INSERT INTO users (name, email, password, role_id, user_status_type_id)
 VALUES ('Bob','bob@example.com','bobpass',
   (SELECT id FROM roles WHERE role_code='USER'),
   (SELECT id FROM user_status_types WHERE status_code='SUSPENDED'));
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

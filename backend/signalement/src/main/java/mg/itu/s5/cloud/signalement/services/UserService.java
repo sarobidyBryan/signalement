@@ -49,6 +49,9 @@ public class UserService {
     }
 
     public User saveUser(User user) {
+        if (user.getId() == 0) {
+            user.setCreatedAt(java.time.LocalDateTime.now());
+        }
         return userRepository.save(user);
     }
 
@@ -118,5 +121,9 @@ public class UserService {
         user.setEmail(email);
 
         return userRepository.save(user);
+    }
+
+    public List<User> findModifiedSince(LocalDateTime since) {
+        return userRepository.findModifiedSince(since);
     }
 }

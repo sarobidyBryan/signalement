@@ -27,7 +27,13 @@ public class ReportsAssignationProgressService {
 
     public List<ReportsAssignationProgress> getAll() { return repository.findAll(); }
     public Optional<ReportsAssignationProgress> getById(int id) { return repository.findById(id); }
-    public ReportsAssignationProgress save(ReportsAssignationProgress r) { return repository.save(r); }
+    public ReportsAssignationProgress save(ReportsAssignationProgress r) {
+        if (r.getId() == 0) {
+            r.setCreatedAt(java.time.LocalDateTime.now());
+        }
+        r.setUpdatedAt(java.time.LocalDateTime.now());
+        return repository.save(r);
+    }
     public void delete(int id) { repository.deleteById(id); }
 
     public java.math.BigDecimal sumTreatedAreaByReportId(int reportId) {
@@ -76,6 +82,11 @@ public class ReportsAssignationProgressService {
             throw new IllegalArgumentException("La surface traitée ne peut pas dépasser la surface restante (" + remaining + " m²)");
         }
 
+        // Gestion des timestamps
+        if (p.getId() == 0) {
+            p.setCreatedAt(java.time.LocalDateTime.now());
+        }
+
         ReportsAssignationProgress saved = repository.save(p);
         return createProgressMap(saved);
     }
@@ -104,5 +115,13 @@ public class ReportsAssignationProgressService {
         }
         map.put("percentage", percentage);
         return map;
+    }
+
+    public Optional<ReportsAssignationProgress> getByFirebaseId(String firebaseId) {
+        return repository.findByFirebaseId(firebaseId);
+    }
+
+    public List<ReportsAssignationProgress> findModifiedSince(java.time.LocalDateTime since) {
+        return repository.findModifiedSince(since);
     }
 }

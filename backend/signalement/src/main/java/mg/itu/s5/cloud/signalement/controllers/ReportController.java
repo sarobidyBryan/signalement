@@ -104,9 +104,16 @@ public class ReportController {
 
     // Statut du signalement
     @PostMapping("/{id}/status")
+    @Operation(summary = "Update report status", description = "Updates the report status and creates a history entry")
     public ResponseEntity<ApiResponse> addStatusToReport(@PathVariable int id, @RequestBody ReportStatusRequest req) {
-        LocalDateTime reg = req.getRegistrationDate() != null ? req.getRegistrationDate() : LocalDateTime.now();
-        ReportsStatus saved = reportsStatusService.addStatusToReport(id, req.getStatusId(), reg);
-        return ResponseEntity.ok(ApiResponse.success(saved));
+        try {
+            LocalDateTime reg = req.getRegistrationDate() != null ? req.getRegistrationDate() : LocalDateTime.now();
+            ReportsStatus saved = reportsStatusService.addStatusToReport(id, req.getStatusId(), reg);
+            return ResponseEntity.ok(ApiResponse.success(saved));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_DATA, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Erreur lors de la mise à jour du statut"));
+        }
     }
 }

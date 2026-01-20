@@ -31,6 +31,12 @@ public class User {
     @JoinColumn(name = "user_status_type_id", nullable = false)
     private UserStatusType userStatusType;
 
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public User() {}
 
     public User(String name, String email, String password, String firebaseUid, Role role, UserStatusType userStatusType) {
@@ -96,5 +102,21 @@ public class User {
 
     public void setUserStatusType(UserStatusType userStatusType) {
         this.userStatusType = userStatusType;
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.time.LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

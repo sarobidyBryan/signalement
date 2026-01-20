@@ -20,6 +20,15 @@ public class Configuration {
     @Column(name = "type", length = 100)
     private String type;
 
+    @Column(name = "firebase_id", length = 100)
+    private String firebaseId;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
+
     public Configuration() {}
 
     public Configuration(String key, String value, String type) {
@@ -58,5 +67,29 @@ public class Configuration {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getFirebaseId() {
+        return firebaseId;
+    }
+
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.time.LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
