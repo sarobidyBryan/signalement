@@ -246,7 +246,7 @@ public class PostgresToFirestoreSyncService {
             firebaseId = firestoreService.findDocumentIdByPostgresId(collection, postgresId);
         }
         
-        data.put("synced_at", new Date());
+        data.put("syncedAt", new Date());
         
         return firestoreService.saveDocument(collection, firebaseId, data);
     }
@@ -254,7 +254,7 @@ public class PostgresToFirestoreSyncService {
     private Map<String, Object> createSyncResult(String tableName, int total, int synced) {
         Map<String, Object> result = new HashMap<>();
         result.put("table", tableName);
-        result.put("total_modified", total);
+        result.put("totalModified", total);
         result.put("synced", synced);
         result.put("timestamp", LocalDateTime.now());
         return result;
@@ -264,7 +264,7 @@ public class PostgresToFirestoreSyncService {
 
     private Map<String, Object> mapConfiguration(Configuration config) {
         Map<String, Object> data = new HashMap<>();
-        data.put("postgres_id", config.getId());
+        data.put("postgresId", config.getId());
         data.put("id", config.getId());
         data.put("key", config.getKey());
         data.put("value", config.getValue());
@@ -277,7 +277,7 @@ public class PostgresToFirestoreSyncService {
 
     private Map<String, Object> mapCompany(Company company) {
         Map<String, Object> data = new HashMap<>();
-        data.put("postgres_id", company.getId());
+        data.put("postgresId", company.getId());
         data.put("id", company.getId());
         data.put("name", company.getName());
         data.put("email", company.getEmail());
@@ -313,7 +313,7 @@ public class PostgresToFirestoreSyncService {
 
     private Map<String, Object> mapUser(User user) {
         Map<String, Object> data = new HashMap<>();
-        data.put("postgres_id", user.getId());
+        data.put("postgresId", user.getId());
         data.put("id", user.getId());
         data.put("name", user.getName());
         data.put("email", user.getEmail());
@@ -369,7 +369,7 @@ public class PostgresToFirestoreSyncService {
         Map<String, Object> data = new HashMap<>();
         
         // === REPORT (niveau racine) ===
-        data.put("postgres_id", report.getId());
+        data.put("postgresId", report.getId());
         data.put("id", report.getId());
         data.put("reportDate", toDate(report.getReportDate()));
         data.put("area", report.getArea());
@@ -414,7 +414,7 @@ public class PostgresToFirestoreSyncService {
     private Map<String, Object> mapAssignationBasic(ReportsAssignation assignation) {
         Map<String, Object> data = new HashMap<>();
         
-        data.put("postgres_id", assignation.getId());
+        data.put("postgresId", assignation.getId());
         data.put("id", assignation.getId());
         data.put("budget", assignation.getBudget());
         data.put("startDate", assignation.getStartDate() != null ? assignation.getStartDate().toString() : null);
@@ -471,7 +471,7 @@ public class PostgresToFirestoreSyncService {
     private Map<String, Object> mapProgressionWithPercentage(ReportsAssignationProgress progress, BigDecimal totalArea) {
         Map<String, Object> data = new HashMap<>();
         
-        data.put("postgres_id", progress.getId());
+        data.put("postgresId", progress.getId());
         data.put("id", progress.getId());
         data.put("treatedArea", progress.getTreatedArea());
         

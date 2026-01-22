@@ -1,6 +1,7 @@
 package mg.itu.s5.cloud.signalement.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,12 +26,15 @@ public class ReportsAssignationProgress {
 
     private LocalDateTime registrationDate;
 
+    @JsonProperty("firebaseId")
     @Column(name = "firebase_id", length = 100)
     private String firebaseId;
 
+    @JsonProperty("createdAt")
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
 
+    @JsonProperty("updatedAt")
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
 

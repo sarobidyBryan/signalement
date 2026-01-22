@@ -40,7 +40,7 @@ public class SyncController {
     public ResponseEntity<ApiResponse> syncPostgresToFirebase() {
         try {
             Map<String, Object> results = postgresToFirestoreSyncService.syncAllToFirestore();
-            return ResponseEntity.ok(ApiResponse.success("sync_results", results));
+            return ResponseEntity.ok(ApiResponse.success("syncResults", results));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Sync Postgres vers Firebase échoué: " + e.getMessage()));
         }
@@ -53,7 +53,7 @@ public class SyncController {
     public ResponseEntity<ApiResponse> syncFirebaseToPostgres() {
         try {
             Map<String, Object> results = firestoreToPostgresSyncService.syncAllFromFirestore();
-            return ResponseEntity.ok(ApiResponse.success("sync_results", results));
+            return ResponseEntity.ok(ApiResponse.success("syncResults", results));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Sync Firebase vers Postgres échoué: " + e.getMessage()));
         }
@@ -66,10 +66,10 @@ public class SyncController {
     public ResponseEntity<ApiResponse> syncBidirectional() {
         try {
             Map<String, Object> results = new HashMap<>();
-            results.put("postgres_to_firebase", postgresToFirestoreSyncService.syncAllToFirestore());
-            results.put("firebase_to_postgres", firestoreToPostgresSyncService.syncAllFromFirestore());
+            results.put("postgresToFirebase", postgresToFirestoreSyncService.syncAllToFirestore());
+            results.put("firebaseToPostgres", firestoreToPostgresSyncService.syncAllFromFirestore());
             results.put("success", true);
-            return ResponseEntity.ok(ApiResponse.success("sync_results", results));
+            return ResponseEntity.ok(ApiResponse.success("syncResults", results));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Sync bidirectionnel échoué: " + e.getMessage()));
         }

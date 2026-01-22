@@ -1,6 +1,7 @@
 package mg.itu.s5.cloud.signalement.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +12,7 @@ public class Status {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @JsonProperty("statusCode")
     @Column(name = "status_code", length = 20, unique = true)
     private String statusCode;
 

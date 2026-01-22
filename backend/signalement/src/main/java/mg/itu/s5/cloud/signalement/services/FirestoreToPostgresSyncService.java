@@ -183,8 +183,8 @@ public class FirestoreToPostgresSyncService {
     // ===================== USER HELPERS =====================
 
     private User findExistingUser(Map<String, Object> data, String firebaseDocId) {
-        // 1. Chercher par postgres_id
-        Object postgresIdObj = data.get("postgres_id");
+        // 1. Chercher par postgresId
+        Object postgresIdObj = data.get("postgresId");
         if (postgresIdObj != null) {
             int postgresId = convertToInt(postgresIdObj);
             if (postgresId > 0) {
@@ -336,8 +336,8 @@ public class FirestoreToPostgresSyncService {
     // ===================== REPORT HELPERS =====================
 
     private Report findExistingReport(Map<String, Object> data, String firebaseDocId) {
-        // 1. Chercher par postgres_id
-        Object postgresIdObj = data.get("postgres_id");
+        // 1. Chercher par postgresId
+        Object postgresIdObj = data.get("postgresId");
         if (postgresIdObj != null) {
             int postgresId = convertToInt(postgresIdObj);
             if (postgresId > 0) {
@@ -581,7 +581,7 @@ public class FirestoreToPostgresSyncService {
     private Map<String, Object> createSyncResult(String tableName, int total, int synced, int created, int updated) {
         Map<String, Object> result = new HashMap<>();
         result.put("table", tableName);
-        result.put("total_firestore_docs", total);
+        result.put("totalFirestoreDocs", total);
         result.put("synced", synced);
         result.put("created", created);
         result.put("updated", updated);

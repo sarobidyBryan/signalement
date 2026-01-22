@@ -1,6 +1,7 @@
 package mg.itu.s5.cloud.signalement.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,15 +13,19 @@ public class SynchronizationLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @JsonProperty("syncDate")
     @Column(name = "sync_date")
     private LocalDateTime syncDate;
 
+    @JsonProperty("tableName")
     @Column(name = "table_name", length = 100)
     private String tableName;
 
+    @JsonProperty("recordsSynced")
     @Column(name = "records_synced")
     private int recordsSynced;
 
+    @JsonProperty("syncType")
     @Column(name = "sync_type", length = 50)
     private String syncType; // POSTGRES_TO_FIREBASE, FIREBASE_TO_POSTGRES
 
