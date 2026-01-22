@@ -49,7 +49,10 @@ CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH R
 CREATE TABLE status(
     id SERIAL PRIMARY KEY,
     status_code VARCHAR(20) UNIQUE,
-    label VARCHAR(100)
+    label VARCHAR(100),
+    firebase_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -61,6 +64,8 @@ INSERT INTO status (status_code, label) VALUES
 ('COMPLETED', 'Terminé'),
 --('CANCELLED', 'Annulé'),
 ('VERIFIED', 'Vérifié et validé');
+
+CREATE TRIGGER update_status_updated_at BEFORE UPDATE ON status FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 CREATE TABLE roles (

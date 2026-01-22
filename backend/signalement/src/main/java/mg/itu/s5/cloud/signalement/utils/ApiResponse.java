@@ -76,6 +76,7 @@ public class ApiResponse {
         public static final String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
         public static final String UNAUTHORIZED = "UNAUTHORIZED";
         public static final String FORBIDDEN = "FORBIDDEN";
+        public static final String NOT_FOUND = "NOT_FOUND";
         public static final String CONFIGURATION_NOT_FOUND = "CONFIGURATION_NOT_FOUND";
         public static final String INVALID_REQUEST = "INVALID_REQUEST";
         public static final String INVALID_DATA = "INVALID_DATA";

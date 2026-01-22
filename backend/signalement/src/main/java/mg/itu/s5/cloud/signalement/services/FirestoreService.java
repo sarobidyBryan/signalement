@@ -3,7 +3,6 @@ package mg.itu.s5.cloud.signalement.services;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.cloud.FirestoreClient;
 import mg.itu.s5.cloud.signalement.config.FirebaseConfig;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -23,6 +23,7 @@ public class PostgresToFirestoreSyncService {
     // Collections Firestore cibles
     public static final String COLLECTION_CONFIGURATIONS = "configurations";
     public static final String COLLECTION_COMPANIES = "companies";
+    public static final String COLLECTION_STATUSES = "status";
     public static final String COLLECTION_USERS = "users";
     public static final String COLLECTION_REPORTS = "reports";
 
@@ -37,6 +38,9 @@ public class PostgresToFirestoreSyncService {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private StatusRepository statusRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -63,6 +67,7 @@ public class PostgresToFirestoreSyncService {
         try {
             results.put("configurations", syncConfigurations());
             results.put("companies", syncCompanies());
+            results.put("statuses", syncStatuses());
             results.put("users", syncUsers());
             results.put("reports", syncReports());
             results.put("success", true);
@@ -134,6 +139,36 @@ public class PostgresToFirestoreSyncService {
         
         syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
         return createSyncResult(tableName, modifiedCompanies.size(), synced);
+    }
+
+    /**
+     * Synchronise les statuts
+     */
+    @Transactional
+    public Map<String, Object> syncStatuses() {
+        String tableName = "status";
+        LocalDateTime lastSync = syncLogService.getLastSyncDateOrDefault(tableName, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
+        
+        List<Status> modifiedStatuses = statusRepository.findModifiedSince(lastSync);
+        int synced = 0;
+        
+        for (Status status : modifiedStatuses) {
+            try {
+                Map<String, Object> data = mapStatus(status);
+                String firebaseId = syncToFirestore(COLLECTION_STATUSES, status.getFirebaseId(), status.getId(), data);
+                
+                if (status.getFirebaseId() == null || !status.getFirebaseId().equals(firebaseId)) {
+                    status.setFirebaseId(firebaseId);
+                    statusRepository.save(status);
+                }
+                synced++;
+            } catch (Exception e) {
+                logger.error("Erreur sync status id={}", status.getId(), e);
+            }
+        }
+        
+        syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
+        return createSyncResult(tableName, modifiedStatuses.size(), synced);
     }
 
     /**
@@ -287,6 +322,18 @@ public class PostgresToFirestoreSyncService {
         return data;
     }
 
+    private Map<String, Object> mapStatus(Status status) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("postgresId", status.getId());
+        data.put("id", status.getId());
+        data.put("statusCode", status.getStatusCode());
+        data.put("label", status.getLabel());
+        data.put("firebaseId", status.getFirebaseId());
+        data.put("createdAt", toDate(status.getCreatedAt()));
+        data.put("updatedAt", toDate(status.getUpdatedAt()));
+        return data;
+    }
+
     private Map<String, Object> mapRole(Role role) {
         Map<String, Object> data = new HashMap<>();
         data.put("id", role.getId());
@@ -300,14 +347,6 @@ public class PostgresToFirestoreSyncService {
         data.put("id", statusType.getId());
         data.put("statusCode", statusType.getStatusCode());
         data.put("label", statusType.getLabel());
-        return data;
-    }
-
-    private Map<String, Object> mapStatus(Status status) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("id", status.getId());
-        data.put("statusCode", status.getStatusCode());
-        data.put("label", status.getLabel());
         return data;
     }
 
