@@ -71,6 +71,13 @@
   text-decoration: none;
   border-radius: var(--border-radius-md);
   transition: all var(--transition-base);
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-family: inherit;
 
   &:hover {
     background-color: var(--color-gray-100);

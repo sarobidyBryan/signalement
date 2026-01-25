@@ -22,7 +22,6 @@ services:
   backend:
     build: 
       context: ./backend/signalement
-      network: host
       cache_from:
         - maven-cache
     volumes:
@@ -49,7 +48,7 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: "http://backend:8080"
+        VITE_API_URL: "/api"
       cache_from:
         - npm-cache
     volumes:
@@ -60,7 +59,7 @@ services:
       backend:
         condition: service_healthy
     environment:
-      - VITE_API_URL=http://backend:8080
+      - VITE_API_URL=/api
 
   tileserver:
     image: maptiler/tileserver-gl

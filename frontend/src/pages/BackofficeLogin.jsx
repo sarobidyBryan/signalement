@@ -1,33 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/auth';
+import { ApiError } from '../services/api';
 import Form from '../components/Form/Form';
 import FormField from '../components/Form/FormField';
 import Button from '../components/Button/Button';
+import ErrorBanner from '../components/ErrorBanner';
 import './BackofficeLogin.css';
 
 function BackofficeLogin() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Si déjà connecté, rediriger vers le dashboard
+    if (authService.isAuthenticated()) {
+      navigate('/backoffice/dashboard');
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Effacer l'erreur lors de la modification
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(null);
 
-    // Simulate login delay
-    setTimeout(() => {
+    // Debug: log login attempt
+    console.debug('Attempting login with email:', formData.email);
+
+    try {
+      await authService.login(formData.email, formData.password);
+      // Rediriger vers le dashboard après connexion réussie
+      navigate('/backoffice/dashboard');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError({ message: err.message, errorCode: err.errorCode, status: err.status });
+      } else {
+        setError({ message: err.message || 'Email ou mot de passe incorrect' });
+      }
+    } finally {
       setLoading(false);
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
@@ -58,7 +81,7 @@ function BackofficeLogin() {
               required
             />
           </FormField>
-          {error && <div className="error-message">{error}</div>}
+          {error && <ErrorBanner error={error} />}
           <Button type="submit" variant="primary" size="large" disabled={loading}>
             {loading ? 'Connexion en cours...' : 'Se connecter'}
           </Button>

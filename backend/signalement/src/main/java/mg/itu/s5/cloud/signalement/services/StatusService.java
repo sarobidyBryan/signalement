@@ -26,17 +26,7 @@ public class StatusService {
         return statusRepository.findByStatusCode(statusCode);
     }
 
-    public Optional<Status> getStatusByFirebaseId(String firebaseId) {
-        return statusRepository.findAll().stream()
-                .filter(status -> firebaseId.equals(status.getFirebaseId()))
-                .findFirst();
-    }
-
     public Status saveStatus(Status status) {
-        if (status.getId() == 0) {
-            status.setCreatedAt(java.time.LocalDateTime.now());
-        }
-        status.setUpdatedAt(java.time.LocalDateTime.now());
         return statusRepository.save(status);
     }
 }

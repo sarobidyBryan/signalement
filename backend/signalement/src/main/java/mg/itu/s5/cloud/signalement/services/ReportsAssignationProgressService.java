@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportsAssignationProgressService {
@@ -52,6 +53,11 @@ public class ReportsAssignationProgressService {
 
     public Optional<Map<String, Object>> getByIdWithPercentage(int id) {
         return repository.findById(id).map(this::createProgressMap);
+    }
+
+    public List<Map<String, Object>> getByReportIdWithPercentage(int reportId) {
+        List<ReportsAssignationProgress> entries = repository.findByReportsAssignation_Report_Id(reportId);
+        return entries.stream().map(this::createProgressMap).collect(Collectors.toList());
     }
 
     public Map<String, Object> saveWithPercentage(ReportsAssignationProgress p) {
