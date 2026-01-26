@@ -23,9 +23,9 @@
           </ion-chip>
           <ion-chip
             v-for="sf in statuses"
-            :key="sf.status_code"
-            :outline="filter !== sf.status_code"
-            @click="filter = sf.status_code"
+            :key="sf.statusCode"
+            :outline="filter !== sf.statusCode"
+            @click="filter = sf.statusCode"
           >
             <ion-label>{{ sf.label }}</ion-label>
           </ion-chip>
@@ -128,7 +128,7 @@ type Report = {
   date: string;
   status: string;
   budget?: number | null;
-  company_name?: string | null;
+  companyName?: string | null;
 };
 
 export default defineComponent({
@@ -153,7 +153,7 @@ export default defineComponent({
     return {
       showCreationForm : false,
       filter: 'tous',
-      statuses: [] as Array<{ id?: number; status_code: string; label: string }>,
+      statuses: [] as Array<{ id?: number; statusCode: string; label: string }>,
       signalements: [] as Report[],
       reportFormRef: null,
       add,
@@ -182,7 +182,7 @@ export default defineComponent({
           const d: any = doc.data();
           return {
             id: d.id ?? doc.id,
-            status_code: d.status_code ?? d.statusCode ?? d.code,
+            statusCode: d.status_code ?? d.statusCode ?? d.code,
             label: d.label ?? ''
           };
         });
@@ -227,9 +227,9 @@ export default defineComponent({
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
             budget: d.assignation?.budget ?? null,
-            company_name: d.assignation?.company.name ?? null,
+            companyName: d.assignation?.company.name ?? null,
             adresse: (d.latitude !== undefined && d.longitude !== undefined) ? 
-              `${d.latitude.toFixed(6)}, ${d.longitude.toFixed(6)}` : '',
+              `${d.latitude}, ${d.longitude}` : '',
             date: formatDate(d.createdAt),
             status: d.status?.statusCode ?? 'SUBMITTED'
           } as Report;
@@ -290,7 +290,7 @@ export default defineComponent({
     
     statusLabel(status: string) {
       if (!status) return 'Non défini';
-      const found = this.statuses.find((s: any) => s.status_code === status);
+      const found = this.statuses.find((s: any) => s.statusCode === status);
       return found?.label ?? status;
     },
     

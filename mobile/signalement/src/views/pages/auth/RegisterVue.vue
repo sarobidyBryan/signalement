@@ -97,19 +97,14 @@ export default defineComponent({
         await setDoc(doc(db,"users",userCredential.user.uid),{
             name: this.name,
             email: this.email,
-            created_at: new Date(),
+            createdAt: new Date(),
             status: "ACTIVE"
         });
 
-        // Créer le document password_attempts initialisé à 0
-        try {
           await setDoc(doc(db, 'password_attempts', userCredential.user.uid), {
-            nb_attempt: 0,
-            user_id: userCredential.user.uid
+            nbAttempt: 0,
+            userId: userCredential.user.uid
           });
-        } catch (err) {
-          console.warn('Impossible de créer password_attempts:', err);
-        }
 
         // Redirection vers la page d'accueil
         this.router.push('/map');

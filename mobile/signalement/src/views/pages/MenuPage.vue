@@ -243,7 +243,7 @@ export default defineComponent({
                 const myEndedReportsQuery = query(
                     collection(db, 'reports'),
                     where("user.firebaseUid", "==", uid),
-                    where("status.status_code", "==", "COMPLETED")
+                    where("status.statusCode", "==", "COMPLETED")
                 );
 
                 const reports = await getDocs(myReportsQuery);

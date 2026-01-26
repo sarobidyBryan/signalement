@@ -209,7 +209,7 @@ export default defineComponent({
 
     const currentUserId = ref<string | null>(auth.currentUser ? auth.currentUser.uid : null);
 
-    const statuses = ref<Array<{ id?: number; status_code: string; label: string }>>([]);
+    const statuses = ref<Array<{ id?: number; statusCode: string; label: string }>>([]);
 
     const signalementsFiltres = ref([...signalements.value]);
 
@@ -222,7 +222,7 @@ export default defineComponent({
 
     const statusLabel = (status: string) => {
       if (!status) return '';
-      const found = statuses.value.find(s => s.status_code === status);
+      const found = statuses.value.find(s => s.statusCode === status);
       if (found && found.label) return found.label;
       // fallback
       switch (status) {
@@ -245,7 +245,7 @@ export default defineComponent({
           const d: any = doc.data();
           return {
             id: d.id ?? doc.id,
-            status_code: d.status_code ?? d.statusCode ?? d.code,
+            statusCode: d.status_code ?? d.statusCode ?? d.code,
             label: d.label ?? ''
           };
         });
@@ -267,7 +267,7 @@ export default defineComponent({
         if (!resolved && !filtres.value.enCours) return false;
         // Filtrer par utilisateur connecté si demandé
         if (filtres.value.onlyMine) {
-          const owner = signalement.raw && (signalement.raw.user_id ?? signalement.raw.userId ?? signalement.raw.user?.uid ?? null);
+          const owner = signalement.raw && (signalement.raw.userId ?? signalement.raw.userId ?? signalement.raw.user?.uid ?? null);
           if (!currentUserId.value || owner !== currentUserId.value) return false;
         }
         return true;
@@ -351,7 +351,7 @@ export default defineComponent({
           });
 
           // Préparer affichage company / budget / surface
-          const company = signalement.company_name ?? (signalement.raw && (signalement.raw.company_name ?? signalement.raw.companyName)) ?? '—';
+          const company = signalement.companyName ?? (signalement.raw && (signalement.raw.companyName ?? signalement.raw.companyName)) ?? '—';
           let budgetDisplay = '—';
           if (signalement.budget != null) {
             try {
@@ -452,11 +452,11 @@ export default defineComponent({
             id: d.id ?? doc.id,
             titre: d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`,
             description: d.description ?? '',
-            status: d.status.statusCode ?? 'SUBMITTED',
+            status: d.status?.statusCode ?? 'SUBMITTED',
             position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
             date: formatDate(d.createdAt),
-            budget: d.assignation.budget ?? null,
-            company_name: d.assignation.company.name ?? null,
+            budget: d.assignation?.budget ?? null,
+            companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
             raw: d
           };

@@ -72,9 +72,9 @@ export default defineComponent({
               const attemptsRef = doc(db, 'password_attempts', uid);
               const attemptsSnap = await getDoc(attemptsRef);
               if (attemptsSnap.exists()) {
-                await updateDoc(attemptsRef, { nb_attempt: 0 });
+                await updateDoc(attemptsRef, { nbAttempt: 0 });
               } else {
-                await setDoc(attemptsRef, { nb_attempt: 0, user_id: uid });
+                await setDoc(attemptsRef, { nbAttempt: 0, userId: uid });
               }
             } catch (e) {
               console.warn('Impossible de réinitialiser password_attempts:', e);
@@ -119,7 +119,7 @@ export default defineComponent({
                 // Charger la configuration max_password_attempts
                 let maxAttempts = 3; // fallback
                 try {
-                  const confQ = query(collection(db, 'configurations'), where('key', '==', 'max_password_attempts'));
+                  const confQ = query(collection(db, 'configurations'), where('key', '==', 'maxPasswordAttempts'));
                   const confSnap = await getDocs(confQ);
                   if (!confSnap.empty) {
                     const conf = confSnap.docs[0].data();
@@ -132,7 +132,7 @@ export default defineComponent({
                   console.warn('Impossible de charger la configuration:', confErr);
                 }
 
-                const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nb_attempt || 0) : 0;
+                const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nbAttempt || 0) : 0;
 
                 // N'incrémenter que si on n'a pas encore atteint la limite
                 if (currentAttempts >= maxAttempts) {
@@ -150,7 +150,7 @@ export default defineComponent({
                 } else {
                   // Incrémenter
                   if (attemptsSnap.exists()) {
-                    await updateDoc(attemptsRef, { nb_attempt: increment(1) });
+                    await updateDoc(attemptsRef, { nbAttempt: increment(1) });
                     // augmenter la valeur locale
                     const newAttempts = currentAttempts + 1;
                     if (newAttempts < maxAttempts) {
@@ -169,7 +169,7 @@ export default defineComponent({
                       }
                     }
                   } else {
-                    await setDoc(attemptsRef, { nb_attempt: 1, user_id: userId });
+                    await setDoc(attemptsRef, { nbAttempt: 1, userId: userId });
                     if (1 < maxAttempts) {
                       alert('Les informations que vous avez entrées sont incorrectes. Il vous reste ' + (maxAttempts - 1) + ' tentative(s).');
                     } else {
