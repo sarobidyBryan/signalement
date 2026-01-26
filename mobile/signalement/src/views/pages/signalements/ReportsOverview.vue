@@ -267,7 +267,7 @@ export default defineComponent({
         if (!resolved && !filtres.value.enCours) return false;
         // Filtrer par utilisateur connecté si demandé
         if (filtres.value.onlyMine) {
-          const owner = signalement.raw && (signalement.raw.userId ?? signalement.raw.userId ?? signalement.raw.user?.uid ?? null);
+          const owner = signalement.raw && (signalement.raw.user?.firebaseUid ?? null);
           if (!currentUserId.value || owner !== currentUserId.value) return false;
         }
         return true;
