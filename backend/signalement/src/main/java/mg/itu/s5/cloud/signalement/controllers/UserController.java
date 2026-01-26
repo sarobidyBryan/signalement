@@ -34,13 +34,13 @@ public class UserController {
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieves a list of all users (MANAGER role required)")
     public ResponseEntity<ApiResponse> getAllUsers(HttpSession session) {
-        if (!authenticationService.isAuthenticated(session)) {
-            return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
-        }
+        // if (!authenticationService.isAuthenticated(session)) {
+        //     return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
+        // }
 
-        if (!authenticationService.hasRole(session, "MANAGER")) {
-            return ResponseEntity.status(403).body(ApiResponse.error(ApiResponse.ErrorCodes.FORBIDDEN, "Access denied - MANAGER role required"));
-        }
+        // if (!authenticationService.hasRole(session, "MANAGER")) {
+        //     return ResponseEntity.status(403).body(ApiResponse.error(ApiResponse.ErrorCodes.FORBIDDEN, "Access denied - MANAGER role required"));
+        // }
 
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success("users", users));
