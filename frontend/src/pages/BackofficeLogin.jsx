@@ -67,7 +67,7 @@ function BackofficeLogin() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="gestionnaire@example.com"
+              placeholder="manager@example.com"
               required
             />
           </FormField>

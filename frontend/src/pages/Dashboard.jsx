@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
 import { dashboardService } from '../services';
-import Sidebar from '../components/Sidebar/Sidebar';
 import Card from '../components/Card/Card';
 import ErrorBanner from '../components/ErrorBanner';
 import './Dashboard.css';
 
 function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // error can be ApiError or object with message
@@ -41,36 +39,6 @@ function Dashboard() {
       setLoading(false);
     }
   };
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      navigate('/backoffice');
-    } catch (err) {
-      console.error('Logout error:', err);
-      // Rediriger quand même en cas d'erreur
-      navigate('/backoffice');
-    }
-  };
-
-  const sidebarItems = [
-    {
-      title: 'Navigation',
-      links: [
-        { label: 'Tableau de bord', href: '/backoffice/dashboard', active: true },
-        { label: 'Signalements', href: '/backoffice/reports' },
-        { label: 'Entreprises', href: '/backoffice/companies' },
-        { label: 'Utilisateurs', href: '/backoffice/users' },
-      ],
-    },
-    {
-      title: 'Administration',
-      links: [
-        { label: 'Configurations', href: '/backoffice/configurations' },
-        { label: 'Déconnexion', onClick: handleLogout },
-      ],
-    },
-  ];
 
   // Fonction pour formater les nombres avec des séparateurs
   const formatNumber = (num) => {
@@ -117,54 +85,44 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-content">
-        <Sidebar isOpen={sidebarOpen} items={sidebarItems} onToggle={setSidebarOpen} />
-        <main className={`dashboard-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          <div className="main-header">
-            <button className="hamburger-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-            <div className="header-title">
-              <h1>Tableau de bord</h1>
-              {user && <p className="welcome-text">Bienvenue, {user.name}</p>}
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="loading-container">
-              <div className="spinner"></div>
-              <p>Chargement des données...</p>
-            </div>
-          ) : error ? (
-            <div className="error-container">
-              <ErrorBanner error={error} />
-              <button onClick={loadDashboardData} className="retry-btn">Réessayer</button>
-            </div>
-          ) : (
-            <>
-              <div className="stats-grid">
-                {statsConfig.map((stat, index) => (
-                  <Card key={index} className="stat-card">
-                    <div className="stat-content">
-                      <div className="stat-icon">{stat.icon}</div>
-                      <div className="stat-info">
-                        <div className="stat-value">{stat.value}</div>
-                        <div className="stat-title">{stat.title}</div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <div className="global-view-container">
-                <h2>Vue globale</h2>
-                <p className="info-text">Système de gestion des signalements - Tableau de bord administrateur</p>
-              </div>
-            </>
-          )}
-        </main>
+      <div className="main-header">
+        <div className="header-title">
+          <h1>Tableau de bord</h1>
+          {user && <p className="welcome-text">Bienvenue, {user.name}</p>}
+        </div>
       </div>
+
+      {loading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Chargement des données...</p>
+        </div>
+      ) : error ? (
+        <div className="error-container">
+          <ErrorBanner error={error} />
+          <button onClick={loadDashboardData} className="retry-btn">Réessayer</button>
+        </div>
+      ) : (
+        <>
+          <div className="stats-grid">
+            {statsConfig.map((stat, index) => (
+              <Card key={index} className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-icon">{stat.icon}</div>
+                  <div className="stat-info">
+                    <div className="stat-value">{stat.value}</div>
+                    <div className="stat-title">{stat.title}</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="global-view-container">
+            <h2>Vue globale</h2>
+            <p className="info-text">Système de gestion des signalements - Tableau de bord administrateur</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

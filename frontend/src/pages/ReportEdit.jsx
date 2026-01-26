@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar/Sidebar';
 import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
@@ -12,7 +11,6 @@ import './ReportEdit.css';
 const ReportEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -30,18 +28,6 @@ const ReportEdit = () => {
   const [hasExistingAssignation, setHasExistingAssignation] = useState(false);
 
   const currentUser = authService.getStoredUser();
-
-  const sidebarItems = [
-    {
-      title: 'Navigation',
-      links: [
-        { label: 'Tableau de bord', href: '/backoffice/dashboard' },
-        { label: 'Signalements', href: '/backoffice/reports' },
-        { label: 'Entreprises', href: '/backoffice/companies' },
-        { label: 'Utilisateurs', href: '/backoffice/users' },
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadData();
@@ -161,12 +147,7 @@ const ReportEdit = () => {
   if (loading) {
     return (
       <div className="report-edit-page">
-        <div className="report-edit-content">
-          <Sidebar isOpen={sidebarOpen} items={sidebarItems} onToggle={setSidebarOpen} />
-          <main className={`report-edit-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            <div className="loading-state">Chargement du signalement...</div>
-          </main>
-        </div>
+        <div className="loading-state">Chargement du signalement...</div>
       </div>
     );
   }
@@ -174,14 +155,9 @@ const ReportEdit = () => {
   if (!report) {
     return (
       <div className="report-edit-page">
-        <div className="report-edit-content">
-          <Sidebar isOpen={sidebarOpen} items={sidebarItems} onToggle={setSidebarOpen} />
-          <main className={`report-edit-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            <div className="error-state">
-              <ErrorBanner error="Signalement introuvable" />
-              <Button onClick={() => navigate('/backoffice/reports')}>Retour aux signalements</Button>
-            </div>
-          </main>
+        <div className="error-state">
+          <ErrorBanner error="Signalement introuvable" />
+          <Button onClick={() => navigate('/backoffice/reports')}>Retour aux signalements</Button>
         </div>
       </div>
     );
@@ -189,25 +165,14 @@ const ReportEdit = () => {
 
   return (
     <div className="report-edit-page">
-      <div className="report-edit-content">
-        <Sidebar isOpen={sidebarOpen} items={sidebarItems} onToggle={setSidebarOpen} />
-        <main className={`report-edit-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          <header className="report-edit-header">
-            <button
-              className="report-edit-hamburger"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-            <div>
-              <h1>Modifier le signalement #{report.id}</h1>
-              {currentUser && <p className="report-edit-welcome">{currentUser.name ?? currentUser.email}</p>}
-            </div>
-          </header>
+      <header className="report-edit-header">
+        <div>
+          <h1>Modifier le signalement #{report.id}</h1>
+          {currentUser && <p className="report-edit-welcome">{currentUser.name ?? currentUser.email}</p>}
+        </div>
+      </header>
 
-          <div className="report-edit-grid">
+      <div className="report-edit-grid">
             <Card className="report-form-card">
               <div className="card-header">
                 <h2>Informations du signalement</h2>
@@ -387,8 +352,6 @@ const ReportEdit = () => {
               )}
             </Card>
           </div>
-        </main>
-      </div>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar/Sidebar';
 import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
@@ -19,7 +18,6 @@ const emptyFilters = {
 };
 
 function Reports() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [filters, setFilters] = useState(emptyFilters);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -85,34 +83,6 @@ function Reports() {
       setShowAssignationForm(false);
     }
   }, [detail]);
-
-  const sidebarItems = [
-    {
-      title: 'Navigation',
-      links: [
-        { label: 'Tableau de bord', href: '/backoffice/dashboard', active: location.pathname.startsWith('/backoffice/dashboard') },
-        { label: 'Signalements', href: '/backoffice/reports', active: location.pathname.startsWith('/backoffice/reports') },
-        { label: 'Entreprises', href: '/backoffice/companies' },
-        { label: 'Utilisateurs', href: '/backoffice/users' },
-      ],
-    },
-    {
-      title: 'Administration',
-      links: [
-        { label: 'Configurations', href: '/backoffice/configurations' },
-        {
-          label: 'Déconnexion',
-          onClick: async () => {
-            try {
-              await authService.logout();
-            } finally {
-              navigate('/backoffice');
-            }
-          },
-        },
-      ],
-    },
-  ];
 
   const handleError = (err, setter) => {
     if (!setter) return;
@@ -234,22 +204,14 @@ function Reports() {
 
   return (
     <div className="reports-page">
-      <div className="reports-content">
-        <Sidebar isOpen={sidebarOpen} items={sidebarItems} onToggle={setSidebarOpen} />
-        <main className={`reports-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          <header className="reports-main-header">
-            <button className="reports-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-            <div>
-              <h1>Signalements</h1>
-              {currentUser && <p className="reports-welcome">{currentUser.name ?? currentUser.email}</p>}
-            </div>
-          </header>
+      <header className="reports-main-header">
+        <div>
+          <h1>Signalements</h1>
+          {currentUser && <p className="reports-welcome">{currentUser.name ?? currentUser.email}</p>}
+        </div>
+      </header>
 
-          <section className="reports-grid">
+      <section className="reports-grid">
             <Card className="filters-panel">
               <div className="panel-header">
                 <p>Filtrer</p>
@@ -388,7 +350,6 @@ function Reports() {
               )}
             </Card>
           </section>
-        </main>
         <section className={`detail-panel ${detail ? 'detail-open' : ''}`}>
           <div className="detail-panel-inner">
             <div className="detail-panel-header">
@@ -615,7 +576,6 @@ function Reports() {
             )}
           </div>
         </section>
-      </div>
     </div>
   );
 }
