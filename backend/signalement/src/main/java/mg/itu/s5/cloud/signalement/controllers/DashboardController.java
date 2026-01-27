@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Dashboard", description = "API for dashboard statistics and overview")
 public class DashboardController {
 

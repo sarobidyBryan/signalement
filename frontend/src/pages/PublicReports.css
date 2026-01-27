@@ -1,4 +1,4 @@
-/* ========== Summary Page Layout (Copied for Landing) ========== */
+/* ========== Summary Page Layout (Copied for PublicReports) ========== */
 .summary {
   max-width: 1600px;
   margin: 0 auto;
@@ -115,26 +115,18 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.landing-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  height: 100%;
-  text-align: center;
-  padding: 40px;
+.map-section .map-container {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 16px;
+  /* Space at bottom inside container */
 }
 
-.landing-cta h2 {
-  font-size: 2rem;
-  color: var(--color-secondary);
-}
-
-.landing-cta p {
-  font-size: 1.2rem;
-  color: var(--color-gray-600);
-  max-width: 600px;
+.map-section.fullwidth {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* display: flex; */
 }
 
 /* Responsive design */
@@ -162,4 +154,66 @@
   .map-section {
     min-height: 250px;
   }
+}
+
+/* Detail panel inline container */
+.detail-inline {
+  width: 0;
+  height: 100%;
+  /* Match parent container height */
+  overflow: hidden;
+  transition: width 0.3s ease-in-out;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.detail-inline.open {
+  width: 450px;
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 1024px) {
+  .summary-content {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .map-section {
+    height: 600px;
+  }
+
+  .detail-inline.open {
+    width: 100%;
+    height: auto;
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .summary-content {
+    gap: 16px;
+  }
+
+  .map-section {
+    height: 500px;
+    padding: 12px;
+  }
+
+  .detail-inline.open {
+    width: 100%;
+  }
+}
+
+/* Landing specific Styles (if any needed for shared file, but separating is better) */
+.landing-cta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 30px;
 }

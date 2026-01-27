@@ -1,32 +1,36 @@
-import './Summary.css';
+import './PublicReports.css';
 import { useEffect, useState, useCallback } from 'react';
 import Map from '../components/Map';
-import { reportService, companyService } from '../services';
+import { reportService } from '../services';
 import { getGlobal } from '../services/summaryService';
-import Header from '../components/Header/Header';
 import ReportDetailPanel from '../components/ReportDetailPanel/ReportDetailPanel';
 
-export default function PublicReports() {
+function PublicReports() {
   const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState(null);
-  const [companies, setCompanies] = useState([]);
+  const [error, setError] = useState(null);
+  // No companies loading for public view
 
   const loadReports = useCallback(async () => {
+    setLoading(true);
     try {
       const list = await reportService.getAll();
       setReports(list || []);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load reports', err);
       setReports([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const loadStats = useCallback(async () => {
     try {
       const result = await getGlobal();
+      // result has { summary: { nbPoints, totalSurface, totalBudget, totalTreated, overallProgressPercent }, reports: [...] }
       const summary = result?.summary || {};
       setStats({
         totalReports: summary.nbPoints || 0,
@@ -35,11 +39,12 @@ export default function PublicReports() {
         totalBudget: summary.totalBudget || 0,
         progressPercentage: summary.overallProgressPercent || 0
       });
+      // also update reports from summary if available
       if (result?.reports && result.reports.length > 0) {
         setReports(result.reports);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load stats', err);
       setStats(null);
     }
   }, []);
@@ -47,7 +52,6 @@ export default function PublicReports() {
   useEffect(() => {
     loadReports();
     loadStats();
-    companyService.getAll().then(setCompanies).catch(() => setCompanies([]));
   }, [loadReports, loadStats]);
 
   const openDetail = async (reportId) => {
@@ -56,13 +60,13 @@ export default function PublicReports() {
       return;
     }
     setDetailLoading(true);
-    setDetailError(null);
+    setError(null);
     try {
       const detail = await reportService.getDetail(reportId);
       setSelectedDetail(detail || null);
     } catch (err) {
-      console.error(err);
-      setDetailError({ message: 'Impossible de charger les détails' });
+      console.error('Detail load error', err);
+      setError({ message: 'Impossible de charger les détails' });
       setSelectedDetail(null);
     } finally {
       setDetailLoading(false);
@@ -75,8 +79,11 @@ export default function PublicReports() {
   };
 
   return (
-    <div className="public-reports-page">
-      <Header navItems={[{ href: '/', label: 'Accueil' }, { href: '/reports', label: 'Signalements' }]} />
+    <div className="summary">
+      <div className="summary-header">
+        <h1>Suivi Public Signaleo</h1>
+        <p>Vue d'ensemble des travaux et signalements à Antananarivo</p>
+      </div>
 
       {/* Top metrics cards */}
       <div className="summary-metrics">
@@ -92,8 +99,9 @@ export default function PublicReports() {
           <div className="metric-card-label">Surface traitée</div>
           <div className="metric-card-value">{formatNumber(stats?.totalTreated)} m²</div>
         </div>
+        {/* Only show budget if public? User requested exactly same code/style. Summary has budget. I'll include it. */}
         <div className="metric-card">
-          <div className="metric-card-label">Budget total</div>
+          <div className="metric-card-label">Budget alloué</div>
           <div className="metric-card-value">{formatNumber(stats?.totalBudget)} Ar</div>
         </div>
         <div className="metric-card highlight">
@@ -106,20 +114,24 @@ export default function PublicReports() {
       </div>
 
       <div className="summary-content">
-        <div className="map-section fullwidth">
+        <div className="map-section">
           <Map reports={reports} onReportClick={openDetail} />
         </div>
-      </div>
 
-      <ReportDetailPanel
-        detail={selectedDetail}
-        detailLoading={detailLoading}
-        detailError={detailError}
-        onClose={() => setSelectedDetail(null)}
-        onRefresh={openDetail}
-        companies={companies}
-        isOpen={!!selectedDetail}
-      />
+        <div className={`detail-inline ${selectedDetail ? 'open' : ''}`}>
+          <ReportDetailPanel
+            detail={selectedDetail}
+            detailLoading={detailLoading}
+            detailError={error}
+            onClose={() => setSelectedDetail(null)}
+            onRefresh={openDetail}
+            companies={[]} /* Empty companies list disables admin actions */
+            isOpen={!!selectedDetail}
+          />
+        </div>
+      </div>
     </div>
   );
 }
+
+export default PublicReports;

@@ -19,22 +19,22 @@
 }
 
 .badge-success {
-  background-color: #10b981;
+  background-color: var(--color-gray-700);
   color: var(--color-primary);
 }
 
 .badge-danger {
-  background-color: #ef4444;
+  background-color: var(--color-gray-900);
   color: var(--color-primary);
 }
 
 .badge-warning {
-  background-color: #f59e0b;
+  background-color: var(--color-gray-300);
   color: var(--color-secondary);
 }
 
 .badge-info {
-  background-color: #3b82f6;
+  background-color: var(--color-gray-500);
   color: var(--color-primary);
 }
 

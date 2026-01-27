@@ -100,8 +100,8 @@
 }
 
 .error-message {
-  color: #dc2626;
-  font-size: var(--font-size-lg);
+  color: #444444;
+  font-weight: 600;
   margin: 0;
 }
 

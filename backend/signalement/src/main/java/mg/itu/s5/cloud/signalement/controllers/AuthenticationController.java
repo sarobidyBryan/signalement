@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Authentication", description = "API for user authentication")
 public class AuthenticationController {
 

@@ -26,7 +26,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Reports Management", description = "API for managing road reports")
 public class ReportController {
 

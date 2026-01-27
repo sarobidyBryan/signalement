@@ -13,8 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reports/assignations")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/reports/assignation")
 @Tag(name = "Reports Assignation Management", description = "API for managing report assignments to companies")
 public class ReportsAssignationController {
 

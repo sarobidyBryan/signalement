@@ -27,7 +27,7 @@ export default function Users() {
     setLoading(true);
     setError('');
     try {
-      const url = `${API_BASE}/api/users`;
+      const url = `${API_BASE}/users`;
       const res = await fetch(url, { credentials: 'include' });
       const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {

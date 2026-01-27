@@ -13,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports/summary")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Reports Summary", description = "API for getting summary statistics of reports by status")
 public class ReportsSummaryController {
 

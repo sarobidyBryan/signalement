@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/companies")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Company Management", description = "API for managing companies")
 public class CompanyController {
 

@@ -8,6 +8,7 @@ import Summary from './pages/Summary';
 import Synchronization from './pages/Synchronization';
 import BackofficeLayout from './components/BackofficeLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicLayout from './components/PublicLayout';
 import Landing from './pages/Landing';
 import PublicReports from './pages/PublicReports';
 import './App.css'
@@ -15,9 +16,11 @@ import './App.css'
 function App() {
   return (
     <Routes>
-      <Route path="/backoffice/users" element={<Users/>} />
-      <Route path="/" element={<Landing />} />
-      <Route path="/reports" element={<PublicReports />} />
+      <Route path="/backoffice/users" element={<Users />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/reports" element={<PublicReports />} />
+      </Route>
       {/* backoffice */}
       <Route path="/backoffice" element={<BackofficeLogin />} />
       <Route

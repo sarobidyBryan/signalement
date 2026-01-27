@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports/status")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Reports Status Management", description = "API for managing report status history")
 public class ReportsStatusController {
 

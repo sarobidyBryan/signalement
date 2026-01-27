@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports/assignation-progress")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Reports Assignation Progress Management", description = "API for managing progress on report assignments")
 public class ReportsAssignationProgressController {
 

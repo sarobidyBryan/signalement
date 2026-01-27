@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sync")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Synchronization", description = "API for PostgreSQL <-> Firestore bidirectional synchronization")
 public class SyncController {
 

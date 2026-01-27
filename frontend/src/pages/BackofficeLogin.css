@@ -68,7 +68,8 @@
 }
 
 .error-message {
-  color: var(--color-error);
+  color: #444444;
+  font-weight: 600;
   font-size: var(--font-size-sm);
   text-align: center;
   margin-top: var(--spacing-sm);

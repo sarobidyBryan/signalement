@@ -18,6 +18,18 @@
   right: 0;
 }
 
+/* Inline usage: when panel is placed beside the map */
+.detail-inline .report-detail-panel {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  box-shadow: none;
+  transition: none;
+}
+
 .detail-panel-inner {
   padding: 24px;
 }
@@ -115,7 +127,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  background: var(--color-secondary);
   transition: width 0.3s ease;
 }
 
@@ -132,7 +144,7 @@
   gap: 16px;
 }
 
-.detail-grid > div {
+.detail-grid>div {
   padding: 12px;
   background: #fafafa;
   border-radius: 6px;
@@ -178,8 +190,8 @@
 
 .assignation-card {
   padding: 12px;
-  background: #f0f7ff;
-  border-left: 3px solid #2196F3;
+  background: var(--color-gray-100);
+  border-left: 3px solid var(--color-secondary);
 }
 
 .assignation-card h4 {

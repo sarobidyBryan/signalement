@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/configurations")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/configuration")
 @Tag(name = "Configuration Management", description = "API for managing application configurations")
 public class ConfigurationController {
 

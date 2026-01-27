@@ -7,7 +7,7 @@
 }
 
 .sync-button {
-  background: var(--primary-color, #1f73ff);
+  background: var(--color-secondary, #000000);
   color: white;
   border: none;
   padding: 10px 16px;
@@ -22,13 +22,15 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: #fff;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sync-message {
@@ -44,7 +46,8 @@
   border-collapse: collapse;
 }
 
-.sync-table th, .sync-table td {
+.sync-table th,
+.sync-table td {
   padding: 8px 10px;
   border-bottom: 1px solid #eee;
   text-align: left;

@@ -124,17 +124,19 @@ function Summary() {
         <div className="map-section">
           <Map reports={reports} onReportClick={openDetail} />
         </div>
-      </div>
 
-      <ReportDetailPanel
-        detail={selectedDetail}
-        detailLoading={detailLoading}
-        detailError={error}
-        onClose={() => setSelectedDetail(null)}
-        onRefresh={openDetail}
-        companies={companies}
-        isOpen={!!selectedDetail}
-      />
+        <div className={`detail-inline ${selectedDetail ? 'open' : ''}`}>
+          <ReportDetailPanel
+            detail={selectedDetail}
+            detailLoading={detailLoading}
+            detailError={error}
+            onClose={() => setSelectedDetail(null)}
+            onRefresh={openDetail}
+            companies={companies}
+            isOpen={!!selectedDetail}
+          />
+        </div>
+      </div>
     </div>
   );
 }
