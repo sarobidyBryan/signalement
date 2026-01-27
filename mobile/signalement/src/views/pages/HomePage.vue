@@ -52,7 +52,7 @@
                 
                 <p class="text-xl text-gray-600 leading-relaxed">
                   Signalez en temps réel les problèmes routiers, 
-                  contribuez à l'amélioration de votre ville et 
+                  contribuez à l'amélioration d'Antananarivo et 
                   faites partie du changement.
                 </p>
                 
@@ -166,7 +166,7 @@
                 Comment ça marche ?
               </h2>
               <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                Une plateforme simple et efficace pour signaler les problèmes routiers
+                Une plateforme simple et efficace pour signaler les problèmes routiers dans la ville d'Antananarivo
               </p>
             </div>
             
@@ -178,10 +178,10 @@
                 </div>
                 <h3 class="text-2xl font-bold text-gray-900 mb-4">Signalez</h3>
                 <p class="text-gray-600 mb-6">
-                  Prenez une photo et décrivez le problème routier que vous avez rencontré.
+                  Identifiez et décrivez le problème routier que vous avez rencontré.
                 </p>
                 <div class="bg-gray-100 rounded-xl p-4 inline-block">
-                  <ion-icon :icon="camera" class="text-3xl text-gray-700"></ion-icon>
+                  <ion-icon :icon="eye" class="text-3xl text-gray-700"></ion-icon>
                 </div>
               </div>
               
@@ -311,7 +311,8 @@ import {
   time, 
   camera, 
   location, 
-  notifications 
+  notifications, 
+  eye
 } from 'ionicons/icons';
 
 export default defineComponent({
@@ -335,7 +336,8 @@ export default defineComponent({
       time,
       camera,
       location,
-      notifications
+      notifications,
+      eye
     };
   },
   
