@@ -216,18 +216,17 @@ export default defineComponent({
 
     const getStatus = async (statusCode: string) => {
       try {
-        const statusQuery = query(
-          collection(db, 'status'),
-          where('status_code', '==', statusCode)
-        );
-        const querySnapshot = await getDocs(statusQuery);
+        // Essayer le nouveau champ `statusCode` puis tomber en backfill sur `status_code`
+        let querySnapshot = await getDocs(query(collection(db, 'status'), where('statusCode', '==', statusCode)));
+        if (querySnapshot.empty) {
+          querySnapshot = await getDocs(query(collection(db, 'status'), where('status_code', '==', statusCode)));
+        }
         if (!querySnapshot.empty) {
           const doc = querySnapshot.docs[0];
           return { id: doc.id, ...doc.data() };
-        } else {
-          console.warn(`Aucun statut trouvé pour le code: ${statusCode}`);
-          return null;
         }
+        console.warn(`Aucun statut trouvé pour le code: ${statusCode}`);
+        return null;
       } catch (error) {
         console.error('Erreur lors de la récupération du statut:', error);
         return null;

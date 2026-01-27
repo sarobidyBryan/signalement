@@ -221,15 +221,18 @@ export default defineComponent({
             (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : 
             `Signalement ${d.id ?? doc.id}`;
           
+          // Coords peuvent être des chaînes, ne sont ici qu'affichées sous forme de texte
+          const latTxt = d.latitude !== undefined ? String(d.latitude) : '';
+          const lngTxt = d.longitude !== undefined ? String(d.longitude) : '';
+
           return {
             id: d.id ?? doc.id,
             titre,
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
             budget: d.assignation?.budget ?? null,
-            companyName: d.assignation?.company.name ?? null,
-            adresse: (d.latitude !== undefined && d.longitude !== undefined) ? 
-              `${d.latitude}, ${d.longitude}` : '',
+            companyName: d.assignation?.company?.name ?? null,
+            adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
             date: formatDate(d.createdAt),
             status: d.status?.statusCode ?? 'SUBMITTED'
           } as Report;

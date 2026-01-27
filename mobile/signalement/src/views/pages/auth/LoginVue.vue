@@ -81,10 +81,35 @@ export default defineComponent({
             } catch (e) {
               console.warn('Impossible de réinitialiser password_attempts:', e);
             }
-            
-            localStorage.setItem('uid',uid);
-            localStorage.setItem('user',JSON.stringify(userData));
-            this.$router.push('/map');
+
+              // Charger la configuration `session_duration` (en secondes)
+              let sessionDurationSec = 1800; // fallback 30min
+              try {
+                const confQ = query(collection(db, 'configurations'), where('key', '==', 'session_duration'));
+                const confSnap = await getDocs(confQ);
+                if (!confSnap.empty) {
+                  const conf = confSnap.docs[0].data();
+                  if (conf && conf.value) {
+                    const parsed = parseInt(conf.value, 10);
+                    if (!isNaN(parsed)) sessionDurationSec = parsed;
+                  }
+                }
+
+                console.log('session_duration chargée:', sessionDurationSec);
+              } catch (confErr) {
+                console.warn('Impossible de charger session_duration:', confErr);
+              }
+
+              // Calculer l'expiration et stocker en localStorage
+              const expiry = Date.now() + sessionDurationSec * 1000;
+              localStorage.setItem('uid', uid);
+              localStorage.setItem('user', JSON.stringify(userData));
+              localStorage.setItem('sessionExpiry', String(expiry));
+              localStorage.setItem('sessionDuration', String(sessionDurationSec));
+
+              console.log('[LoginVue] Session créée, expiration:', new Date(expiry).toLocaleString());
+
+              this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
             alert("Votre compte est suspendu. Contactez l'administrateur.");
@@ -142,9 +167,9 @@ export default defineComponent({
                   try {
                     const userRef = doc(db, 'users', userId);
                     const userSnap2 = await getDoc(userRef);
-                    const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                    const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                     if (currentStatus !== 'SUSPENDED') {
-                      await updateDoc(userRef, { status: 'SUSPENDED' });
+                      await updateDoc(userRef, { 'userStatusType.statusCode': 'SUSPENDED' });
                     }
                   } catch (sErr) {
                     console.error('Impossible de suspendre l\'utilisateur:', sErr);
@@ -162,9 +187,9 @@ export default defineComponent({
                       try {
                         const userRef = doc(db, 'users', userId);
                         const userSnap2 = await getDoc(userRef);
-                        const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                        const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                         if (currentStatus !== 'SUSPENDED') {
-                          await updateDoc(userRef, { status: 'SUSPENDED' });
+                          await updateDoc(userRef, { 'userStatusType.statusCode': 'SUSPENDED' });
                         }
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
@@ -176,8 +201,8 @@ export default defineComponent({
                       alert('Les informations que vous avez entrées sont incorrectes. Il vous reste ' + (maxAttempts - 1) + ' tentative(s).');
                     } else {
                       alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
-                      try {
-                        await updateDoc(doc(db, 'users', userId), { status: 'SUSPENDED' });
+                        try {
+                        await updateDoc(doc(db, 'users', userId), { 'userStatusType.statusCode': 'SUSPENDED' });
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
                       }
@@ -201,6 +226,28 @@ export default defineComponent({
       finally{
         this.isLoading = false;
       }
+    }
+  },
+  watch: {
+    '$route.query.reason'(newVal) {
+      try {
+        if (newVal === 'session_expired') {
+          alert('La session a expiré');
+        }
+      } catch (e) {
+        // no-op
+      }
+    }
+  },
+  mounted() {
+    try {
+      const reason = (this as any).$route?.query?.reason as string | undefined;
+      if (reason === 'session_expired') {
+        // Afficher une alerte native à la place du message inline
+        alert('La session a expiré');
+      }
+    } catch (e) {
+      // no-op
     }
   }
 });

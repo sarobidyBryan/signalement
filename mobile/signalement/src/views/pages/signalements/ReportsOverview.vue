@@ -448,12 +448,19 @@ export default defineComponent({
         const snap = await getDocs(q);
         const items = snap.docs.map(doc => {
           const d: any = doc.data();
+          // Convertir les coordonnées en nombres si elles sont des chaînes
+          let lat: any = d.latitude;
+          let lng: any = d.longitude;
+          if (typeof lat === 'string') lat = parseFloat(lat);
+          if (typeof lng === 'string') lng = parseFloat(lng);
+          const hasCoords = lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
+
           return {
             id: d.id ?? doc.id,
             titre: d.description ? (d.description.length > 50 ? d.description.slice(0, 50) + '...' : d.description) : `Signalement ${d.id ?? doc.id}`,
             description: d.description ?? '',
             status: d.status?.statusCode ?? 'SUBMITTED',
-            position: (d.latitude !== undefined && d.longitude !== undefined) ? { lat: d.latitude, lng: d.longitude } : null,
+            position: hasCoords ? { lat, lng } : null,
             date: formatDate(d.createdAt),
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
