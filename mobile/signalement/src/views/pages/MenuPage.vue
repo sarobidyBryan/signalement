@@ -304,11 +304,26 @@ export default defineComponent({
             }
         },
 
-        deconnexion() {
-            signOut(auth);
+        async deconnexion() {
+            try {
+                await signOut(auth);
+            } catch (e) {
+                console.warn('Erreur lors du signOut:', e);
+            }
+
+            // Nettoyage localStorage (inclut la session)
             localStorage.removeItem('uid');
             localStorage.removeItem('user');
-            
+            localStorage.removeItem('sessionExpiry');
+            localStorage.removeItem('sessionDuration');
+
+            // Notifier l'application dans le même onglet
+            try {
+                window.dispatchEvent(new Event('userLoggedOut'));
+            } catch (e) {
+                // no-op
+            }
+
             this.$router.push('/');
         }
     },

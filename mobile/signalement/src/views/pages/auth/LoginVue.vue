@@ -107,6 +107,13 @@ export default defineComponent({
               localStorage.setItem('sessionExpiry', String(expiry));
               localStorage.setItem('sessionDuration', String(sessionDurationSec));
 
+              // Notifier l'application dans le même onglet que la session a démarré
+              try {
+                window.dispatchEvent(new Event('userLoggedIn'));
+              } catch (e) {
+                // no-op
+              }
+
               console.log('[LoginVue] Session créée, expiration:', new Date(expiry).toLocaleString());
 
               this.$router.push('/map');
