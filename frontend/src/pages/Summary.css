@@ -24,6 +24,67 @@
   color: var(--color-gray-600);
 }
 
+.summary-metrics {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-card.highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.metric-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-card.highlight .metric-card-label {
+  color: rgba(255,255,255,0.9);
+}
+
+.metric-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+}
+
+.metric-card.highlight .metric-card-value {
+  color: white;
+}
+
+.metric-card-bar {
+  margin-top: 8px;
+  height: 6px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-card-bar-fill {
+  height: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
 .summary-content {
   display: flex;
   gap: var(--spacing-lg);
@@ -32,50 +93,15 @@
 }
 
 .map-section {
-  flex: 2;
+  flex: 1;
   min-height: 400px;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
 }
 
-.info-panel {
+.map-section.fullwidth {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-primary);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-}
-
-.info-panel-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-gray-200);
-  flex-shrink: 0;
-}
-
-.info-panel-header h2 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-secondary);
-}
-
-.info-panel-content {
-  flex: 1;
-  padding: var(--spacing-lg);
-  overflow-y: auto;
-}
-
-.info-placeholder {
-  color: var(--color-gray-300);
-  text-align: center;
-}
-
-.info-placeholder p {
-  margin: var(--spacing-md) 0;
-  font-size: var(--font-size-base);
-  line-height: 1.5;
+  width: 100%;
 }
 
 /* Responsive design */
@@ -87,11 +113,6 @@
   .map-section {
     flex: 1;
     min-height: 300px;
-  }
-
-  .info-panel {
-    flex: none;
-    max-height: 300px;
   }
 }
 
@@ -107,9 +128,5 @@
 
   .map-section {
     min-height: 250px;
-  }
-
-  .info-panel {
-    max-height: 250px;
   }
 }

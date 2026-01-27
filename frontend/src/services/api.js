@@ -1,11 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8180/api';
 
 class ApiError extends Error {
-  constructor(message, status, errorCode) {
+  constructor(message, status, errorCode, url) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.errorCode = errorCode;
+    this.url = url;
   }
 }
 
@@ -22,23 +23,39 @@ async function fetchAPI(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    const contentType = response.headers.get('content-type') || '';
-    let data = null;
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    const responseText = await response.text();
+    let data = responseText;
 
     if (contentType.includes('application/json')) {
-      try {
-        data = await response.json();
-      } catch (error) {
+      if (!responseText) {
         data = null;
+      } else {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          const snippet = responseText.slice(0, 800);
+          console.error(`[API] Invalid JSON response from ${url}`, snippet);
+          throw new ApiError(
+            `Le serveur a renvoyé un contenu inattendu pour ${url}: ${snippet}`,
+            response.status,
+            null,
+            url
+          );
+        }
       }
-    } else {
-      data = await response.text();
     }
 
     if (!response.ok) {
-      const message = data && typeof data === 'object' ? data.message : data || response.statusText;
-      const errorCode = data && typeof data === 'object' ? data.errorCode : null;
-      throw new ApiError(message || 'Une erreur est survenue', response.status, errorCode);
+      const bodySnippet = responseText ? responseText.slice(0, 800) : '';
+      const messageParts = [`HTTP ${response.status} ${response.statusText}`];
+      if (bodySnippet) messageParts.push(bodySnippet);
+      throw new ApiError(
+        messageParts.join(' - '),
+        response.status,
+        null,
+        url
+      );
     }
 
     return data;
@@ -46,7 +63,7 @@ async function fetchAPI(endpoint, options = {}) {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Erreur de connexion au serveur', 0, 'NETWORK_ERROR');
+    throw new ApiError('Erreur de connexion au serveur', 0, 'NETWORK_ERROR', url);
   }
 }
 

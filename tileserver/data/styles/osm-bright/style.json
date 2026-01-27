@@ -14,7 +14,7 @@
       "maxzoom": 14
     }
   },
-  "glyphs": "/fonts/{fontstack}/{range}.pbf",
+  "glyphs": "http://localhost:3000/fonts/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",
@@ -204,7 +204,7 @@
       "layout": {
         "text-field": "{name:latin}",
         "text-font": [
-          "Noto Sans Regular"
+          "NotoSansRegular"
         ],
         "text-size": 12,
         "text-anchor": "center"
@@ -224,7 +224,7 @@
       "layout": {
         "text-field": "{name:latin}",
         "text-font": [
-          "Noto Sans Regular"
+          "NotoSansRegular"
         ],
         "text-size": 10,
         "symbol-placement": "line",

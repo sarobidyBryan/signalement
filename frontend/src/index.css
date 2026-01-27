@@ -30,6 +30,11 @@ body {
   min-height: 100vh;
 }
 
+/* Make room for the fixed header so main content isn't hidden */
+main, .public-reports-page, .summary, .landing-page {
+  padding-top: var(--header-height, 70px);
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

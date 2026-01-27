@@ -3,34 +3,30 @@ import { useEffect, useState, useCallback } from 'react';
 import Map from '../components/Map';
 import { reportService, companyService } from '../services';
 import { getGlobal } from '../services/summaryService';
+import Header from '../components/Header/Header';
 import ReportDetailPanel from '../components/ReportDetailPanel/ReportDetailPanel';
 
-function Summary() {
+export default function PublicReports() {
   const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [detailError, setDetailError] = useState(null);
   const [companies, setCompanies] = useState([]);
 
   const loadReports = useCallback(async () => {
-    setLoading(true);
     try {
       const list = await reportService.getAll();
       setReports(list || []);
     } catch (err) {
-      console.error('Failed to load reports', err);
+      console.error(err);
       setReports([]);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   const loadStats = useCallback(async () => {
     try {
       const result = await getGlobal();
-      // result has { summary: { nbPoints, totalSurface, totalBudget, totalTreated, overallProgressPercent }, reports: [...] }
       const summary = result?.summary || {};
       setStats({
         totalReports: summary.nbPoints || 0,
@@ -39,12 +35,11 @@ function Summary() {
         totalBudget: summary.totalBudget || 0,
         progressPercentage: summary.overallProgressPercent || 0
       });
-      // also update reports from summary if available
       if (result?.reports && result.reports.length > 0) {
         setReports(result.reports);
       }
     } catch (err) {
-      console.error('Failed to load stats', err);
+      console.error(err);
       setStats(null);
     }
   }, []);
@@ -61,13 +56,13 @@ function Summary() {
       return;
     }
     setDetailLoading(true);
-    setError(null);
+    setDetailError(null);
     try {
       const detail = await reportService.getDetail(reportId);
       setSelectedDetail(detail || null);
     } catch (err) {
-      console.error('Detail load error', err);
-      setError({ message: 'Impossible de charger les détails' });
+      console.error(err);
+      setDetailError({ message: 'Impossible de charger les détails' });
       setSelectedDetail(null);
     } finally {
       setDetailLoading(false);
@@ -79,19 +74,9 @@ function Summary() {
     return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
   };
 
-  const formatDate = (value) => {
-    if (!value) return '—';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
-  };
-
   return (
-    <div className="summary">
-      <div className="summary-header">
-        <h1>Récapitulatif</h1>
-        <p>Vue d'ensemble des signalements sur la carte d'Antananarivo</p>
-      </div>
+    <div className="public-reports-page">
+      <Header navItems={[{ href: '/', label: 'Accueil' }, { href: '/reports', label: 'Signalements' }]} />
 
       {/* Top metrics cards */}
       <div className="summary-metrics">
@@ -121,7 +106,7 @@ function Summary() {
       </div>
 
       <div className="summary-content">
-        <div className="map-section">
+        <div className="map-section fullwidth">
           <Map reports={reports} onReportClick={openDetail} />
         </div>
       </div>
@@ -129,7 +114,7 @@ function Summary() {
       <ReportDetailPanel
         detail={selectedDetail}
         detailLoading={detailLoading}
-        detailError={error}
+        detailError={detailError}
         onClose={() => setSelectedDetail(null)}
         onRefresh={openDetail}
         companies={companies}
@@ -138,5 +123,3 @@ function Summary() {
     </div>
   );
 }
-
-export default Summary;
