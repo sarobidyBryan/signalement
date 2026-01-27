@@ -41,14 +41,6 @@
                 <p class="text-base text-gray-900">{{ utilisateur.email || '-' }}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-4">
-                <h3 class="text-sm font-medium text-gray-600 mb-1">Téléphone</h3>
-                <p class="text-base text-gray-900">{{ utilisateur.phone || '-' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-4">
-                <h3 class="text-sm font-medium text-gray-600 mb-1">Adresse</h3>
-                <p class="text-base text-gray-900">{{ utilisateur.address || '-' }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-4">
                 <h3 class="text-sm font-medium text-gray-600 mb-1">Date d'inscription</h3>
                 <p class="text-base text-gray-900">{{ formattedRegistrationDate }}</p>
               </div>
@@ -102,8 +94,6 @@ import { doc, getDoc } from 'firebase/firestore';
 interface UserData {
   name?: string;
   email?: string;
-  phone?: string;
-  address?: string;
   createdAt?: any;
 }
 
@@ -127,8 +117,6 @@ export default defineComponent({
       utilisateur: {
         name: '[Utilisateur]',
         email: '[Email]',
-        phone: '',
-        address: ''
       } as UserData,
       isLoading: false,
       registrationDate: null as any,
@@ -147,6 +135,33 @@ export default defineComponent({
   },
 
   methods: {
+    handleStorageChange(event: StorageEvent) {
+      // Vérifier si c'est le localStorage 'user' qui a changé
+      if (event.key === 'user' && event.newValue) {
+        try {
+          const parsedUser = JSON.parse(event.newValue);
+          this.utilisateur.name = parsedUser.name || this.utilisateur.name;
+          this.utilisateur.email = parsedUser.email || this.utilisateur.email;
+          console.log('Données utilisateur mises à jour depuis localStorage');
+        } catch (e) {
+          console.error('Erreur parsing user localStorage:', e);
+        }
+      }
+    },
+
+    handleUserUpdated(event: any) {
+      // Gérer l'événement personnalisé déclenché après mise à jour du localStorage
+      if (event.detail) {
+        try {
+          this.utilisateur.name = event.detail.name || this.utilisateur.name;
+          this.utilisateur.email = event.detail.email || this.utilisateur.email;
+          console.log('Données utilisateur mises à jour depuis événement personnalisé');
+        } catch (e) {
+          console.error('Erreur lors de la mise à jour depuis événement:', e);
+        }
+      }
+    },
+
     async chargerDonneesUtilisateur() {
       this.isLoading = true;
       try {
@@ -164,8 +179,6 @@ export default defineComponent({
           const userData = userSnap.data() as UserData;
           if (userData.name) this.utilisateur.name = userData.name;
           if (userData.email) this.utilisateur.email = userData.email;
-          if (userData.phone) this.utilisateur.phone = userData.phone;
-          if (userData.address) this.utilisateur.address = userData.address;
           if (userData.createdAt) this.registrationDate = userData.createdAt;
         } else {
           console.warn('Document utilisateur non trouvé');
@@ -196,12 +209,22 @@ export default defineComponent({
         const parsedUser = JSON.parse(savedUser);
         this.utilisateur.name = parsedUser.name || this.utilisateur.name;
         this.utilisateur.email = parsedUser.email || this.utilisateur.email;
-        this.utilisateur.phone = parsedUser.phone || this.utilisateur.phone;
-        this.utilisateur.address = parsedUser.address || this.utilisateur.address;
       } catch (e) {
         console.error('Erreur parsing user localStorage:', e);
       }
     }
+
+    // Écouter les changements du localStorage depuis d'autres onglets
+    window.addEventListener('storage', this.handleStorageChange);
+
+    // Écouter l'événement personnalisé pour les mises à jour dans le même onglet
+    window.addEventListener('userStorageUpdated', this.handleUserUpdated);
+  },
+
+  beforeUnmount() {
+    // Nettoyer les écouteurs d'événements
+    window.removeEventListener('storage', this.handleStorageChange);
+    window.removeEventListener('userStorageUpdated', this.handleUserUpdated);
   }
 });
 </script>
