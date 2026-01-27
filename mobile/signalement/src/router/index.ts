@@ -22,11 +22,6 @@ const routes: Array<RouteRecordRaw> = [
     component: LoginVue 
   },
   {
-    path: '/register',  
-    name: 'Register',
-    component: RegisterVue 
-  },
-  {
     path: '/list',  
     name: 'List',
     component:() => import('@/views/pages/signalements/ReportsList.vue')  
