@@ -8,6 +8,8 @@
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { auth } from '@/config/firebase';
+import { signOut } from 'firebase/auth';
 
 const router = useRouter();
 let sessionCheckInterval: number | null = null;
@@ -36,23 +38,27 @@ onMounted(() => {
       });
       
       if (now >= expiry) {
-        console.log('[App.vue] 🔴 Session expirée! Redirection...');
-        
-        // Session expirée - nettoyer et rediriger
+        console.log('[App.vue] 🔴 Session expirée! Déconnexion et redirection...');
+
+        // Tenter une déconnexion Firebase centrale (similaire à MenuPage.deconnexion)
+        try {
+          signOut(auth).catch((e) => console.warn('signOut failed:', e));
+        } catch (e) {
+          console.warn('Erreur signOut:', e);
+        }
+
+        // Session expirée - nettoyer le localStorage
         localStorage.removeItem('uid');
         localStorage.removeItem('user');
         localStorage.removeItem('sessionExpiry');
         localStorage.removeItem('sessionDuration');
-        
+
         // Rediriger vers login si pas déjà sur login
         if (router.currentRoute.value.path !== '/login') {
           console.log('[App.vue] Redirection vers /login');
-          
-          // Essayer router.replace d'abord
           router.replace({ path: '/login', query: { reason: 'session_expired' } })
             .catch(err => {
-              console.warn('[App.vue] router.replace échoué, utilisation de window.location', err);
-              // Fallback: redirection forcée
+              console.warn('[App.vue] router.replace échoué, fallback window.location', err);
               window.location.href = '/login?reason=session_expired';
             });
         }

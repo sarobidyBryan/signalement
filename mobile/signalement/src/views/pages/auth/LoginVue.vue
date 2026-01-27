@@ -228,11 +228,23 @@ export default defineComponent({
       }
     }
   },
+  watch: {
+    '$route.query.reason'(newVal) {
+      try {
+        if (newVal === 'session_expired') {
+          alert('La session a expiré');
+        }
+      } catch (e) {
+        // no-op
+      }
+    }
+  },
   mounted() {
     try {
       const reason = (this as any).$route?.query?.reason as string | undefined;
       if (reason === 'session_expired') {
-        this.errorMessage = 'La session a expiré';
+        // Afficher une alerte native à la place du message inline
+        alert('La session a expiré');
       }
     } catch (e) {
       // no-op
