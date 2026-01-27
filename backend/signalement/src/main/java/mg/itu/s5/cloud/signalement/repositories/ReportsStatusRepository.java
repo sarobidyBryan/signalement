@@ -14,5 +14,9 @@ public interface ReportsStatusRepository extends JpaRepository<ReportsStatus, In
 	List<Integer> findReportIdsWithLatestStatus(@Param("code") String statusCode);
 
 	List<ReportsStatus> findByReport_Id(int reportId);
+
+	// Compter les signalements avec un statut donné (dernier statut uniquement)
+	@Query(value = "SELECT COUNT(DISTINCT r2.report_id) FROM reports_status r2 JOIN status s ON r2.status_id = s.id WHERE r2.registration_date = (SELECT MAX(r3.registration_date) FROM reports_status r3 WHERE r3.report_id = r2.report_id) AND s.status_code = :statusCode", nativeQuery = true)
+	long countByStatus_StatusCode(@Param("statusCode") String statusCode);
 }
 

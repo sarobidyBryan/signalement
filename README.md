@@ -25,7 +25,8 @@ docker compose up --build
 
 ## Ports
 - Frontend: http://localhost:3000
-- Backend: http://localhost:8080
+- Backend: http://localhost:8180
+- Backend (container internal): http://backend:8080 (used by frontend container proxy)
 - Database: localhost:5432
 - Tileserver: http://localhost:8081
 

@@ -1,0 +1,32 @@
+.landing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.landing-hero {
+  background: linear-gradient(180deg, #f5f8ff 0%, #ffffff 100%);
+  padding: 48px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-content {
+  max-width: 900px;
+  text-align: center;
+}
+
+.landing-content h1 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.landing-content p {
+  color: #444;
+  margin-bottom: 20px;
+}
+
+.cta-arrow {
+  margin-left: 8px;
+}

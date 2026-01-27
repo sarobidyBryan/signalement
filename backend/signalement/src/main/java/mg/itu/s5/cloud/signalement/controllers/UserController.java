@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpSession;
-
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +86,11 @@ public class UserController {
         // }
 
         try {
-            User updatedUser = userService.updateUserStatus(id, request.getStatusCode(), request.getRegistrationDate());
+            Optional<User> userOpt = userService.getUserById(id);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(ApiResponse.error(ApiResponse.ErrorCodes.USER_NOT_FOUND, "User not found"));
+            }
+            User updatedUser = userService.updateUserStatus(id, request.getStatusCode(), userOpt.get().getCreatedAt());
             Map<String, Object> data = new HashMap<>();
             data.put("message", "User status updated successfully");
             data.put("user", updatedUser);
@@ -173,15 +175,8 @@ public class UserController {
 
     public static class UpdateStatusRequest {
         private String statusCode;
-        private LocalDateTime registrationDate;
 
         // Getters and setters
-        public void setRegistrationDate(LocalDateTime registrationDate) {
-            this.registrationDate = registrationDate;
-        }
-        public LocalDateTime getRegistrationDate() {
-            return registrationDate;
-        }
         public String getStatusCode() { return statusCode; }
         public void setStatusCode(String statusCode) { this.statusCode = statusCode; }
     }

@@ -12,10 +12,13 @@ const Sidebar = ({
     onToggle && onToggle(!isOpen);
   };
 
+  const isDesktop = window.innerWidth > 768;
+  const effectiveIsOpen = isDesktop ? true : isOpen;
+
   return (
     <>
       <aside
-        className={`sidebar ${isOpen ? 'sidebar-open' : 'sidebar-closed'} ${className}`}
+        className={`sidebar ${effectiveIsOpen ? 'sidebar-open' : 'sidebar-closed'} ${className}`}
         {...props}
       >
         <div className="sidebar-content">
@@ -67,23 +70,37 @@ const Sidebar = ({
                     </a>
                   );
                 })}
+                {item.links && item.links.map((link, linkIndex) => (
+                  link.onClick ? (
+                    <button
+                      key={linkIndex}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        link.onClick();
+                      }}
+                      className={`sidebar-link ${link.active ? 'sidebar-link-active' : ''}`}
+                    >
+                      <span className="sidebar-link-text">{link.label}</span>
+                    </button>
+                  ) : (
+                    <a
+                      key={linkIndex}
+                      href={link.href}
+                      className={`sidebar-link ${link.active ? 'sidebar-link-active' : ''}`}
+                    >
+                      <span className="sidebar-link-text">{link.label}</span>
+                    </a>
+                  )
+                ))}
               </nav>
             </div>
           ))}
         </div>
-
-        <button
-          className="sidebar-toggle"
-          onClick={handleToggle}
-          aria-label="Toggle sidebar"
-        >
-          {'<'}
-        </button>
       </aside>
 
       <div
-        className={`sidebar-overlay ${isOpen ? 'sidebar-overlay-visible' : ''}`}
-        onClick={handleToggle}
+        className={`sidebar-overlay ${effectiveIsOpen ? 'sidebar-overlay-visible' : ''}`}
+        onClick={isDesktop ? undefined : handleToggle}
       />
     </>
   );

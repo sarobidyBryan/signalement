@@ -16,6 +16,8 @@ public interface ReportsAssignationProgressRepository extends JpaRepository<Repo
     @Query("SELECT SUM(r.treatedArea) FROM ReportsAssignationProgress r WHERE r.reportsAssignation.report.id = :reportId")
     java.math.BigDecimal sumTreatedAreaByReportId(@Param("reportId") int reportId);
     
+    List<ReportsAssignationProgress> findByReportsAssignation_Report_Id(int reportId);
+    
     Optional<ReportsAssignationProgress> findByFirebaseId(String firebaseId);
     
     @Query("SELECT r FROM ReportsAssignationProgress r WHERE r.createdAt > :since OR r.updatedAt > :since")

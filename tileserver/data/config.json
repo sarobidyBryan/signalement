@@ -1,6 +1,6 @@
 {
   "options": {
-      "paths": {
+    "paths": {
       "root": "/data",
       "fonts": "fonts",
       "styles": "styles",
@@ -12,7 +12,12 @@
       "style": "osm-bright/style.json",
       "tilejson": {
         "type": "overlay",
-        "bounds": [47.45, -18.95, 47.6, -18.8]
+        "bounds": [
+          47.45,
+          -18.95,
+          47.6,
+          -18.8
+        ]
       }
     }
   },

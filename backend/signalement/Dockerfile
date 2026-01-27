@@ -1,19 +1,14 @@
-FROM eclipse-temurin:21 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy Maven wrapper and settings
 COPY .mvn .mvn
 COPY mvnw .
 COPY settings.xml /root/.m2/settings.xml
-
-# Make Maven wrapper executable
 RUN chmod +x mvnw
 
-# Copy pom.xml and download dependencies (cached layer)
 COPY pom.xml .
-RUN ./mvnw dependency:go-offline -B || ./mvnw dependency:resolve -B || true
+RUN ./mvnw dependency:go-offline -B || true
 
-# Copy source code and build
 COPY src ./src
 RUN ./mvnw clean package -B -DskipTests
 
@@ -21,13 +16,8 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# copy health-wait script and make it executable
 COPY wait-for-postgres.sh /usr/local/bin/wait-for-postgres.sh
-# Install bash (script uses bash features), convertir CRLF en LF et rendre exécutable
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends bash && \
-    sed -i 's/\r$//' /usr/local/bin/wait-for-postgres.sh && \
-    chmod +x /usr/local/bin/wait-for-postgres.sh && \
-    rm -rf /var/lib/apt/lists/*
+RUN sed -i 's/\r$//' /usr/local/bin/wait-for-postgres.sh && chmod +x /usr/local/bin/wait-for-postgres.sh
 
 EXPOSE 8080
-ENTRYPOINT ["bash","/usr/local/bin/wait-for-postgres.sh"]
+ENTRYPOINT ["/usr/local/bin/wait-for-postgres.sh"]

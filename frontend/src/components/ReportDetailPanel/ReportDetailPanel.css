@@ -1,0 +1,312 @@
+/* ReportDetailPanel.css - styles for the detail panel component */
+
+.report-detail-panel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 500px;
+  max-width: 90vw;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.report-detail-panel.detail-open {
+  right: 0;
+}
+
+.detail-panel-inner {
+  padding: 24px;
+}
+
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.panel-overline {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.detail-panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #222;
+}
+
+.detail-panel-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.detail-panel-close:hover {
+  color: #222;
+}
+
+.detail-loading,
+.detail-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.detail-progress {
+  margin-top: 8px;
+}
+
+.progress-track {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+  margin: 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.detail-grid > div {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.description-text {
+  color: #444;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  white-space: pre-wrap;
+}
+
+.assignations-section,
+.progress-section {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #222;
+}
+
+.section-header span {
+  font-size: 12px;
+  color: #666;
+}
+
+.assignations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.assignation-card {
+  padding: 12px;
+  background: #f0f7ff;
+  border-left: 3px solid #2196F3;
+}
+
+.assignation-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #222;
+}
+
+.assignation-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.assignation-dates {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+.assignation-form,
+.progress-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.assignation-form label,
+.progress-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+}
+
+.assignation-form input,
+.assignation-form select,
+.progress-form input,
+.progress-form select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.inline-hint {
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.progress-card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: #666;
+}
+
+.detail-value {
+  color: #222;
+  font-weight: 500;
+}
+
+.progress-card-body {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .report-detail-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .detail-summary {
+    grid-template-columns: 1fr;
+  }
+}
