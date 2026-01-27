@@ -147,20 +147,15 @@ public class PostgresToFirestoreSyncService {
     @Transactional
     public Map<String, Object> syncStatuses() {
         String tableName = "status";
-        LocalDateTime lastSync = syncLogService.getLastSyncDateOrDefault(tableName, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
         
-        List<Status> modifiedStatuses = statusRepository.findModifiedSince(lastSync);
+        // Note: status table has no updatedAt field, sync all statuses each time
+        List<Status> modifiedStatuses = statusRepository.findAll();
         int synced = 0;
         
         for (Status status : modifiedStatuses) {
             try {
                 Map<String, Object> data = mapStatus(status);
-                String firebaseId = syncToFirestore(COLLECTION_STATUSES, status.getFirebaseId(), status.getId(), data);
-                
-                if (status.getFirebaseId() == null || !status.getFirebaseId().equals(firebaseId)) {
-                    status.setFirebaseId(firebaseId);
-                    statusRepository.save(status);
-                }
+                String firebaseId = syncToFirestore(COLLECTION_STATUSES, null, status.getId(), data);
                 synced++;
             } catch (Exception e) {
                 logger.error("Erreur sync status id={}", status.getId(), e);
@@ -328,9 +323,6 @@ public class PostgresToFirestoreSyncService {
         data.put("id", status.getId());
         data.put("statusCode", status.getStatusCode());
         data.put("label", status.getLabel());
-        data.put("firebaseId", status.getFirebaseId());
-        data.put("createdAt", toDate(status.getCreatedAt()));
-        data.put("updatedAt", toDate(status.getUpdatedAt()));
         return data;
     }
 

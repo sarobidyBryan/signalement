@@ -1,0 +1,132 @@
+.summary {
+  max-width: 1400px;
+  margin: 0 auto;
+  height: calc(100vh - 120px); /* Adjust based on header height */
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-header {
+  margin-bottom: var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.summary-header h1 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-secondary);
+}
+
+.summary-header p {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-gray-600);
+}
+
+.summary-metrics {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-card.highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.metric-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-card.highlight .metric-card-label {
+  color: rgba(255,255,255,0.9);
+}
+
+.metric-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+}
+
+.metric-card.highlight .metric-card-value {
+  color: white;
+}
+
+.metric-card-bar {
+  margin-top: 8px;
+  height: 6px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-card-bar-fill {
+  height: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.summary-content {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex: 1;
+  min-height: 0; /* Allow flex items to shrink */
+}
+
+.map-section {
+  flex: 1;
+  min-height: 400px;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.map-section.fullwidth {
+  flex: 1;
+  width: 100%;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .summary-content {
+    flex-direction: column;
+  }
+
+  .map-section {
+    flex: 1;
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary {
+    height: auto;
+    padding: var(--spacing-md);
+  }
+
+  .summary-content {
+    gap: var(--spacing-md);
+  }
+
+  .map-section {
+    min-height: 250px;
+  }
+}

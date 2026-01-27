@@ -39,4 +39,11 @@ public class ReportsSummaryController {
         Map<String, Object> res = summaryService.getSummaryForStatus("COMPLETED");
         return ResponseEntity.ok(ApiResponse.success(res));
     }
+
+    @GetMapping("/global")
+    @Operation(summary = "Get global summary", description = "Retrieves summary statistics for all reports regardless of status")
+    public ResponseEntity<ApiResponse> global() {
+        Map<String, Object> res = summaryService.getGlobalSummary();
+        return ResponseEntity.ok(ApiResponse.success(res));
+    }
 }

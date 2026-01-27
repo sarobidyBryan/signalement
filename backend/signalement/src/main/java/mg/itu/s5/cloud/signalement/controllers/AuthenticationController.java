@@ -15,11 +15,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Authentication", description = "API for user authentication")
 public class AuthenticationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -46,6 +51,12 @@ public class AuthenticationController {
     @PostMapping("/login")
     @Operation(summary = "Login with email and password", description = "Authenticates a user and starts a session")
     public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request, HttpSession session) {
+        try {
+            logger.info("Authentication request for email='{}' from session='{}'", request.getEmail(), session != null ? session.getId() : "no-session");
+        } catch (Exception e) {
+            // ignore logging errors
+        }
+
         boolean success = authenticationService.login(request.getEmail(), request.getPassword(), session);
         if (success) {
             Optional<User> user = authenticationService.getCurrentUser(session);
@@ -59,6 +70,7 @@ public class AuthenticationController {
             ));
             return ResponseEntity.ok(ApiResponse.success(data));
         } else {
+            logger.info("Authentication failed for email='{}'", request.getEmail());
             return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_CREDENTIALS, "Invalid email or password"));
         }
     }

@@ -1,13 +1,16 @@
 package mg.itu.s5.cloud.signalement.controllers;
 
+import mg.itu.s5.cloud.signalement.dto.ReportDetailDto;
 import mg.itu.s5.cloud.signalement.entities.Report;
 import mg.itu.s5.cloud.signalement.entities.ReportsAssignation;
 import mg.itu.s5.cloud.signalement.entities.ReportsStatus;
 import mg.itu.s5.cloud.signalement.services.ReportService;
+import mg.itu.s5.cloud.signalement.services.ReportsAssignationProgressService;
 import mg.itu.s5.cloud.signalement.services.ReportsAssignationService;
 import mg.itu.s5.cloud.signalement.services.ReportsStatusService;
 import mg.itu.s5.cloud.signalement.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +18,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -30,12 +36,21 @@ public class ReportController {
     private ReportsAssignationService reportsAssignationService;
     @Autowired
     private ReportsStatusService reportsStatusService;
+    @Autowired
+    private ReportsAssignationProgressService reportsAssignationProgressService;
 
     @GetMapping
-    @Operation(summary = "Get all reports", description = "Retrieves a list of all reports")
-    public ResponseEntity<ApiResponse> getAll() {
-        List<Report> all = reportService.getAllReports();
-        return ResponseEntity.ok(ApiResponse.success("reports", all));
+    @Operation(summary = "Get all reports", description = "Retrieves a list of reports, optionally filtered by surface, statut, utilisateur et date")
+    public ResponseEntity<ApiResponse> getAll(
+            @RequestParam(value = "areaMin", required = false) BigDecimal areaMin,
+            @RequestParam(value = "areaMax", required = false) BigDecimal areaMax,
+            @RequestParam(value = "statusCode", required = false) String statusCode,
+            @RequestParam(value = "userId", required = false) Integer userId,
+            @RequestParam(value = "reportDateFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
+            @RequestParam(value = "reportDateTo", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo
+    ) {
+        List<Report> reports = reportService.searchReports(areaMin, areaMax, statusCode, userId, reportDateFrom, reportDateTo);
+        return ResponseEntity.ok(ApiResponse.success("reports", reports));
     }
 
     @GetMapping("/{id}")
@@ -46,11 +61,52 @@ public class ReportController {
                 .orElseGet(() -> ResponseEntity.status(404).body(ApiResponse.error(ApiResponse.ErrorCodes.USER_NOT_FOUND, "Report not found")));
     }
 
+    @GetMapping("/{id}/detail")
+    @Operation(summary = "Get report detail", description = "Retrieves the report with its assignations, progress history and aggregates")
+    public ResponseEntity<ApiResponse> getDetail(@PathVariable int id) {
+        return reportService.getReportById(id)
+                .map(report -> {
+                    List<ReportsAssignation> assignations = reportsAssignationService.findByReportId(id);
+                    List<Map<String, Object>> progressEntries = reportsAssignationProgressService.getByReportIdWithPercentage(id);
+                    BigDecimal treatedArea = reportsAssignationProgressService.sumTreatedAreaByReportId(id);
+                    BigDecimal totalArea = report.getArea() != null ? report.getArea() : BigDecimal.ZERO;
+                    BigDecimal progressPercentage = BigDecimal.ZERO;
+                    if (totalArea.compareTo(BigDecimal.ZERO) > 0) {
+                        progressPercentage = treatedArea.divide(totalArea, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+                        if (progressPercentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+                            progressPercentage = BigDecimal.valueOf(100);
+                        }
+                    }
+                    ReportDetailDto detail = new ReportDetailDto();
+                    detail.setReport(report);
+                    detail.setAssignations(assignations);
+                    detail.setProgressEntries(progressEntries);
+                    detail.setTreatedArea(treatedArea);
+                    detail.setTotalArea(totalArea);
+                    detail.setProgressPercentage(progressPercentage);
+                    return ResponseEntity.ok(ApiResponse.success("reportDetail", detail));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(ApiResponse.error(ApiResponse.ErrorCodes.USER_NOT_FOUND, "Report not found")));
+    }
+
     @PostMapping
     @Operation(summary = "Create a new report", description = "Creates a new road report")
     public ResponseEntity<ApiResponse> create(@RequestBody Report r) {
         Report saved = reportService.saveReport(r);
         return ResponseEntity.ok(ApiResponse.success(saved));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a report", description = "Updates an existing report")
+    public ResponseEntity<ApiResponse> update(@PathVariable int id, @RequestBody Report reportData) {
+        try {
+            Report updated = reportService.updateReport(id, reportData);
+            return ResponseEntity.ok(ApiResponse.success(updated));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_DATA, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Erreur lors de la mise à jour du signalement"));
+        }
     }
 
     @DeleteMapping("/{id}")
