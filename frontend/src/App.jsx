@@ -2,10 +2,15 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import BackofficeLogin from './pages/BackofficeLogin';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import UserCreate from './pages/UserCreate';
+import UserEdit from './pages/UserEdit';
 import Reports from './pages/Reports';
 import ReportEdit from './pages/ReportEdit';
 import Summary from './pages/Summary';
 import Synchronization from './pages/Synchronization';
+import Configurations from './pages/Configurations';
+import ConfigurationCreate from './pages/ConfigurationCreate';
+import ConfigurationEdit from './pages/ConfigurationEdit';
 import BackofficeLayout from './components/BackofficeLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
@@ -16,7 +21,6 @@ import './App.css'
 function App() {
   return (
     <Routes>
-      <Route path="/backoffice/users" element={<Users />} />
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Landing />} />
         <Route path="/reports" element={<PublicReports />} />
@@ -36,6 +40,12 @@ function App() {
         <Route path="reports/:id/edit" element={<ReportEdit />} />
         <Route path="summary" element={<Summary />} />
         <Route path="synchronization" element={<Synchronization />} />
+        <Route path="users" element={<Users />} />
+        <Route path="users/new" element={<UserCreate />} />
+        <Route path="users/:id/edit" element={<UserEdit />} />
+        <Route path="configurations" element={<Configurations />} />
+        <Route path="configurations/new" element={<ConfigurationCreate />} />
+        <Route path="configurations/:key/edit" element={<ConfigurationEdit />} />
       </Route>
     </Routes>
   );

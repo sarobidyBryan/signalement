@@ -13,18 +13,17 @@ function BackofficeLayout() {
     {
       title: 'Navigation',
       links: [
-        { label: 'Tableau de bord', href: '/backoffice/dashboard', active: location.pathname === '/backoffice/dashboard' },
+        { label: 'Récapitulatif', href: '/backoffice/summary', active: location.pathname === '/backoffice/summary' },
         { label: 'Signalements', href: '/backoffice/reports', active: location.pathname.startsWith('/backoffice/reports') },
         { label: 'Entreprises', href: '/backoffice/companies' },
-        { label: 'Utilisateurs', href: '/backoffice/users' },
-            { label: 'Récapitulatif', href: '/backoffice/summary', active: location.pathname === '/backoffice/summary' },
-            { label: 'Synchronisation', href: '/backoffice/synchronization', active: location.pathname === '/backoffice/synchronization' },
+        { label: 'Utilisateurs', href: '/backoffice/users', active: location.pathname.startsWith('/backoffice/users') },
+        { label: 'Synchronisation', href: '/backoffice/synchronization', active: location.pathname === '/backoffice/synchronization' },
       ],
     },
     {
       title: 'Administration',
       links: [
-        { label: 'Configurations', href: '/backoffice/configurations' },
+        { label: 'Configurations', href: '/backoffice/configurations', active: location.pathname.startsWith('/backoffice/configurations') },
         {
           label: 'Déconnexion',
           onClick: async () => {

@@ -1,8 +1,12 @@
 package mg.itu.s5.cloud.signalement.controllers;
 
+import mg.itu.s5.cloud.signalement.entities.Role;
 import mg.itu.s5.cloud.signalement.entities.User;
+import mg.itu.s5.cloud.signalement.entities.UserStatusType;
 import mg.itu.s5.cloud.signalement.services.AuthenticationService;
+import mg.itu.s5.cloud.signalement.services.RoleService;
 import mg.itu.s5.cloud.signalement.services.UserService;
+import mg.itu.s5.cloud.signalement.services.UserStatusTypeService;
 import mg.itu.s5.cloud.signalement.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +32,12 @@ public class UserController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private UserStatusTypeService userStatusTypeService;
+
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieves a list of all users (MANAGER role required)")
     public ResponseEntity<ApiResponse> getAllUsers(HttpSession session) {
@@ -41,6 +51,42 @@ public class UserController {
 
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success("users", users));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create user", description = "Creates a new user")
+    public ResponseEntity<ApiResponse> createUser(@RequestBody CreateUserRequest request, HttpSession session) {
+        try {
+            // Check if email already exists
+            if (userService.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, "Email already exists"));
+            }
+
+            // Get role
+            Optional<Role> roleOpt = roleService.getRoleByCode(request.getRoleCode());
+            if (roleOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, "Role not found: " + request.getRoleCode()));
+            }
+
+            // Get status type (default to ACTIVE)
+            String statusCode = request.getStatusCode() != null ? request.getStatusCode() : "ACTIVE";
+            Optional<UserStatusType> statusOpt = userStatusTypeService.getUserStatusTypeByCode(statusCode);
+            if (statusOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, "Status not found: " + statusCode));
+            }
+
+            User user = new User();
+            user.setName(request.getName());
+            user.setEmail(request.getEmail());
+            user.setPassword(request.getPassword());
+            user.setRole(roleOpt.get());
+            user.setUserStatusType(statusOpt.get());
+
+            User savedUser = userService.saveUser(user);
+            return ResponseEntity.ok(ApiResponse.success(savedUser));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
@@ -59,14 +105,42 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update user", description = "Updates user information (name and email)")
+    @Operation(summary = "Update user", description = "Updates user information (name, email, role, status)")
     public ResponseEntity<ApiResponse> updateUser(@PathVariable int id, @RequestBody UpdateUserRequest request, HttpSession session) {
         if (!authenticationService.isAuthenticated(session)) {
             return ResponseEntity.status(401).body(ApiResponse.error(ApiResponse.ErrorCodes.UNAUTHORIZED, "User not authenticated"));
         }
 
         try {
-            User updatedUser = userService.updateUser(id, request.getName(), request.getEmail());
+            Optional<User> userOpt = userService.getUserById(id);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(ApiResponse.error(ApiResponse.ErrorCodes.USER_NOT_FOUND, "User not found"));
+            }
+
+            User user = userOpt.get();
+            
+            if (request.getName() != null) {
+                user.setName(request.getName());
+            }
+            if (request.getEmail() != null) {
+                user.setEmail(request.getEmail());
+            }
+            if (request.getRoleCode() != null) {
+                Optional<Role> roleOpt = roleService.getRoleByCode(request.getRoleCode());
+                if (roleOpt.isEmpty()) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, "Role not found: " + request.getRoleCode()));
+                }
+                user.setRole(roleOpt.get());
+            }
+            if (request.getStatusCode() != null) {
+                Optional<UserStatusType> statusOpt = userStatusTypeService.getUserStatusTypeByCode(request.getStatusCode());
+                if (statusOpt.isEmpty()) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, "Status not found: " + request.getStatusCode()));
+                }
+                user.setUserStatusType(statusOpt.get());
+            }
+
+            User updatedUser = userService.saveUser(user);
             return ResponseEntity.ok(ApiResponse.success(updatedUser));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(ApiResponse.ErrorCodes.INVALID_REQUEST, e.getMessage()));
@@ -129,6 +203,13 @@ public class UserController {
         }
     }
 
+    @GetMapping("/roles")
+    @Operation(summary = "Get all roles", description = "Retrieves a list of all available roles")
+    public ResponseEntity<ApiResponse> getAllRoles(HttpSession session) {
+        List<Role> roles = roleService.getAllRoles();
+        return ResponseEntity.ok(ApiResponse.success("roles", roles));
+    }
+
     @GetMapping("/blocked")
     public ResponseEntity<ApiResponse> getUsersBlocked(
             @RequestParam(value = "page", required = false, defaultValue = "1") int page,
@@ -163,6 +244,8 @@ public class UserController {
     public static class UpdateUserRequest {
         private String name;
         private String email;
+        private String roleCode;
+        private String statusCode;
 
         // Getters and setters
         public String getName() { return name; }
@@ -170,12 +253,41 @@ public class UserController {
 
         public String getEmail() { return email; }
         public void setEmail(String email) { this.email = email; }
+
+        public String getRoleCode() { return roleCode; }
+        public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
+
+        public String getStatusCode() { return statusCode; }
+        public void setStatusCode(String statusCode) { this.statusCode = statusCode; }
     }
 
     public static class UpdateStatusRequest {
         private String statusCode;
 
         // Getters and setters
+        public String getStatusCode() { return statusCode; }
+        public void setStatusCode(String statusCode) { this.statusCode = statusCode; }
+    }
+
+    public static class CreateUserRequest {
+        private String name;
+        private String email;
+        private String password;
+        private String roleCode;
+        private String statusCode;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+
+        public String getRoleCode() { return roleCode; }
+        public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
+
         public String getStatusCode() { return statusCode; }
         public void setStatusCode(String statusCode) { this.statusCode = statusCode; }
     }

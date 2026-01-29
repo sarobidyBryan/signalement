@@ -15,9 +15,9 @@ function BackofficeLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Si déjà connecté, rediriger vers le dashboard
+    // Si déjà connecté, rediriger vers le récapitulatif
     if (authService.isAuthenticated()) {
-      navigate('/backoffice/dashboard');
+      navigate('/backoffice/summary');
     }
   }, [navigate]);
 
@@ -40,8 +40,8 @@ function BackofficeLogin() {
 
     try {
       await authService.login(formData.email, formData.password);
-      // Rediriger vers le dashboard après connexion réussie
-      navigate('/backoffice/dashboard');
+      // Rediriger vers le récapitulatif après connexion réussie
+      navigate('/backoffice/summary');
     } catch (err) {
       if (err instanceof ApiError) {
         setError({ message: err.message, errorCode: err.errorCode, status: err.status });

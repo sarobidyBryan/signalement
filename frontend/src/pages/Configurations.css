@@ -1,0 +1,202 @@
+.configurations-page {
+  background: #ffffff;
+  min-height: 100vh;
+  color: #000000;
+  padding: var(--spacing-xl, 32px);
+}
+
+.configurations-page * {
+  box-sizing: border-box;
+}
+
+/* Header */
+.configurations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl, 32px);
+}
+
+.configurations-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.configurations-overline {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.configurations-header h1 {
+  margin: 0;
+  font-size: var(--font-size-2xl, 28px);
+  font-weight: 700;
+  color: #000000;
+}
+
+/* Filters */
+.configurations-filters {
+  display: flex;
+  gap: var(--spacing-lg, 24px);
+  margin-bottom: var(--spacing-lg, 24px);
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-lg, 24px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.configurations-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 6px);
+  min-width: 200px;
+}
+
+.configurations-filters .filter-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.configurations-filters .filter-input,
+.configurations-filters .filter-select {
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  color: #000000;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.configurations-filters .filter-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.configurations-filters .filter-select option {
+  color: #000000;
+  background: #fff;
+}
+
+.configurations-filters .filter-input:focus,
+.configurations-filters .filter-select:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Table container */
+.configurations-table-container {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--border-radius-lg, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.configurations-loading,
+.configurations-empty {
+  padding: var(--spacing-xl, 32px);
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+}
+
+/* Table */
+.configurations-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.configurations-table th,
+.configurations-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.configurations-table th {
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.configurations-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.configurations-table td {
+  font-size: 14px;
+  color: #000;
+}
+
+.configurations-table code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+}
+
+/* Type badge */
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+}
+
+/* Actions cell */
+.configurations-table .actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .configurations-page {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .configurations-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .configurations-filters {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .configurations-filters .filter-group {
+    width: 100%;
+  }
+
+  .configurations-table .actions-cell {
+    flex-direction: column;
+  }
+
+  .configurations-table th,
+  .configurations-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
