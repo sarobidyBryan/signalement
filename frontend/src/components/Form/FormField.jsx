@@ -1,4 +1,4 @@
-import './FormField.css';
+import '../css/FormField.css';
 
 const FormField = ({
   label,

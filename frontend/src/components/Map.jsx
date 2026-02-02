@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './Map.css';
+import './css/Map.css';
 
 // Map component using Leaflet
 // Props:

@@ -11,12 +11,15 @@ import Synchronization from './pages/Synchronization';
 import Configurations from './pages/Configurations';
 import ConfigurationCreate from './pages/ConfigurationCreate';
 import ConfigurationEdit from './pages/ConfigurationEdit';
+import Companies from './pages/Companies';
+import CompanyCreate from './pages/CompanyCreate';
+import CompanyEdit from './pages/CompanyEdit';
 import BackofficeLayout from './components/BackofficeLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
 import Landing from './pages/Landing';
 import PublicReports from './pages/PublicReports';
-import './App.css'
+import './css/App.css'
 
 function App() {
   return (
@@ -46,6 +49,9 @@ function App() {
         <Route path="configurations" element={<Configurations />} />
         <Route path="configurations/new" element={<ConfigurationCreate />} />
         <Route path="configurations/:key/edit" element={<ConfigurationEdit />} />
+        <Route path="companies" element={<Companies />} />
+        <Route path="companies/new" element={<CompanyCreate />} />
+        <Route path="companies/:id/edit" element={<CompanyEdit />} />
       </Route>
     </Routes>
   );

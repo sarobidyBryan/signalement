@@ -1,4 +1,4 @@
-import './Summary.css';
+import './css/Summary.css';
 import { useEffect, useState, useCallback } from 'react';
 import Map from '../components/Map';
 import { reportService, companyService } from '../services';

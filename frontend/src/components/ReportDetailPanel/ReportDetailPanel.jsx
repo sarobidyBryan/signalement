@@ -3,7 +3,7 @@ import Card from '../Card/Card';
 import Button from '../Button/Button';
 import ErrorBanner from '../ErrorBanner';
 import { assignationProgressService, assignationService } from '../../services';
-import './ReportDetailPanel.css';
+import '../css/ReportDetailPanel.css';
 
 /**
  * ReportDetailPanel - displays full report details with assignations and progress
@@ -15,6 +15,7 @@ import './ReportDetailPanel.css';
  * - onRefresh: callback to reload report details after updates
  * - companies: array of companies for assignation form
  * - isOpen: boolean to control panel visibility
+ * - readOnly: boolean to hide all action buttons (for public view)
  */
 const ReportDetailPanel = ({
   detail,
@@ -23,7 +24,8 @@ const ReportDetailPanel = ({
   onClose = () => {},
   onRefresh = () => {},
   companies = [],
-  isOpen = false
+  isOpen = false,
+  readOnly = false
 }) => {
   const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
   const [progressForm, setProgressForm] = useState({ assignationId: '', treatedArea: '', comment: '' });
@@ -186,7 +188,7 @@ const ReportDetailPanel = ({
                 <h3>Assignations</h3>
                 {detail.assignations?.length ? (
                   <span>{detail.assignations.length} assignation(s)</span>
-                ) : companies.length > 0 ? (
+                ) : !readOnly && companies.length > 0 ? (
                   <Button variant="primary" size="sm" onClick={() => setShowAssignationForm((prev) => !prev)}>
                     Créer une assignation
                   </Button>
@@ -265,11 +267,11 @@ const ReportDetailPanel = ({
             <div className="progress-section">
               <div className="section-header">
                 <h3>Progrès</h3>
-                {detail.assignations?.length && companies.length > 0 ? (
+                {!readOnly && detail.assignations?.length && companies.length > 0 ? (
                   <Button type="button" variant="secondary" size="sm" onClick={() => setShowProgressForm((prev) => !prev)}>
                     Ajouter un progrès
                   </Button>
-                ) : detail.assignations?.length === 0 ? (
+                ) : !readOnly && detail.assignations?.length === 0 ? (
                   <p className="inline-hint">Ajoutez une assignation pour démarrer le suivi.</p>
                 ) : null}
               </div>

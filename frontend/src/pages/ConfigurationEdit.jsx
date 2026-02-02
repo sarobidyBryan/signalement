@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { configurationService } from '../services';
 import Button from '../components/Button/Button';
-import './ConfigurationEdit.css';
+import './css/ConfigurationEdit.css';
 
 const ConfigurationEdit = () => {
   const navigate = useNavigate();

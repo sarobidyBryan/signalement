@@ -1,4 +1,4 @@
-import './PublicReports.css';
+import './css/PublicReports.css';
 import { useEffect, useState, useCallback } from 'react';
 import Map from '../components/Map';
 import { reportService } from '../services';
@@ -125,8 +125,9 @@ function PublicReports() {
             detailError={error}
             onClose={() => setSelectedDetail(null)}
             onRefresh={openDetail}
-            companies={[]} /* Empty companies list disables admin actions */
+            companies={[]}
             isOpen={!!selectedDetail}
+            readOnly={true}
           />
         </div>
       </div>

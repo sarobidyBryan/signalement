@@ -1,8 +1,9 @@
 .configurations-page {
-  background: #ffffff;
+  background: var(--theme-bg);
   min-height: 100vh;
-  color: #000000;
+  color: var(--theme-text);
   padding: var(--spacing-xl, 32px);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .configurations-page * {
@@ -27,7 +28,7 @@
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.2em;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--theme-text-secondary);
   margin: 0;
 }
 
@@ -35,7 +36,7 @@
   margin: 0;
   font-size: var(--font-size-2xl, 28px);
   font-weight: 700;
-  color: #000000;
+  color: var(--theme-text);
 }
 
 /* Filters */
@@ -44,11 +45,12 @@
   gap: var(--spacing-lg, 24px);
   margin-bottom: var(--spacing-lg, 24px);
   flex-wrap: wrap;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
   border-radius: var(--border-radius-lg, 12px);
   padding: var(--spacing-lg, 24px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .configurations-filters .filter-group {
@@ -61,7 +63,7 @@
 .configurations-filters .filter-group label {
   font-size: 13px;
   font-weight: 500;
-  color: #000000;
+  color: var(--theme-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -69,44 +71,45 @@
 .configurations-filters .filter-input,
 .configurations-filters .filter-select {
   padding: 10px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--theme-input-border);
   border-radius: 8px;
   font-size: 14px;
-  background: #fff;
-  color: #000000;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.3s ease;
 }
 
 .configurations-filters .filter-input::placeholder {
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--theme-text-muted);
 }
 
 .configurations-filters .filter-select option {
-  color: #000000;
-  background: #fff;
+  color: var(--theme-text);
+  background: var(--card-bg);
 }
 
 .configurations-filters .filter-input:focus,
 .configurations-filters .filter-select:focus {
   outline: none;
-  border-color: #000;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  border-color: var(--theme-text);
+  box-shadow: 0 0 0 2px var(--theme-toggle-bg);
 }
 
 /* Table container */
 .configurations-table-container {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
   border-radius: var(--border-radius-lg, 12px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--card-shadow);
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .configurations-loading,
 .configurations-empty {
   padding: var(--spacing-xl, 32px);
   text-align: center;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--theme-text-secondary);
   font-size: 14px;
 }
 
@@ -120,29 +123,29 @@
 .configurations-table td {
   padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .configurations-table th {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--theme-toggle-bg);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--theme-text-secondary);
 }
 
 .configurations-table tbody tr:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--theme-toggle-bg);
 }
 
 .configurations-table td {
   font-size: 14px;
-  color: #000;
+  color: var(--theme-text);
 }
 
 .configurations-table code {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--theme-toggle-bg);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Consolas', 'Monaco', monospace;

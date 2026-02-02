@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './MapView.css';
+import '../css/MapView.css';
 
 export default function MapView({ center = [ -18.8792, 47.5079 ], zoom = 12 }) {
   const mapRef = useRef(null);

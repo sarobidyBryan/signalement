@@ -1,0 +1,192 @@
+.sync-page {
+  background: var(--theme-bg);
+  min-height: 100vh;
+  color: var(--theme-text);
+  padding: var(--spacing-xl, 32px);
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.sync-page h1 {
+  margin: 0 0 var(--spacing-sm, 12px) 0;
+  font-size: var(--font-size-2xl, 32px);
+  font-weight: 700;
+  color: var(--theme-text);
+  text-align: center;
+}
+
+.sync-page > p {
+  margin: 0 0 var(--spacing-xl, 32px) 0;
+  font-size: var(--font-size-base, 16px);
+  color: var(--theme-text-secondary);
+  text-align: center;
+}
+
+.sync-actions {
+  margin: 0 0 var(--spacing-2xl, 48px) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md, 16px);
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-xl, 32px);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.sync-button {
+  background: var(--theme-highlight-bg);
+  color: var(--theme-highlight-text);
+  border: none;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sync-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sync-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sync-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--theme-highlight-text);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-message {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  text-align: center;
+}
+
+.sync-logs,
+.sync-result {
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: var(--spacing-xl, 32px);
+  margin-bottom: var(--spacing-lg, 24px);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.sync-logs h2,
+.sync-result h2 {
+  margin: 0 0 var(--spacing-lg, 24px) 0;
+  font-size: var(--font-size-xl, 24px);
+  font-weight: 600;
+  color: var(--theme-text);
+  text-align: center;
+}
+
+.sync-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sync-table th,
+.sync-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--theme-border);
+  text-align: left;
+  color: var(--theme-text);
+}
+
+.sync-table th {
+  background: var(--theme-toggle-bg);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--theme-text-secondary);
+}
+
+.sync-table tbody tr:hover {
+  background: var(--theme-toggle-bg);
+}
+
+.sync-empty {
+  padding: var(--spacing-xl, 32px);
+  text-align: center;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.sync-result-pre {
+  background: var(--theme-bg-secondary);
+  border: 1px solid var(--theme-border);
+  padding: var(--spacing-lg, 24px);
+  border-radius: 8px;
+  max-height: 400px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--theme-text);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.sync-result-summary {
+  margin-bottom: var(--spacing-md, 16px);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--theme-text);
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sync-page {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .sync-actions {
+    padding: var(--spacing-lg, 24px);
+  }
+
+  .sync-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sync-logs,
+  .sync-result {
+    padding: var(--spacing-lg, 24px);
+  }
+
+  .sync-table th,
+  .sync-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}

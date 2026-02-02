@@ -1,4 +1,4 @@
-/* ========== Summary Page Layout (Copied for Landing) ========== */
+/* ========== Summary Page Layout (Copied for PublicReports) ========== */
 .summary {
   max-width: 1600px;
   margin: 0 auto;
@@ -18,13 +18,15 @@
   margin: 0 0 var(--spacing-sm, 12px) 0;
   font-size: var(--font-size-2xl, 32px);
   font-weight: var(--font-weight-bold, 700);
-  color: var(--color-secondary, #2c3e50);
+  color: var(--theme-text);
+  transition: color 0.3s ease;
 }
 
 .summary-header p {
   margin: 0;
   font-size: var(--font-size-base, 16px);
-  color: var(--color-gray-600, #666);
+  color: var(--theme-text-secondary);
+  transition: color 0.3s ease;
 }
 
 /* Metrics cards */
@@ -37,42 +39,46 @@
 }
 
 .metric-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--card-shadow);
   flex: 1;
   min-width: 180px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Progression globale card - always black bg, white text */
 .metric-card.highlight {
-  background: var(--color-secondary);
-  color: var(--color-primary);
+  background: #000000 !important;
+  color: #ffffff !important;
 }
 
 .metric-card-label {
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: var(--theme-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  transition: color 0.3s ease;
 }
 
 .metric-card.highlight .metric-card-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 .metric-card-value {
   font-size: 28px;
   font-weight: 700;
-  color: #333;
+  color: var(--theme-text);
+  transition: color 0.3s ease;
 }
 
 .metric-card.highlight .metric-card-value {
-  color: white;
+  color: #ffffff !important;
 }
 
 .metric-card-bar {
@@ -83,9 +89,13 @@
   overflow: hidden;
 }
 
+.metric-card.highlight .metric-card-bar {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
 .metric-card-bar-fill {
   height: 100%;
-  background: white;
+  background: #ffffff !important;
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -108,33 +118,26 @@
   /* Fill parent container height */
   border: 2px solid var(--color-secondary);
   border-radius: 12px;
-  background: var(--color-primary);
+  background: var(--card-bg);
   padding: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--card-shadow);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-.landing-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  height: 100%;
-  text-align: center;
-  padding: 40px;
+.map-section .map-container {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 16px;
+  /* Space at bottom inside container */
 }
 
-.landing-cta h2 {
-  font-size: 2rem;
-  color: var(--color-secondary);
-}
-
-.landing-cta p {
-  font-size: 1.2rem;
-  color: var(--color-gray-600);
-  max-width: 600px;
+.map-section.fullwidth {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* display: flex; */
 }
 
 /* Responsive design */
@@ -162,4 +165,66 @@
   .map-section {
     min-height: 250px;
   }
+}
+
+/* Detail panel inline container */
+.detail-inline {
+  width: 0;
+  height: 100%;
+  /* Match parent container height */
+  overflow: hidden;
+  transition: width 0.3s ease-in-out;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.detail-inline.open {
+  width: 450px;
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 1024px) {
+  .summary-content {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .map-section {
+    height: 600px;
+  }
+
+  .detail-inline.open {
+    width: 100%;
+    height: auto;
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .summary-content {
+    gap: 16px;
+  }
+
+  .map-section {
+    height: 500px;
+    padding: 12px;
+  }
+
+  .detail-inline.open {
+    width: 100%;
+  }
+}
+
+/* Landing specific Styles (if any needed for shared file, but separating is better) */
+.landing-cta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 30px;
 }

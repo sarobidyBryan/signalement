@@ -4,7 +4,7 @@ import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
 import { configurationService } from '../services';
 import { ApiError } from '../services/api';
-import './Configurations.css';
+import './css/Configurations.css';
 
 export default function Configurations() {
   const navigate = useNavigate();

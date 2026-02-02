@@ -6,20 +6,21 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--color-primary);
+  background-color: var(--card-bg);
   font-size: var(--font-size-sm);
+  transition: background-color 0.3s ease;
 }
 
 .table-head {
-  background-color: var(--color-gray-100);
-  border-bottom: 2px solid var(--color-gray-300);
+  background-color: var(--theme-bg-secondary);
+  border-bottom: 2px solid var(--theme-border);
 }
 
 .table-header-cell {
   padding: var(--spacing-md);
   text-align: left;
   font-weight: 600;
-  color: var(--color-secondary);
+  color: var(--theme-text);
   user-select: none;
 }
 
@@ -29,17 +30,17 @@
 
 .table-cell {
   padding: var(--spacing-md);
-  color: var(--color-secondary);
-  border-bottom: 1px solid var(--color-gray-200);
+  color: var(--theme-text);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .table-bordered {
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--theme-border);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
 
   .table-header-cell {
-    border-right: 1px solid var(--color-gray-300);
+    border-right: 1px solid var(--theme-border);
 
     &:last-child {
       border-right: none;
@@ -47,7 +48,7 @@
   }
 
   .table-cell {
-    border-right: 1px solid var(--color-gray-300);
+    border-right: 1px solid var(--theme-border);
 
     &:last-child {
       border-right: none;
@@ -58,7 +59,7 @@
 .table-striped {
   tbody tr {
     &:nth-child(odd) {
-      background-color: var(--color-gray-50);
+      background-color: var(--theme-toggle-bg);
     }
   }
 }
@@ -66,7 +67,7 @@
 .table-hoverable {
   tbody tr {
     &:hover {
-      background-color: var(--color-gray-100);
+      background-color: var(--theme-toggle-bg);
     }
   }
 }

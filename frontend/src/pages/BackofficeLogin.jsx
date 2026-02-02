@@ -2,17 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
+import { useTheme, THEMES } from '../contexts/ThemeContext';
+import PublicNavbar from '../components/PublicNavbar/PublicNavbar';
 import Form from '../components/Form/Form';
 import FormField from '../components/Form/FormField';
 import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
-import './BackofficeLogin.css';
+import './css/BackofficeLogin.css';
 
 function BackofficeLogin() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     // Si déjà connecté, rediriger vers le récapitulatif
@@ -54,7 +57,8 @@ function BackofficeLogin() {
   };
 
   return (
-    <div className="backoffice-login">
+    <div className={`backoffice-login ${theme === THEMES.DARK ? 'dark' : 'light'}`}>
+      <PublicNavbar />
       <div className="login-container">
         <div className="login-header">
           <h1>Signaleo</h1>

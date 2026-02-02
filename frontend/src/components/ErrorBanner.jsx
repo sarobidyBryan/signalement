@@ -1,4 +1,4 @@
-import './ErrorBanner.css';
+import './css/ErrorBanner.css';
 
 export default function ErrorBanner({ error }) {
   if (!error) return null;

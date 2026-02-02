@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { authService } from '../services/auth';
-import './BackofficeLayout.css';
+import './css/BackofficeLayout.css';
 
 function BackofficeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -15,7 +15,7 @@ function BackofficeLayout() {
       links: [
         { label: 'Récapitulatif', href: '/backoffice/summary', active: location.pathname === '/backoffice/summary' },
         { label: 'Signalements', href: '/backoffice/reports', active: location.pathname.startsWith('/backoffice/reports') },
-        { label: 'Entreprises', href: '/backoffice/companies' },
+        { label: 'Entreprises', href: '/backoffice/companies', active: location.pathname.startsWith('/backoffice/companies') },
         { label: 'Utilisateurs', href: '/backoffice/users', active: location.pathname.startsWith('/backoffice/users') },
         { label: 'Synchronisation', href: '/backoffice/synchronization', active: location.pathname === '/backoffice/synchronization' },
       ],
@@ -27,6 +27,8 @@ function BackofficeLayout() {
         {
           label: 'Déconnexion',
           onClick: async () => {
+            const confirmed = window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?');
+            if (!confirmed) return;
             try {
               await authService.logout();
             } finally {

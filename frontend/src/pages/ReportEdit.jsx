@@ -6,7 +6,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import { ApiError } from '../services/api';
 import { reportService, statusService, userService, companyService, assignationService } from '../services';
 import { authService } from '../services/auth';
-import './ReportEdit.css';
+import './css/ReportEdit.css';
 
 const ReportEdit = () => {
   const { id } = useParams();

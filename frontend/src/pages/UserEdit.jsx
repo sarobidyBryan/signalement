@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { userService } from '../services';
 import Button from '../components/Button/Button';
-import './UserEdit.css';
+import './css/UserEdit.css';
 
 const UserEdit = () => {
   const navigate = useNavigate();

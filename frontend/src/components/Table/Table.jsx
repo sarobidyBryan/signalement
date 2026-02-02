@@ -1,4 +1,4 @@
-import './Table.css';
+import '../css/Table.css';
 
 const Table = ({
   columns,

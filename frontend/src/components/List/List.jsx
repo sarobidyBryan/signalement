@@ -1,4 +1,4 @@
-import './List.css';
+import '../css/List.css';
 
 const List = ({
   items,

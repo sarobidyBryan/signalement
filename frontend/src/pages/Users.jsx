@@ -4,7 +4,7 @@ import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
 import { userService } from '../services';
 import { ApiError } from '../services/api';
-import './Users.css';
+import './css/Users.css';
 
 export default function Users() {
   const navigate = useNavigate();

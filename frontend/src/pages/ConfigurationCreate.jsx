@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { configurationService } from '../services';
 import Button from '../components/Button/Button';
-import './ConfigurationCreate.css';
+import './css/ConfigurationCreate.css';
 
 const ConfigurationCreate = () => {
   const navigate = useNavigate();

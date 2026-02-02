@@ -1,23 +1,22 @@
 
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from './Header/Header';
-import './PublicLayout.css';
+import { useTheme, THEMES } from '../contexts/ThemeContext';
+import PublicNavbar from './PublicNavbar/PublicNavbar';
+import './css/PublicLayout.css';
 
 function PublicLayout() {
     const location = useLocation();
+    const { theme } = useTheme();
+    const isLanding = location.pathname === '/';
 
-    const navItems = [
-        { href: '/', label: 'Accueil' },
-        { href: '/reports', label: 'Signalements' }
-    ];
+    // Landing page handles its own navbar
+    if (isLanding) {
+        return <Outlet />;
+    }
 
     return (
-        <div className="public-layout">
-            <Header
-                title="Signaleo"
-                navItems={navItems}
-                className="public-header"
-            />
+        <div className={`public-layout ${theme === THEMES.DARK ? 'dark' : 'light'}`}>
+            <PublicNavbar />
             <main className="public-main">
                 <Outlet />
             </main>

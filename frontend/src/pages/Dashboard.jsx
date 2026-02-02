@@ -5,7 +5,7 @@ import { ApiError } from '../services/api';
 import { dashboardService } from '../services';
 import Card from '../components/Card/Card';
 import ErrorBanner from '../components/ErrorBanner';
-import './Dashboard.css';
+import './css/Dashboard.css';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);

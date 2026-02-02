@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './Synchronization.css';
+import './css/Synchronization.css';
 import { bidirectional, getLogs } from '../services/syncService';
 
 export default function Synchronization() {

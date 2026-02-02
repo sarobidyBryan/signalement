@@ -6,7 +6,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import { ApiError } from '../services/api';
 import { assignationProgressService, assignationService, companyService, reportService, statusService, userService } from '../services';
 import { authService } from '../services/auth';
-import './Reports.css';
+import './css/Reports.css';
 
 const emptyFilters = {
   areaMin: '',

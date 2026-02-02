@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import './fonts.css';
 @import './variables.css';
 
 * {
@@ -16,10 +16,11 @@ body {
 }
 
 body {
-  background-color: var(--color-primary);
-  color: var(--color-secondary);
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
   font-size: var(--font-size-md);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -35,16 +36,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-gray-100);
+  background: var(--theme-bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
+  background: var(--theme-text-muted);
   border-radius: var(--border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
+  background: var(--theme-text-secondary);
 }
 
 /* Utility Classes */

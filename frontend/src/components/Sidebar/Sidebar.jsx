@@ -1,5 +1,6 @@
-import './Sidebar.css';
+import '../css/Sidebar.css';
 import { NavLink } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle';
 
 const Sidebar = ({
   items = [],
@@ -23,7 +24,8 @@ const Sidebar = ({
       >
         <div className="sidebar-content">
           <div className="sidebar-header">
-            <h2>Signaleo</h2>
+            <h2>Signaleo<span className="sidebar-logo-exclamation">!</span></h2>
+            <ThemeToggle className="sidebar-variant" />
           </div>
           {items.map((item, index) => (
             <div key={index} className="sidebar-section">

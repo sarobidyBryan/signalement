@@ -1,0 +1,33 @@
+.public-layout {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark theme */
+.public-layout.dark {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
+}
+
+/* Light theme */
+.public-layout.light {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #fafafa 100%);
+}
+
+.public-main {
+  width: 100%;
+  padding-top: 80px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Center children horizontally */
+}
+
+@media (max-width: 768px) {
+  .public-main {
+    padding-top: 70px;
+  }
+}
