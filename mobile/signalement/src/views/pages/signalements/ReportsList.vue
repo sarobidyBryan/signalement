@@ -301,7 +301,6 @@ export default defineComponent({
       const color = (() => {
         switch (status) {
           case 'COMPLETED':
-          case 'VERIFIED':
             return 'bg-green-100 text-green-700';
           case 'CANCELLED':
             return 'bg-red-100 text-red-700';
@@ -321,7 +320,6 @@ export default defineComponent({
     statusPillBg(status: string) {
       switch (status) {
         case 'COMPLETED':
-        case 'VERIFIED':
           return 'bg-green-100';
         case 'CANCELLED':
           return 'bg-red-100';

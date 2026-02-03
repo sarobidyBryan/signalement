@@ -22,7 +22,7 @@
       <div ref="mapContainer" class="h-full w-full z-0"></div>
 
       <!-- Filtres flottants -->
-      <div v-if="showFiltres" class="absolute top-20 left-4 right-4 bg-white rounded-xl shadow-xl p-4 z-10 animate-slideDown">
+      <div v-if="showFiltres" class="absolute top-20 left-4 right-4 bg-white rounded-xl shadow-xl p-4 z-50 animate-slideDown filters-popup">
         <div class="flex items-center justify-between mb-4">
           <h4 class="font-bold text-gray-900">Filtrer les signalements</h4>
           <ion-button fill="clear" @click="toggleFiltres" class="p-0">
@@ -30,42 +30,35 @@
           </ion-button>
         </div>
         
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
-              <span class="text-gray-700">En cours</span>
+          <div class="space-y-3">
+            <div class="mb-2">
+              <h5 class="text-sm font-medium text-gray-700 mb-2">Statuts</h5>
+              <div class="flex flex-wrap gap-2">
+                <ion-chip :outline="selectedStatus !== 'tous'" @click="selectAllStatuses">
+                  <ion-label>Tous</ion-label>
+                </ion-chip>
+                <ion-chip
+                  v-for="sf in statuses"
+                  :key="sf.statusCode"
+                  :outline="selectedStatus !== sf.statusCode"
+                  @click="toggleStatus(sf.statusCode)"
+                >
+                  <ion-label>{{ sf.label }}</ion-label>
+                </ion-chip>
+              </div>
             </div>
-            <ion-toggle 
-              :checked="filtres.enCours" 
-              @ionChange="filtres.enCours = $event.detail.checked; filtrerSignalements()"
-              color="success"
-            ></ion-toggle>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
-              <span class="text-gray-700">Résolus</span>
-            </div>
-            <ion-toggle 
-              :checked="filtres.resolus" 
-              @ionChange="filtres.resolus = $event.detail.checked; filtrerSignalements()"
-              color="success"
-            ></ion-toggle>
-          </div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
-              <span class="text-gray-700">Mes signalements uniquement</span>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
+                <span class="text-gray-700">Mes signalements uniquement</span>
+              </div>
+              <ion-toggle
+                :checked="filtres.onlyMine"
+                @ionChange="filtres.onlyMine = $event.detail.checked; filtrerSignalements()"
+                color="primary"
+              ></ion-toggle>
             </div>
-            <ion-toggle
-              :checked="filtres.onlyMine"
-              @ionChange="filtres.onlyMine = $event.detail.checked; filtrerSignalements()"
-              color="primary"
-            ></ion-toggle>
-          </div>
 
           <!-- Tableau récapitulatif dépendant des filtres -->
           <div class="pt-3">
@@ -75,29 +68,28 @@
           </div>
 
           <div class="pt-2 border-t border-gray-100">
-            <ion-button @click="reinitialiserFiltres" expand="block" fill="outline" class="mt-2">
+            <ion-button @click="reinitialiserFiltres" expand="block" fill="solid" class="mt-2 reset-btn">
               Réinitialiser
             </ion-button>
           </div>
         </div>
       </div>
 
-      <!-- Légende -->
-      <div class="absolute bottom-20 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 z-10">
+      <!-- Légende (masquée si le panneau de filtres est ouvert) -->
+      <div v-if="!showFiltres" class="absolute bottom-20 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 z-10">
         <div class="flex items-center justify-between mb-3">
           <h4 class="font-bold text-gray-900">Signalements</h4>
           <span class="text-sm text-gray-600">{{ signalementsFiltres.length }} visible(s)</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex items-center">
-            <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-            <span class="text-sm text-gray-700">En cours</span>
-            <span class="ml-auto text-sm font-medium">{{ compteurEnCours }}</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span class="text-sm text-gray-700">Résolu</span>
-            <span class="ml-auto text-sm font-medium">{{ compteurResolus }}</span>
+          <div
+            v-for="item in compteurParStatus"
+            :key="item.statusCode"
+            class="flex items-center"
+          >
+            <div :style="{ background: item.color }" class="w-3 h-3 rounded-full mr-2"></div>
+            <span class="text-sm text-gray-700">{{ item.label }}</span>
+            <span class="ml-auto text-sm font-medium">{{ item.count }}</span>
           </div>
         </div>
       </div>
@@ -107,7 +99,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, nextTick } from 'vue';
+import { defineComponent, onMounted, ref, nextTick, computed } from 'vue';
 import TabBar from '@/views/components/global/TabBar.vue';
 import { 
   IonPage, 
@@ -118,7 +110,9 @@ import {
   IonButton,
   IonButtons,
   IonIcon,
-  IonToggle
+  IonToggle,
+  IonChip,
+  IonLabel
 } from '@ionic/vue';
 
 // Import Leaflet
@@ -182,7 +176,9 @@ export default defineComponent({
     IonButton,
     IonButtons,
     IonIcon,
-    IonToggle,
+      IonToggle,
+      IonChip,
+      IonLabel,
     TabBar,
     TableauRecapitulatif
   },
@@ -202,8 +198,8 @@ export default defineComponent({
 
     const showFiltres = ref(false);
     const filtres = ref({
-      enCours: true,
-      resolus: true,
+      // selectedStatuses: empty => all statuses
+      selectedStatuses: [] as string[],
       onlyMine: false
     });
 
@@ -215,6 +211,18 @@ export default defineComponent({
 
     const compteurEnCours = ref(0);
     const compteurResolus = ref(0);
+
+    const compteurParStatus = computed(() => {
+      return statuses.value.map(s => {
+        const count = signalementsFiltres.value.filter(sig => sig.status === s.statusCode).length;
+        return {
+          statusCode: s.statusCode,
+          label: s.label,
+          color: statusColor(s.statusCode),
+          count
+        };
+      });
+    });
 
     const isResolved = (status: string) => {
       return status === 'COMPLETED' || status === 'VERIFIED';
@@ -262,18 +270,48 @@ export default defineComponent({
 
     const filtrerSignalements = () => {
       signalementsFiltres.value = signalements.value.filter(signalement => {
-        const resolved = isResolved(signalement.status);
-        if (resolved && !filtres.value.resolus) return false;
-        if (!resolved && !filtres.value.enCours) return false;
-        // Filtrer par utilisateur connecté si demandé
+        // Filtrer par utilisateur si demandé
         if (filtres.value.onlyMine) {
           const owner = signalement.raw && (signalement.raw.user?.firebaseUid ?? null);
           if (!currentUserId.value || owner !== currentUserId.value) return false;
         }
+
+        // Filtrer par status si des statuses sont sélectionnés
+        const selected = filtres.value.selectedStatuses;
+        if (selected && selected.length > 0) {
+          return selected.includes(signalement.status);
+        }
+
         return true;
       });
       calculerCompteurs();
       updateMarkers();
+    };
+
+    const isStatusSelected = (code: string) => {
+      return filtres.value.selectedStatuses && filtres.value.selectedStatuses.includes(code);
+    };
+
+    const selectedStatus = computed(() => {
+      return (filtres.value.selectedStatuses && filtres.value.selectedStatuses.length > 0)
+        ? filtres.value.selectedStatuses[0]
+        : 'tous';
+    });
+
+    const toggleStatus = (code: string) => {
+      const arr = filtres.value.selectedStatuses || [];
+      // Make selection exclusive: if clicking currently selected, clear; otherwise select only this one
+      if (arr.length === 1 && arr[0] === code) {
+        filtres.value.selectedStatuses = [];
+      } else {
+        filtres.value.selectedStatuses = [code];
+      }
+      filtrerSignalements();
+    };
+
+    const selectAllStatuses = () => {
+      filtres.value.selectedStatuses = [];
+      filtrerSignalements();
     };
 
     const initialiserCarte = async () => {
@@ -550,8 +588,7 @@ export default defineComponent({
 
     const reinitialiserFiltres = () => {
       filtres.value = {
-        enCours: true,
-        resolus: true,
+        selectedStatuses: [],
         onlyMine: false
       };
       filtrerSignalements();
@@ -585,9 +622,11 @@ export default defineComponent({
       signalementsFiltres,
       showFiltres,
       filtres,
+      statuses,
       currentUserId,
       compteurEnCours,
       compteurResolus,
+      compteurParStatus,
       locate,
       layers,
       add,
@@ -601,6 +640,7 @@ export default defineComponent({
       toggleFiltres,
       filtrerSignalements,
       reinitialiserFiltres
+      ,selectedStatus,isStatusSelected,toggleStatus,selectAllStatuses
     };
   }
 });
@@ -655,5 +695,21 @@ export default defineComponent({
   border-radius: 12px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   border: 1px solid #e5e7eb !important;
+}
+
+/* Popup filtres scrollable */
+:deep(.filters-popup) {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  padding-bottom: 96px; /* laisse de l'espace pour le TabBar afin que le bouton Réinitialiser soit cliquable */
+}
+
+/* Bouton Réinitialiser noir et blanc */
+:deep(.reset-btn) {
+  --background: #000000;
+  --color: #ffffff;
+  --border-radius: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
 }
 </style>
