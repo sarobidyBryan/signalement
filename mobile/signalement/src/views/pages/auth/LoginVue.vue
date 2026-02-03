@@ -13,7 +13,14 @@ import {
   IonCol,
   IonIcon 
 } from '@ionic/vue';
-import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+
+// Type for user status entries in Firestore
+interface UserStatusType {
+  id: number;
+  label: string;
+  statusCode: string;
+}
 
 export default defineComponent({
   name: 'LoginPage',
@@ -169,14 +176,29 @@ export default defineComponent({
                 const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nbAttempt || 0) : 0;
 
                 // N'incrémenter que si on n'a pas encore atteint la limite
-                if (currentAttempts >= maxAttempts) {
+                    if (currentAttempts >= maxAttempts) {
                   alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
                   try {
                     const userRef = doc(db, 'users', userId);
                     const userSnap2 = await getDoc(userRef);
                     const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                     if (currentStatus !== 'SUSPENDED') {
-                      await updateDoc(userRef, { 'userStatusType.statusCode': 'SUSPENDED' });
+                      try {
+                        const statusQ = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                        const statusSnap = await getDocs(statusQ);
+                        let suspendedStatus: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                        if (!statusSnap.empty) {
+                          const docData = statusSnap.docs[0].data() as any;
+                          suspendedStatus = {
+                            id: typeof docData.id === 'number' ? docData.id : suspendedStatus.id,
+                            label: typeof docData.label === 'string' ? docData.label : suspendedStatus.label,
+                            statusCode: typeof docData.statusCode === 'string' ? docData.statusCode : suspendedStatus.statusCode,
+                          };
+                        }
+                        await updateDoc(userRef, { userStatusType: suspendedStatus, updatedAt: serverTimestamp() });
+                      } catch (sErr) {
+                        console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                      }
                     }
                   } catch (sErr) {
                     console.error('Impossible de suspendre l\'utilisateur:', sErr);
@@ -196,7 +218,22 @@ export default defineComponent({
                         const userSnap2 = await getDoc(userRef);
                         const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                         if (currentStatus !== 'SUSPENDED') {
-                          await updateDoc(userRef, { 'userStatusType.statusCode': 'SUSPENDED' });
+                          try {
+                            const statusQ2 = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                            const statusSnap2 = await getDocs(statusQ2);
+                            let suspendedStatus2: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                            if (!statusSnap2.empty) {
+                              const docData2 = statusSnap2.docs[0].data() as any;
+                              suspendedStatus2 = {
+                                id: typeof docData2.id === 'number' ? docData2.id : suspendedStatus2.id,
+                                label: typeof docData2.label === 'string' ? docData2.label : suspendedStatus2.label,
+                                statusCode: typeof docData2.statusCode === 'string' ? docData2.statusCode : suspendedStatus2.statusCode,
+                              };
+                            }
+                            await updateDoc(userRef, { userStatusType: suspendedStatus2, updatedAt: serverTimestamp() });
+                          } catch (sErr) {
+                            console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                          }
                         }
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
@@ -209,7 +246,22 @@ export default defineComponent({
                     } else {
                       alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
                         try {
-                        await updateDoc(doc(db, 'users', userId), { 'userStatusType.statusCode': 'SUSPENDED' });
+                        try {
+                          const statusQ3 = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                          const statusSnap3 = await getDocs(statusQ3);
+                          let suspendedStatus3: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                          if (!statusSnap3.empty) {
+                            const docData3 = statusSnap3.docs[0].data() as any;
+                            suspendedStatus3 = {
+                              id: typeof docData3.id === 'number' ? docData3.id : suspendedStatus3.id,
+                              label: typeof docData3.label === 'string' ? docData3.label : suspendedStatus3.label,
+                              statusCode: typeof docData3.statusCode === 'string' ? docData3.statusCode : suspendedStatus3.statusCode,
+                            };
+                          }
+                          await updateDoc(doc(db, 'users', userId), { userStatusType: suspendedStatus3, updatedAt: serverTimestamp() });
+                        } catch (sErr) {
+                          console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                        }
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
                       }
