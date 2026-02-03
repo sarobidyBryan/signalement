@@ -321,7 +321,7 @@ export default defineComponent({
             <!-- Logo / Titre -->
             <div class="text-center mb-8">
               <div class="h-16 bg-black flex items-center justify-center mx-auto mb-4 rounded-lg">
-                <p class="text-2xl font-bold text-white">Signalements</p>
+                <p class="text-2xl font-bold text-white">Signaleo</p>
               </div>
               <h1 class="text-3xl font-bold text-gray-900 mb-2">Bienvenue</h1>
               <p class="text-gray-600">Connectez-vous à votre compte</p>

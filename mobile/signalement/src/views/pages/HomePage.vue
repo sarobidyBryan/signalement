@@ -9,7 +9,7 @@
           <!-- Titre - toujours en première ligne -->
           <div class="flex align-middle justify-center text-black font-bold text-xl w-full md:w-auto text-center md:text-left mb-2 md:mb-0">
             <p>
-              Signalements
+              Signaleo
             </p>
           </div>
           
@@ -234,7 +234,7 @@
           <div class="max-w-7xl mx-auto px-4 md:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
               <div class="mb-8 md:mb-0">
-                <h3 class="text-2xl font-bold mb-4">Signalements</h3>
+                <h3 class="text-2xl font-bold mb-4">Signaleo</h3>
                 <p class="text-gray-400">
                   Construisons ensemble des routes plus sûres
                 </p>
@@ -254,7 +254,7 @@
             </div>
             
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-              © 2024 Signalements. Tous droits réservés.
+              © 2024 Signaleo. Tous droits réservés.
             </div>
           </div>
         </footer>
