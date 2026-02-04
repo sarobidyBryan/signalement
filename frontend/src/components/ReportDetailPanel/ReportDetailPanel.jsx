@@ -47,6 +47,12 @@ const ReportDetailPanel = ({
     return date.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
+  const statusClass = (s) => {
+    const code = (s && (s.statusCode || s.code || s.codeName) || s || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    if (!code) return 'status-default';
+    return `status-${code}`;
+  };
+
   const handleAssignationSubmit = async (event) => {
     event.preventDefault();
     if (!detail?.report?.id) return;
@@ -136,7 +142,11 @@ const ReportDetailPanel = ({
             <div className="detail-summary">
               <div>
                 <p className="summary-label">Statut actuel</p>
-                <p className="summary-value">{detail.report.status?.label || detail.report.status?.statusCode}</p>
+                <p className="summary-value">
+                  <span className={`status-badge ${statusClass(detail.report.status)}`}>
+                    {detail.report.status?.label || detail.report.status?.statusCode}
+                  </span>
+                </p>
               </div>
               <div>
                 <p className="summary-label">Surface totale</p>

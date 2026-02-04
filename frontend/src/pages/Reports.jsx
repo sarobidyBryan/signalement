@@ -371,7 +371,11 @@ function Reports() {
                 <div className="detail-summary">
                   <div>
                     <p className="summary-label">Statut actuel</p>
-                    <p className="summary-value">{detail.report.status?.label || detail.report.status?.statusCode}</p>
+                    <p className="summary-value">
+                      <span className={`status-badge ${((detail.report.status && (detail.report.status.statusCode || '') ) || '').toString().toLowerCase().replace(/[^a-z0-9]+/g,'_') ? 'status-' + ((detail.report.status && (detail.report.status.statusCode || '') ) || '').toString().toLowerCase().replace(/[^a-z0-9]+/g,'_') : 'status-default'}`}>
+                        {detail.report.status?.label || detail.report.status?.statusCode}
+                      </span>
+                    </p>
                   </div>
                   <div>
                     <p className="summary-label">Surface totale</p>
