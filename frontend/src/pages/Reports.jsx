@@ -29,7 +29,7 @@ function Reports() {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
-  const [progressForm, setProgressForm] = useState({ assignationId: '', treatedArea: '', comment: '' });
+  const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
   const [showAssignationForm, setShowAssignationForm] = useState(false);
@@ -175,12 +175,12 @@ function Reports() {
     setProgressLoading(true);
     setDetailError(null);
     try {
-      await assignationProgressService.create({
-        reportsAssignation: { id: parseInt(progressForm.assignationId, 10) },
-        treatedArea: progressForm.treatedArea ? parseFloat(progressForm.treatedArea) : 0,
-        comment: progressForm.comment,
-      });
-      setProgressForm((prev) => ({ ...prev, treatedArea: '', comment: '' }));
+        await assignationProgressService.create({
+          reportsAssignation: { id: parseInt(progressForm.assignationId, 10) },
+          comment: progressForm.comment,
+          registrationDate: progressForm.registrationDate || undefined,
+        });
+        setProgressForm((prev) => ({ ...prev, comment: '', registrationDate: '' }));
       await loadReports();
       await openDetail(detail.report.id);
     } catch (err) {
@@ -514,13 +514,11 @@ function Reports() {
                         </select>
                       </label>
                       <label>
-                        Surface traitée (m²)
+                        Date d'enregistrement
                         <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={progressForm.treatedArea}
-                          onChange={(e) => setProgressForm({ ...progressForm, treatedArea: e.target.value })}
+                          type="datetime-local"
+                          value={progressForm.registrationDate}
+                          onChange={(e) => setProgressForm({ ...progressForm, registrationDate: e.target.value })}
                         />
                       </label>
                       <label>

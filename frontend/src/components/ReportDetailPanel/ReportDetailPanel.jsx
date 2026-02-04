@@ -28,7 +28,7 @@ const ReportDetailPanel = ({
   readOnly = false
 }) => {
   const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
-  const [progressForm, setProgressForm] = useState({ assignationId: '', treatedArea: '', comment: '' });
+  const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
   const [showAssignationForm, setShowAssignationForm] = useState(false);
@@ -92,10 +92,10 @@ const ReportDetailPanel = ({
     try {
       await assignationProgressService.create({
         reportsAssignation: { id: parseInt(assignationId, 10) },
-        treatedArea: progressForm.treatedArea ? parseFloat(progressForm.treatedArea) : 0,
         comment: progressForm.comment,
+        registrationDate: progressForm.registrationDate || undefined,
       });
-      setProgressForm((prev) => ({ ...prev, treatedArea: '', comment: '' }));
+      setProgressForm((prev) => ({ ...prev, comment: '', registrationDate: '' }));
       setShowProgressForm(false);
       onRefresh(detail.report.id);
     } catch (err) {
@@ -292,14 +292,11 @@ const ReportDetailPanel = ({
                     </select>
                   </label>
                   <label>
-                    Surface traitée (m²)
+                    Date d'enregistrement
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={progressForm.treatedArea}
-                      onChange={(e) => setProgressForm({ ...progressForm, treatedArea: e.target.value })}
-                      required
+                      type="datetime-local"
+                      value={progressForm.registrationDate}
+                      onChange={(e) => setProgressForm({ ...progressForm, registrationDate: e.target.value })}
                     />
                   </label>
                   <label>
