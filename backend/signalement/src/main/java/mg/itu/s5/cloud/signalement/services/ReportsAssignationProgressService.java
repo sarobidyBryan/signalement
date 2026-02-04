@@ -61,7 +61,7 @@ public class ReportsAssignationProgressService {
     }
 
     public Map<String, Object> saveWithPercentage(ReportsAssignationProgress p) {
-        // Validation: vérifier que la surface traitée ne dépasse pas la surface du rapport
+        // Validation: vérifier que l'assignation existe
         if (p.getReportsAssignation() == null) {
             throw new IllegalArgumentException("ID d'assignation requis");
         }
@@ -80,18 +80,23 @@ public class ReportsAssignationProgressService {
         BigDecimal reportArea = reportOpt.get().getArea();
         if (reportArea == null) reportArea = BigDecimal.ZERO;
 
-        BigDecimal currentTreated = sumTreatedAreaByReportId(reportId);
-        BigDecimal newTreated = p.getTreatedArea() != null ? p.getTreatedArea() : BigDecimal.ZERO;
-
-        if (currentTreated.add(newTreated).compareTo(reportArea) > 0) {
-            BigDecimal remaining = reportArea.subtract(currentTreated);
-            throw new IllegalArgumentException("La surface traitée ne peut pas dépasser la surface restante (" + remaining + " m²)");
+        int existingProgressCount = repository.findByReportsAssignation_Id(p.getReportsAssignation().getId()).size();
+        BigDecimal targetPercentage;
+        if (existingProgressCount == 0) {
+            targetPercentage = BigDecimal.valueOf(50);
+        } else {
+            targetPercentage = BigDecimal.valueOf(100);
         }
 
-        // Gestion des timestamps
+        // Calculer du treatedArea en fonction du pourcentage
+        BigDecimal treatedArea = reportArea.multiply(targetPercentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        p.setTreatedArea(treatedArea);
+
         if (p.getId() == 0) {
             p.setCreatedAt(java.time.LocalDateTime.now());
         }
+        // Ne pas définir automatiquement registrationDate ici : laisser la valeur fournie par le client
+        p.setUpdatedAt(java.time.LocalDateTime.now());
 
         ReportsAssignationProgress saved = repository.save(p);
         return createProgressMap(saved);
