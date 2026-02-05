@@ -67,7 +67,7 @@ public class PostgresToFirestoreSyncService {
         try {
             results.put("configurations", syncConfigurations());
             results.put("companies", syncCompanies());
-            results.put("statuses", syncStatuses());
+            // statuses synchronization intentionally skipped
             results.put("users", syncUsers());
             results.put("reports", syncReports());
             results.put("success", true);

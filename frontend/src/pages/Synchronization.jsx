@@ -6,8 +6,7 @@ export default function Synchronization() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [logs, setLogs] = useState([]);
-  const [apiResult, setApiResult] = useState(null);
-
+  // fetch logs once on mount; further fetch is triggered after a sync
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -28,8 +27,7 @@ export default function Synchronization() {
     try {
       const res = await bidirectional();
       // backend wraps results in ApiResponse.data.syncResults
-      const payload = res && res.data && res.data.syncResults ? res.data.syncResults : (res && res.data ? res.data : res);
-      setApiResult(payload);
+      // we don't display the raw API payload anymore
       setMessage('Synchronisation terminée avec succès.');
       await fetchLogs();
       return res;
@@ -85,17 +83,7 @@ export default function Synchronization() {
         )}
       </section>
 
-      <section className="sync-result">
-        <h2>Résultat de l'opération</h2>
-        {apiResult ? (
-          <div>
-            <div className="sync-result-summary">Résultat brut :</div>
-            <pre className="sync-result-pre">{JSON.stringify(apiResult, null, 2)}</pre>
-          </div>
-        ) : (
-          <div className="sync-empty">Aucun résultat à afficher.</div>
-        )}
-      </section>
+      {/* raw API result removed — we now display only the synchronized logs */}
     </div>
   );
 }
