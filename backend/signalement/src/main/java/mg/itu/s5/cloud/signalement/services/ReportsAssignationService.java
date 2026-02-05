@@ -1,6 +1,8 @@
 package mg.itu.s5.cloud.signalement.services;
 
+import mg.itu.s5.cloud.signalement.entities.Report;
 import mg.itu.s5.cloud.signalement.entities.ReportsAssignation;
+import mg.itu.s5.cloud.signalement.entities.Status;
 import mg.itu.s5.cloud.signalement.repositories.ReportsAssignationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,13 +17,59 @@ public class ReportsAssignationService {
     @Autowired
     private ReportsAssignationRepository repository;
 
+    @Autowired
+    private StatusService statusService;
+
+    @Autowired
+    private ReportsStatusService reportsStatusService;
+
+    @Autowired
+    private ReportService reportService;
+
     public List<ReportsAssignation> getAll() { return repository.findAll(); }
     public Optional<ReportsAssignation> getById(int id) { return repository.findById(id); }
+
     public ReportsAssignation save(ReportsAssignation r) {
-        if (r.getId() == 0) {
-            r.setCreatedAt(java.time.LocalDateTime.now());
+        boolean isNewAssignation = (r.getId() == 0);
+        if (isNewAssignation) {
+            r.setCreatedAt(LocalDateTime.now());
         }
-        return repository.save(r);
+        ReportsAssignation saved = repository.save(r);
+        
+        if (isNewAssignation) {
+            try {
+                int reportId = 0;
+                if (saved.getReport() != null) {
+                    reportId = saved.getReport().getId();
+                    System.out.println("UNNNNN");
+                } else if (r.getReport() != null) {
+                    reportId = r.getReport().getId();
+                    System.out.println("DEUX");
+                }
+
+                if (reportId > 0) {
+                    Optional<Status> assignedStatusOpt = statusService.getStatusByStatusCode("ASSIGNED");
+                    if (assignedStatusOpt.isPresent()) {
+                        Optional<Report> reportOpt = reportService.getReportById(reportId);
+                        if (reportOpt.isPresent()) {
+                            Report report = reportOpt.get();
+                            report.setStatus(assignedStatusOpt.get());
+                            reportService.saveReport(report);
+
+                            reportsStatusService.addStatusToReport(
+                                report.getId(),
+                                assignedStatusOpt.get().getId(),
+                                LocalDateTime.now()
+                            );
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la mise à jour du statut: " + e.getMessage());
+            }
+        }
+        
+        return saved;
     }
     public void delete(int id) { repository.deleteById(id); }
 

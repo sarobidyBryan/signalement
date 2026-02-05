@@ -61,9 +61,9 @@ INSERT INTO status (status_code, label) VALUES
 --('UNDER_REVIEW', 'En cours d''examen'),
 ('ASSIGNED', 'Assigné à une entreprise'),
 ('IN_PROGRESS', 'Travaux en cours'),
-('COMPLETED', 'Terminé'),
+('COMPLETED', 'Terminé');
 --('CANCELLED', 'Annulé'),
-('VERIFIED', 'Vérifié et validé');
+-- ('VERIFIED', 'Vérifié et validé');
 
 CREATE TRIGGER update_status_updated_at BEFORE UPDATE ON status FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

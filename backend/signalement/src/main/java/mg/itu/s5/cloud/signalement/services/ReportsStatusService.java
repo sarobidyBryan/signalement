@@ -59,4 +59,24 @@ public class ReportsStatusService {
         return repository.save(rs);
     }
     
+    public ReportsStatus recordStatusHistory(int reportId, int statusId, LocalDateTime registrationDate) {
+        Optional<Report> reportOpt = reportService.getReportById(reportId);
+        if (!reportOpt.isPresent()) {
+            throw new IllegalArgumentException("Report non trouvé");
+        }
+        Report report = reportOpt.get();
+
+        Optional<Status> statusOpt = statusRepository.findById(statusId);
+        if (!statusOpt.isPresent()) {
+            throw new IllegalArgumentException("Statut non trouvé");
+        }
+        Status status = statusOpt.get();
+
+        ReportsStatus rs = new ReportsStatus();
+        rs.setReport(report);
+        rs.setStatus(status);
+        rs.setRegistrationDate(registrationDate);
+        return repository.save(rs);
+    }
+    
 }

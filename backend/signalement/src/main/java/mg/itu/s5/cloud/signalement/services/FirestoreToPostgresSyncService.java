@@ -46,6 +46,9 @@ public class FirestoreToPostgresSyncService {
     @Autowired
     private StatusRepository statusRepository;
 
+    @Autowired
+    private ReportsStatusService reportsStatusService;
+
     /**
      * Synchronise toutes les tables depuis Firestore vers PostgreSQL
      */
@@ -163,7 +166,19 @@ public class FirestoreToPostgresSyncService {
                         // Create new report
                         Report newReport = createReportFromFirestore(data, doc.getId());
                         if (newReport != null) {
-                            reportRepository.save(newReport);
+                            Report savedReport = reportRepository.save(newReport);
+                            
+                            // Créer une entrée dans reports_status pour l'historique
+                            try {
+                                reportsStatusService.recordStatusHistory(
+                                    savedReport.getId(),
+                                    savedReport.getStatus().getId(),
+                                    LocalDateTime.now()
+                                );
+                            } catch (Exception e) {
+                                logger.error("Erreur lors de la création de l'entrée reports_status pour le rapport {}", savedReport.getId(), e);
+                            }
+                            
                             created++;
                         }
                     }

@@ -1,12 +1,15 @@
 package mg.itu.s5.cloud.signalement.services;
 
+import mg.itu.s5.cloud.signalement.entities.Report;
 import mg.itu.s5.cloud.signalement.entities.ReportsAssignationProgress;
+import mg.itu.s5.cloud.signalement.entities.Status;
 import mg.itu.s5.cloud.signalement.repositories.ReportsAssignationProgressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +28,12 @@ public class ReportsAssignationProgressService {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private StatusService statusService;
+
+    @Autowired
+    private ReportsStatusService reportsStatusService;
 
     public List<ReportsAssignationProgress> getAll() { return repository.findAll(); }
     public Optional<ReportsAssignationProgress> getById(int id) { return repository.findById(id); }
@@ -61,7 +70,6 @@ public class ReportsAssignationProgressService {
     }
 
     public Map<String, Object> saveWithPercentage(ReportsAssignationProgress p) {
-        // Validation: vérifier que l'assignation existe
         if (p.getReportsAssignation() == null) {
             throw new IllegalArgumentException("ID d'assignation requis");
         }
@@ -93,12 +101,40 @@ public class ReportsAssignationProgressService {
         p.setTreatedArea(treatedArea);
 
         if (p.getId() == 0) {
-            p.setCreatedAt(java.time.LocalDateTime.now());
+            p.setCreatedAt(LocalDateTime.now());
         }
-        // Ne pas définir automatiquement registrationDate ici : laisser la valeur fournie par le client
-        p.setUpdatedAt(java.time.LocalDateTime.now());
+        p.setUpdatedAt(LocalDateTime.now());
 
         ReportsAssignationProgress saved = repository.save(p);
+        
+        try {
+            String newStatusCode = null;
+            if (targetPercentage.compareTo(BigDecimal.valueOf(50)) == 0) {
+                newStatusCode = "IN_PROGRESS";
+            } else if (targetPercentage.compareTo(BigDecimal.valueOf(100)) == 0) {
+                newStatusCode = "COMPLETED";
+            }
+            
+            if (newStatusCode != null) {
+                Optional<Status> newStatusOpt = statusService.getStatusByStatusCode(newStatusCode);
+                if (newStatusOpt.isPresent()) {
+                    if (reportOpt.isPresent()) {
+                        Report report = reportOpt.get();
+                        report.setStatus(newStatusOpt.get());
+                        reportService.saveReport(report);
+                        
+                        reportsStatusService.addStatusToReport(
+                            report.getId(),
+                            newStatusOpt.get().getId(),
+                            java.time.LocalDateTime.now()
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour du statut du rapport: " + e.getMessage());
+        }
+        
         return createProgressMap(saved);
     }
 
