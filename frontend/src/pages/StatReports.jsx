@@ -155,8 +155,47 @@ export default function StatReports() {
 
   const formatDelay = (days) => {
     if (days === null || days === undefined) return '—';
-    if (days < 1) return `${Math.round(days * 24)}h`;
-    return `${days.toFixed(1)}j`;
+    
+    if (days < 1) {
+      return `${Math.round(days * 24)}h`;
+    }
+    
+    if (days < 30) {
+      return `${Math.round(days)}j`;
+    }
+    
+    // Pour les délais >= 30 jours, afficher en mois + jours
+    const months = Math.floor(days / 30);
+    const remainingDays = Math.round(days % 30);
+    
+    if (remainingDays === 0) {
+      return `${months}m`;
+    }
+    
+    return `${months}m${remainingDays}j`;
+  };
+
+  const calculateStats = () => {
+    if (filteredStats.length === 0) {
+      return { avgTotal: null, count: 0 };
+    }
+
+    const completedReports = filteredStats.filter(s => s.delayAssignedToCompleted !== null);
+    
+    if (completedReports.length === 0) {
+      return { avgTotal: null, count: 0, completed: 0 };
+    }
+
+    const totalDelay = completedReports.reduce((sum, s) => sum + s.delayAssignedToCompleted, 0);
+    const avgTotal = totalDelay / completedReports.length;
+
+    return {
+      avgTotal,
+      count: filteredStats.length,
+      completed: completedReports.length,
+      inProgress: filteredStats.filter(s => s.currentStatus === 'Travaux en cours').length,
+      assigned: filteredStats.filter(s => s.currentStatus === 'Assigné à une entreprise').length,
+    };
   };
 
   const getStatusClass = (status) => {
@@ -214,6 +253,36 @@ export default function StatReports() {
         </div>
       </div>
 
+      {(() => {
+        const stats = calculateStats();
+        return (
+          <div className="stat-summary">
+            <div className="stat-summary-item">
+              <span className="stat-summary-label">Total de signalements</span>
+              <span className="stat-summary-value">{stats.count}</span>
+            </div>
+            <div className="stat-summary-item">
+              <span className="stat-summary-label">Terminés</span>
+              <span className="stat-summary-value">{stats.completed}</span>
+            </div>
+            <div className="stat-summary-item">
+              <span className="stat-summary-label">En cours</span>
+              <span className="stat-summary-value">{stats.inProgress}</span>
+            </div>
+            <div className="stat-summary-item">
+              <span className="stat-summary-label">Assignés</span>
+              <span className="stat-summary-value">{stats.assigned}</span>
+            </div>
+            <div className="stat-summary-item stat-summary-item-highlight">
+              <span className="stat-summary-label">Délai moyen (terminés)</span>
+              <span className="stat-summary-value">
+                {stats.avgTotal !== null ? formatDelay(stats.avgTotal) : '—'}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="stat-table-container">
         <table className="stat-table">
           <thead>
@@ -223,15 +292,13 @@ export default function StatReports() {
               <th>Entreprise</th>
               <th>État actuel</th>
               <th>Avancement</th>
-              <th>Délai Assigné → En cours</th>
-              <th>Délai En cours → Terminé</th>
               <th>Délai Total</th>
             </tr>
           </thead>
           <tbody>
             {filteredStats.length === 0 ? (
               <tr>
-                <td colSpan="8" className="stat-empty">Aucun résultat trouvé</td>
+                <td colSpan="6" className="stat-empty">Aucun résultat trouvé</td>
               </tr>
             ) : (
               filteredStats.map(stat => (
@@ -244,19 +311,7 @@ export default function StatReports() {
                       {stat.currentStatus}
                     </span>
                   </td>
-                  <td>
-                    <div className="stat-progress">
-                      <div className="stat-progress-bar">
-                        <div
-                          className="stat-progress-fill"
-                          style={{ width: `${stat.progress}%` }}
-                        />
-                      </div>
-                      <span className="stat-progress-text">{stat.progress}%</span>
-                    </div>
-                  </td>
-                  <td className="stat-delay">{formatDelay(stat.delayAssignedToInProgress)}</td>
-                  <td className="stat-delay">{formatDelay(stat.delayInProgressToCompleted)}</td>
+                  <td className="stat-progress-text">{stat.progress}%</td>
                   <td className="stat-delay stat-delay-total">{formatDelay(stat.delayAssignedToCompleted)}</td>
                 </tr>
               ))
@@ -312,73 +367,6 @@ export default function StatReports() {
                     />
                   </div>
                   <span className="stat-progress-text-large">{selectedStat.progress}% complété</span>
-                </div>
-              </div>
-
-              <div className="stat-popup-section">
-                <h3>Chronologie</h3>
-                <div className="stat-popup-timeline">
-                  <div className="stat-timeline-item">
-                    <div className="stat-timeline-marker stat-timeline-marker-assigned"></div>
-                    <div className="stat-timeline-content">
-                      <div className="stat-timeline-title">Assigné à une entreprise</div>
-                      <div className="stat-timeline-date">{formatDate(selectedStat.assignedDate)}</div>
-                    </div>
-                  </div>
-
-                  {selectedStat.inProgressDate && (
-                    <>
-                      <div className="stat-timeline-connector">
-                        <span className="stat-timeline-delay">{formatDelay(selectedStat.delayAssignedToInProgress)}</span>
-                      </div>
-                      <div className="stat-timeline-item">
-                        <div className="stat-timeline-marker stat-timeline-marker-in-progress"></div>
-                        <div className="stat-timeline-content">
-                          <div className="stat-timeline-title">Travaux en cours</div>
-                          <div className="stat-timeline-date">{formatDate(selectedStat.inProgressDate)}</div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {selectedStat.completedDate && (
-                    <>
-                      <div className="stat-timeline-connector">
-                        <span className="stat-timeline-delay">{formatDelay(selectedStat.delayInProgressToCompleted)}</span>
-                      </div>
-                      <div className="stat-timeline-item">
-                        <div className="stat-timeline-marker stat-timeline-marker-completed"></div>
-                        <div className="stat-timeline-content">
-                          <div className="stat-timeline-title">Terminé</div>
-                          <div className="stat-timeline-date">{formatDate(selectedStat.completedDate)}</div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="stat-popup-section">
-                <h3>Délais cumulés</h3>
-                <div className="stat-popup-grid">
-                  <div className="stat-popup-field">
-                    <span className="stat-popup-label">Assigné → En cours:</span>
-                    <span className="stat-popup-value stat-popup-value-highlight">
-                      {formatDelay(selectedStat.delayAssignedToInProgress)}
-                    </span>
-                  </div>
-                  <div className="stat-popup-field">
-                    <span className="stat-popup-label">En cours → Terminé:</span>
-                    <span className="stat-popup-value stat-popup-value-highlight">
-                      {formatDelay(selectedStat.delayInProgressToCompleted)}
-                    </span>
-                  </div>
-                  <div className="stat-popup-field stat-popup-field-full">
-                    <span className="stat-popup-label">Délai total (Assigné → Terminé):</span>
-                    <span className="stat-popup-value stat-popup-value-total">
-                      {formatDelay(selectedStat.delayAssignedToCompleted)}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
