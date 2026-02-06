@@ -44,6 +44,24 @@
                 <h3 class="text-sm font-medium text-gray-600 mb-1">Date d'inscription</h3>
                 <p class="text-base text-gray-900">{{ formattedRegistrationDate }}</p>
               </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <h3 class="text-sm font-medium text-gray-600 mb-1">Token FCM</h3>
+                <div v-if="fcmToken" class="flex items-center justify-between gap-2">
+                  <p class="text-xs text-gray-900 break-all flex-1 font-mono">{{ fcmToken }}</p>
+                  <button 
+                    @click="copyTokenToClipboard"
+                    class="flex-shrink-0 p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                    :title="tokenCopied ? 'Copié!' : 'Copier'"
+                  >
+                    <ion-icon 
+                      :icon="tokenCopied ? checkmarkDone : copy" 
+                      :style="{color: tokenCopied ? '#22c55e' : '#6b7280'}"
+                      class="text-lg"
+                    ></ion-icon>
+                  </button>
+                </div>
+                <p v-else class="text-base text-gray-500 italic">Aucun token enregistré</p>
+              </div>
             </div>
           </template>
         </div>
@@ -85,7 +103,9 @@ import {
 import {
   person,
   arrowBack,
-  pencil
+  pencil,
+  copy,
+  checkmarkDone
 } from 'ionicons/icons';
 
 import { db } from '@/config/firebase';
@@ -120,9 +140,13 @@ export default defineComponent({
       } as UserData,
       isLoading: false,
       registrationDate: null as any,
+      fcmToken: '',
+      tokenCopied: false,
       person,
       arrowBack,
-      pencil
+      pencil,
+      copy,
+      checkmarkDone
     };
   },
 
@@ -190,6 +214,49 @@ export default defineComponent({
       }
     },
 
+    async chargerToken() {
+      try {
+        const uid = localStorage.getItem('uid');
+        if (!uid) {
+          console.warn('Aucun UID trouvé dans localStorage');
+          return;
+        }
+
+        const tokenRef = doc(db, 'userTokens', uid);
+        const tokenSnap = await getDoc(tokenRef);
+
+        if (tokenSnap.exists()) {
+          const tokenData = tokenSnap.data();
+          if (tokenData.fcmToken) {
+            this.fcmToken = tokenData.fcmToken;
+            console.log('Token FCM chargé avec succès');
+          } else {
+            console.warn('Aucun token FCM trouvé dans le document');
+          }
+        } else {
+          console.warn('Document userTokens non trouvé');
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du token FCM:', error);
+      }
+    },
+
+    async copyTokenToClipboard() {
+      if (!this.fcmToken) return;
+      try {
+        await navigator.clipboard.writeText(this.fcmToken);
+        this.tokenCopied = true;
+        console.log('Token copié au presse-papiers');
+        
+        // Réinitialiser l'état après 2 secondes
+        setTimeout(() => {
+          this.tokenCopied = false;
+        }, 2000);
+      } catch (error) {
+        console.error('Erreur lors de la copie du token:', error);
+      }
+    },
+
     navigateToUpdate() {
       this.$router.push('/personal-data/update');
     },
@@ -201,6 +268,7 @@ export default defineComponent({
 
   mounted() {
     this.chargerDonneesUtilisateur();
+    this.chargerToken();
 
     // Fallback: load from localStorage
     const savedUser = localStorage.getItem('user');
