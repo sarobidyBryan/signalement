@@ -14,6 +14,7 @@ import {
   IonIcon 
 } from '@ionic/vue';
 import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { notificationService } from '../../../services/notificationService';
 
 // Type for user status entries in Firestore
 interface UserStatusType {
@@ -122,7 +123,14 @@ export default defineComponent({
               }
 
               console.log('[LoginVue] Session créée, expiration:', new Date(expiry).toLocaleString());
-
+              
+              try {
+                await notificationService.initialize();
+                console.log('[LoginVue] Service de notifications initialisé');
+              } catch (error) {
+                console.warn('[LoginVue] Erreur lors de l\'initialisation des notifications:', error);
+              }
+              
               this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
