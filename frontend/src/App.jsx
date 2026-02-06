@@ -14,6 +14,7 @@ import ConfigurationEdit from './pages/ConfigurationEdit';
 import Companies from './pages/Companies';
 import CompanyCreate from './pages/CompanyCreate';
 import CompanyEdit from './pages/CompanyEdit';
+import StatReports from './pages/StatReports';
 import BackofficeLayout from './components/BackofficeLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
@@ -41,6 +42,7 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="reports" element={<Reports />} />
         <Route path="reports/:id/edit" element={<ReportEdit />} />
+        <Route path="delais" element={<StatReports />} />
         <Route path="summary" element={<Summary />} />
         <Route path="synchronization" element={<Synchronization />} />
         <Route path="users" element={<Users />} />

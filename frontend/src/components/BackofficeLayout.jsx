@@ -15,6 +15,7 @@ function BackofficeLayout() {
       links: [
         { label: 'Récapitulatif', href: '/backoffice/summary', active: location.pathname === '/backoffice/summary' },
         { label: 'Signalements', href: '/backoffice/reports', active: location.pathname.startsWith('/backoffice/reports') },
+        { label: 'Délais', href: '/backoffice/delais', active: location.pathname === '/backoffice/delais' },
         { label: 'Entreprises', href: '/backoffice/companies', active: location.pathname.startsWith('/backoffice/companies') },
         { label: 'Utilisateurs', href: '/backoffice/users', active: location.pathname.startsWith('/backoffice/users') },
         { label: 'Synchronisation', href: '/backoffice/synchronization', active: location.pathname === '/backoffice/synchronization' },
