@@ -200,7 +200,7 @@ export default function StatReports() {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Terminé': return 'status-completed';
+      case 'Terminé': return 'status_completed';
       case 'Travaux en cours': return 'status-in-progress';
       case 'Assigné à une entreprise': return 'status-assigned';
       default: return '';
@@ -360,12 +360,6 @@ export default function StatReports() {
               <div className="stat-popup-section">
                 <h3>Progression</h3>
                 <div className="stat-popup-progress">
-                  <div className="stat-progress-bar stat-progress-bar-large">
-                    <div
-                      className="stat-progress-fill"
-                      style={{ width: `${selectedStat.progress}%` }}
-                    />
-                  </div>
                   <span className="stat-progress-text-large">{selectedStat.progress}% complété</span>
                 </div>
               </div>
