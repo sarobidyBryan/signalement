@@ -1,9 +1,11 @@
 package mg.itu.s5.cloud.signalement.controllers;
 
 import mg.itu.s5.cloud.signalement.dto.ReportDetailDto;
+import mg.itu.s5.cloud.signalement.entities.ImageReport;
 import mg.itu.s5.cloud.signalement.entities.Report;
 import mg.itu.s5.cloud.signalement.entities.ReportsAssignation;
 import mg.itu.s5.cloud.signalement.entities.ReportsStatus;
+import mg.itu.s5.cloud.signalement.services.ImageReportService;
 import mg.itu.s5.cloud.signalement.services.ReportService;
 import mg.itu.s5.cloud.signalement.services.ReportsAssignationProgressService;
 import mg.itu.s5.cloud.signalement.services.ReportsAssignationService;
@@ -37,6 +39,8 @@ public class ReportController {
     private ReportsStatusService reportsStatusService;
     @Autowired
     private ReportsAssignationProgressService reportsAssignationProgressService;
+    @Autowired
+    private ImageReportService imageReportService;
 
     @GetMapping
     @Operation(summary = "Get all reports", description = "Retrieves a list of reports, optionally filtered by surface, statut, utilisateur et date")
@@ -146,6 +150,17 @@ public class ReportController {
     public ResponseEntity<ApiResponse> getStatusForReport(@PathVariable int id) {
         List<ReportsStatus> list = reportsStatusService.findByReportId(id);
         return ResponseEntity.ok(ApiResponse.success("statuses", list));
+    }
+
+    @GetMapping("/{id}/images")
+    @Operation(summary = "Get images for report", description = "Retrieves the image links attached to a report")
+    public ResponseEntity<ApiResponse> getImagesForReport(@PathVariable int id) {
+        try {
+            List<ImageReport> images = imageReportService.findByReportId(id);
+            return ResponseEntity.ok(ApiResponse.success("images", images));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error(ApiResponse.ErrorCodes.INTERNAL_ERROR, "Erreur lors de la récupération des images"));
+        }
     }
 
     public static class ReportStatusRequest {

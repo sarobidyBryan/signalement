@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import Card from '../Card/Card';
 import Button from '../Button/Button';
 import ErrorBanner from '../ErrorBanner';
 import { assignationProgressService, assignationService } from '../../services';
+import { reportService } from '../../services/reportService';
 import '../css/ReportDetailPanel.css';
 
 /**
@@ -34,6 +36,10 @@ const ReportDetailPanel = ({
   const [showAssignationForm, setShowAssignationForm] = useState(false);
   const [showProgressForm, setShowProgressForm] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [images, setImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [imagesError, setImagesError] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
   const formatNumber = (value) => {
     if (value == null) return '—';
@@ -121,6 +127,29 @@ const ReportDetailPanel = ({
     }
   });
 
+  useEffect(() => {
+    let mounted = true;
+    const loadImages = async () => {
+      setImages([]);
+      setImagesError(null);
+      if (!detail?.report?.id) return;
+      setImagesLoading(true);
+      try {
+        const imgs = await reportService.getImages(detail.report.id);
+        if (!mounted) return;
+        setImages(Array.isArray(imgs) ? imgs : []);
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Error loading images', err);
+        setImagesError({ message: 'Impossible de charger les images' });
+      } finally {
+        if (mounted) setImagesLoading(false);
+      }
+    };
+    loadImages();
+    return () => { mounted = false; };
+  }, [detail?.report?.id]);
+
   return (
     <section className={`report-detail-panel ${isOpen ? 'detail-open' : ''}`}>
       <div className="detail-panel-inner">
@@ -189,6 +218,38 @@ const ReportDetailPanel = ({
                 <p className="summary-label">Description</p>
                 <p className="description-text">{detail.report.description || 'Aucune description fournie'}</p>
               </div>
+            </div>
+
+            <div className="images-section">
+              <div className="section-header">
+                <h3>Images</h3>
+                {imagesLoading ? <span>Chargement...</span> : <span>{images.length} photo(s)</span>}
+              </div>
+              {imagesError && <ErrorBanner error={imagesError} />}
+              <div className="images-grid">
+                {images && images.length > 0 ? (
+                  images.map((img, idx) => (
+                    <button key={img.id || idx} className="image-thumb" onClick={() => setLightboxIndex(idx)} aria-label={`Ouvrir l'image ${idx + 1}`}>
+                      <img src={img.lien} alt={`Photo ${idx + 1}`} />
+                    </button>
+                  ))
+                ) : (
+                  !imagesLoading && <p className="inline-hint">Aucune image pour ce signalement.</p>
+                )}
+              </div>
+
+              {lightboxIndex >= 0 && images[lightboxIndex] && (
+                <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setLightboxIndex(-1)}>
+                  <button className="lightbox-close" onClick={() => setLightboxIndex(-1)}>×</button>
+                  <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
+                    <img src={images[lightboxIndex].lien} alt={`Photo ${lightboxIndex + 1}`} />
+                    <div className="lightbox-controls">
+                      <button disabled={lightboxIndex <= 0} onClick={() => setLightboxIndex((i) => Math.max(0, i - 1))}>‹</button>
+                      <button disabled={lightboxIndex >= images.length - 1} onClick={() => setLightboxIndex((i) => Math.min(images.length - 1, i + 1))}>›</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {formError && <ErrorBanner error={formError} />}
