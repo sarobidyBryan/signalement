@@ -80,10 +80,20 @@
                 <span>{{ signalement.date }}</span>
               </div>
             </div>
+            <div class="mt-3">
+              <div class="flex items-center">
+                <ion-button v-if="signalement.image_report && signalement.image_report.length" fill="clear" size="small" @click.stop="openGalleryFor(signalement)" class="p-0">
+                  <ion-icon :icon="image" class="mr-2"></ion-icon>
+                  <span>Voir photos</span>
+                </ion-button>
+                <span v-else class="text-sm text-gray-400">Aucune photo</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </ion-content>
+    <ImageGalleryModal v-model="galleryVisible" :images="galleryImages" :startIndex="galleryStartIndex" />
     <ReportForm ref="reportFormRef" v-if="showCreationForm" @close="showCreationForm = false" @submit="handleSubmit"/>
     <TabBar />
     
@@ -94,6 +104,7 @@
 import { defineComponent } from 'vue';
 import TabBar from '@/views/components/global/TabBar.vue';
 import ReportForm from '@/views/components/global/signalement/ReportForm.vue';
+import ImageGalleryModal from '@/views/components/global/signalement/ImageGalleryModal.vue';
 import { 
   IonPage, 
   IonHeader, 
@@ -117,7 +128,8 @@ import {
   checkmarkCircle,
   closeCircle,
   location,
-  time
+  time,
+  image
 } from 'ionicons/icons';
 
 type Report = {
@@ -130,6 +142,7 @@ type Report = {
   status: string;
   budget?: number | null;
   companyName?: string | null;
+  image_report?: any[];
 };
 
 export default defineComponent({
@@ -147,7 +160,8 @@ export default defineComponent({
     IonChip,
     IonLabel,
     TabBar,
-    ReportForm
+    ReportForm,
+    ImageGalleryModal
   },
   
   data() {
@@ -157,11 +171,15 @@ export default defineComponent({
       statuses: [] as Array<{ id?: number; statusCode: string; label: string }>,
       signalements: [] as Report[],
       reportFormRef: null,
+      galleryVisible: false,
+      galleryImages: [] as string[],
+      galleryStartIndex: 0,
       add,
       refresh,
       documentText,
       warning,
       checkmarkCircle,
+      image,
       location,
       time
     };
@@ -231,6 +249,7 @@ export default defineComponent({
             titre,
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
+            image_report: d.image_report ?? [],
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
@@ -315,6 +334,26 @@ export default defineComponent({
     voirSignalement(id: number) {
       console.log('Voir signalement', id);
       // Navigation vers le détail
+    },
+
+    normalizeImages(imageArr: any[]) {
+      if (!imageArr || !Array.isArray(imageArr)) return [];
+      return imageArr.map((it: any) => {
+        if (!it) return '';
+        if (typeof it === 'string') return it;
+        return it.lien ?? it.url ?? it.path ?? '';
+      }).filter((u: string) => !!u);
+    },
+
+    openGalleryFor(signalement: Report, start = 0) {
+      const imgs = this.normalizeImages((signalement as any).image_report ?? (signalement as any).raw?.image_report ?? []);
+      if (!imgs || imgs.length === 0) {
+        alert('Aucune photo pour ce signalement');
+        return;
+      }
+      this.galleryImages = imgs;
+      this.galleryStartIndex = start;
+      this.galleryVisible = true;
     },
     
     statusLabel(status: string) {

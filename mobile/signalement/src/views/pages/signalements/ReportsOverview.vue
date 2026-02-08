@@ -94,6 +94,7 @@
         </div>
       </div>
     </ion-content>
+    <ImageGalleryModal v-model="galleryVisible" :images="galleryImages" :startIndex="galleryStartIndex" />
     <TabBar active-tab="carte" />
   </ion-page>
 </template>
@@ -130,9 +131,11 @@ import {
   warning,
   checkmarkCircle,
   filter,
-  close
+  close,
+  image
 } from 'ionicons/icons';
 import TableauRecapitulatif from '@/views/components/global/TableauRecapitulatif.vue';
+import ImageGalleryModal from '@/views/components/global/signalement/ImageGalleryModal.vue';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/config/firebase';
@@ -180,7 +183,8 @@ export default defineComponent({
       IonChip,
       IonLabel,
     TabBar,
-    TableauRecapitulatif
+    TableauRecapitulatif,
+    ImageGalleryModal
   },
   
   setup() {
@@ -226,6 +230,32 @@ export default defineComponent({
 
     const isResolved = (status: string) => {
       return status === 'COMPLETED' || status === 'VERIFIED';
+    };
+
+    // Gallery state
+    const galleryVisible = ref(false);
+    const galleryImages = ref<string[]>([]);
+    const galleryStartIndex = ref(0);
+    const pinnedMarkerId = ref<number | null>(null);
+
+    const normalizeImagesArr = (imageArr: any[]) => {
+      if (!imageArr || !Array.isArray(imageArr)) return [];
+      return imageArr.map((it: any) => {
+        if (!it) return '';
+        if (typeof it === 'string') return it;
+        return it.lien ?? it.url ?? it.path ?? '';
+      }).filter((u: string) => !!u);
+    };
+
+    const openGalleryFromSignalement = (signalement: any, start = 0) => {
+      const imgs = normalizeImagesArr(signalement.raw?.image_report ?? signalement.image_report ?? []);
+      if (!imgs || imgs.length === 0) {
+        alert('Aucune photo pour ce signalement');
+        return;
+      }
+      galleryImages.value = imgs;
+      galleryStartIndex.value = start;
+      galleryVisible.value = true;
     };
 
     const statusLabel = (status: string) => {
@@ -426,25 +456,59 @@ export default defineComponent({
                 </span>
                 <span class="text-xs text-gray-500">${signalement.date}</span>
               </div>
+              <div class="mt-2">
+                <button id="view-photos-${signalement.id}" style="background:#ffffff;color:#000000;padding:8px 10px;border-radius:8px;font-size:13px;border:1px solid #000000;width:100%;display:block;text-align:center;">Voir photos</button>
+              </div>
             </div>
           `);
           
-          // Ouvrir le popup au survol (desktop) et le fermer au mouseout
+          // Ouvrir le popup au survol (desktop)
           marker.on('mouseover', () => {
             try { marker.openPopup(); } catch (e) { /* no-op */ }
           });
+
+          // Fermer le popup au mouseout seulement si il n'est pas "pinned" par un clic
+          // Nous utilisons une variable locale stockée dans closure via pinnedMarkerId
           marker.on('mouseout', () => {
-            try { marker.closePopup(); } catch (e) { /* no-op */ }
+            try {
+              if (pinnedMarkerId.value === signalement.id) return;
+              marker.closePopup();
+            } catch (e) { /* no-op */ }
           });
 
-          // Sur mobile/tactile, le clic ouvrira toujours le popup
+          // Sur mobile/tactile, le clic fixera (pinné) le popup pour permettre d'interagir avec son contenu
           marker.on('click', () => {
-            try { marker.openPopup(); } catch (e) { /* no-op */ }
+            try {
+              pinnedMarkerId.value = signalement.id;
+              marker.openPopup();
+            } catch (e) { /* no-op */ }
+          });
+
+          // Quand le popup se ferme, on débloque le pinned state
+          marker.on('popupclose', () => {
+            try {
+              if (pinnedMarkerId.value === signalement.id) pinnedMarkerId.value = null;
+            } catch (e) { /* no-op */ }
           });
 
           if (map) {
             marker.addTo(map);
             markers.push(marker);
+
+            // Attacher l'écouteur sur l'ouverture du popup pour le bouton 'Voir photos'
+            marker.on('popupopen', () => {
+              try {
+                const el = document.getElementById(`view-photos-${signalement.id}`);
+                if (el) {
+                  // Remplacer onclick pour éviter doublons
+                  (el as any).onclick = () => {
+                    try { openGalleryFromSignalement(signalement); } catch (e) { console.warn(e); }
+                  };
+                }
+              } catch (e) {
+                console.warn('Erreur liaison bouton photos popup:', e);
+              }
+            });
           }
         } catch (err) {
           console.error('Erreur ajout marqueur pour signalement', signalement.id, err);
@@ -503,6 +567,7 @@ export default defineComponent({
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
+            image_report: d.image_report ?? [],
             raw: d
           };
         });
@@ -634,6 +699,7 @@ export default defineComponent({
       checkmarkCircle,
       filter,
       close,
+      image,
       centrerSurPosition,
       changerTypeCarte,
       nouveauSignalement,
@@ -641,6 +707,7 @@ export default defineComponent({
       filtrerSignalements,
       reinitialiserFiltres
       ,selectedStatus,isStatusSelected,toggleStatus,selectAllStatuses
+      ,galleryVisible,galleryImages,galleryStartIndex,openGalleryFromSignalement,normalizeImagesArr
     };
   }
 });
