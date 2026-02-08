@@ -115,16 +115,64 @@ const Map = ({ reports = [], onReportClick = () => { }, className = '' }) => {
 
       const marker = L.marker([lat, lon], { icon });
 
-      const popupHtml = `<div style="font-size:12px"><strong>${statusLabel || status}</strong><br/>${userName ? userName + '<br/>' : ''}Surface: ${r.area || '-'} m²<br/>${(description || '').slice(0, 120)}</div>`;
+      const popupHtml = `
+        <div style="font-size:12px">
+          <strong>${statusLabel || status}</strong><br/>
+          ${userName ? userName + '<br/>' : ''}
+          Surface: ${r.area || '-'} m²<br/>
+          ${(description || '').slice(0, 120)}
+          <div style="margin-top:8px;text-align:right">
+          <button class="view-images-btn" data-report-id="${r.id}" style="cursor:pointer;padding:6px 8px;border-radius:4px">
+            Voir images
+          </button>
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml, { className: 'report-popup', autoClose: false, closeOnClick: false, closeButton: true, maxWidth: 240 });
+
+      let popupHovering = false;
 
       marker.on('mouseover', () => {
-        marker.bindTooltip(popupHtml, { direction: 'top', offset: [0, -40], opacity: 0.95 }).openTooltip();
+        marker.openPopup();
         if (map.getContainer) map.getContainer().style.cursor = 'pointer';
       });
+
       marker.on('mouseout', () => {
-        marker.closeTooltip();
-        if (map.getContainer) map.getContainer().style.cursor = '';
+        setTimeout(() => {
+          if (!popupHovering) {
+            marker.closePopup();
+            if (map.getContainer) map.getContainer().style.cursor = '';
+          }
+        }, 150);
       });
+
+      marker.on('popupopen', () => {
+        const popupEl = marker.getPopup().getElement();
+        if (!popupEl) return;
+        const onEnter = () => { popupHovering = true; };
+        const onLeave = () => { popupHovering = false; marker.closePopup(); if (map.getContainer) map.getContainer().style.cursor = ''; };
+        popupEl.addEventListener('mouseenter', onEnter);
+        popupEl.addEventListener('mouseleave', onLeave);
+
+        const btn = popupEl.querySelector('.view-images-btn');
+        if (btn) {
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            marker.closePopup();
+            onReportClick(r.id);
+          });
+        }
+
+        marker.once('popupclose', () => {
+          try {
+            popupEl.removeEventListener('mouseenter', onEnter);
+            popupEl.removeEventListener('mouseleave', onLeave);
+          } catch (e) {
+          }
+        });
+      });
+
       marker.on('click', () => onReportClick(r.id));
 
       markersLayer.addLayer(marker);
