@@ -171,6 +171,16 @@ CREATE TABLE reports_assignation_progress(
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE image_report(
+    id SERIAL PRIMARY KEY,
+    lien VARCHAR(1000) NOT NULL,
+    report_id INTEGER NOT NULL REFERENCES reports(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER update_image_report_updated_at BEFORE UPDATE ON image_report FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TABLE synchronization_logs(
     id SERIAL PRIMARY KEY,
     sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
