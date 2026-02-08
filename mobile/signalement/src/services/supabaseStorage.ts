@@ -1,8 +1,15 @@
 /**
- * Service d'upload d'images vers Supabase Storage.
+ * [DÉSACTIVÉ] Service d'upload d'images vers Supabase Storage.
+ * Remplacé par cloudinaryStorage.ts
  * Gère la compression, l'upload et la génération des URLs publiques.
  */
 
+// =============================================================================
+// CODE SUPABASE STORAGE COMMENTÉ — Remplacé par Cloudinary
+// Voir : @/services/cloudinaryStorage.ts
+// =============================================================================
+
+/*
 import { supabase, STORAGE_BUCKET } from '@/config/supabase';
 import { compressImage } from '@/utils/imageCompression';
 import type { UserPhoto } from '@/composables/usePhotoGallery';
@@ -13,21 +20,10 @@ export interface ImageReport {
   lien: string;
 }
 
-/**
- * Génère un identifiant unique simple (sans dépendance externe).
- */
 function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-/**
- * Upload une seule image vers Supabase Storage.
- *
- * @param photo      - Photo à uploader (avec webviewPath)
- * @param reportId   - ID du signalement Firestore
- * @param index      - Index de la photo (pour nommage unique)
- * @returns ImageReport avec l'URL publique
- */
 async function uploadSingleImage(
   photo: UserPhoto,
   reportId: string,
@@ -37,14 +33,11 @@ async function uploadSingleImage(
     throw new Error(`La photo ${photo.filepath} n'a pas de webviewPath`);
   }
 
-  // 1. Compresser l'image (≤ 200 Ko)
   const compressedBlob = await compressImage(photo.webviewPath);
 
-  // 2. Construire le chemin dans le bucket : reports/{reportId}/{timestamp}_{index}.jpg
   const imageId = generateId();
   const filePath = `reports/${reportId}/${imageId}_${index}.jpg`;
 
-  // 3. Upload vers Supabase Storage
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, compressedBlob, {
@@ -57,7 +50,6 @@ async function uploadSingleImage(
     throw new Error(`Erreur upload image ${index}: ${uploadError.message}`);
   }
 
-  // 4. Récupérer l'URL publique
   const { data: urlData } = supabase.storage
     .from(STORAGE_BUCKET)
     .getPublicUrl(filePath);
@@ -69,14 +61,6 @@ async function uploadSingleImage(
   };
 }
 
-/**
- * Upload toutes les photos d'un signalement vers Supabase Storage.
- * Compresse chaque image avant l'upload.
- *
- * @param photos    - Tableau de UserPhoto à uploader
- * @param reportId  - ID du signalement Firestore
- * @returns Tableau d'ImageReport avec les URLs publiques
- */
 export async function uploadReportImages(
   photos: UserPhoto[],
   reportId: string
@@ -86,7 +70,6 @@ export async function uploadReportImages(
   const results: ImageReport[] = [];
   const errors: string[] = [];
 
-  // Upload séquentiel pour éviter de surcharger la connexion
   for (let i = 0; i < photos.length; i++) {
     try {
       const imageReport = await uploadSingleImage(photos[i], reportId, i);
@@ -116,11 +99,6 @@ export async function uploadReportImages(
   return results;
 }
 
-/**
- * Supprime toutes les images d'un signalement dans Supabase Storage.
- *
- * @param reportId - ID du signalement
- */
 export async function deleteReportImages(reportId: string): Promise<void> {
   const { data: files, error: listError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -142,3 +120,4 @@ export async function deleteReportImages(reportId: string): Promise<void> {
     }
   }
 }
+*/

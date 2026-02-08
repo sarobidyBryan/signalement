@@ -285,7 +285,7 @@ export default defineComponent({
         status: await getStatus("SUBMITTED"),
         user : JSON.parse(localStorage.getItem('user')!) || null ,
         createdAt : new Date(),
-        // Les photos sont transmises séparément pour upload vers Supabase Storage
+        // Les photos sont transmises séparément pour upload vers Cloudinary
         _photos: [...photos.value],
       };
 

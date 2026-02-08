@@ -119,7 +119,8 @@ import {
 } from '@ionic/vue';
 import { collection, getDocs, query, orderBy, doc, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { uploadReportImages } from '@/services/supabaseStorage';
+// import { uploadReportImages } from '@/services/supabaseStorage';
+import { uploadReportImages } from '@/services/cloudinaryStorage';
 import { 
   add, 
   refresh, 
@@ -284,10 +285,11 @@ export default defineComponent({
         const docRef = await addDoc(collection(db, "reports"), reportData);
         console.log("Signalement créé avec ID:", docRef.id);
 
-        // 2. Upload des images vers Supabase Storage (compressées)
+        // 2. Upload des images vers Cloudinary (compressées)
+        // [ANCIEN] Upload vers Supabase Storage — maintenant remplacé par Cloudinary
         if (photos.length > 0) {
           try {
-            console.log(`Upload de ${photos.length} image(s) vers Supabase Storage...`);
+            console.log(`Upload de ${photos.length} image(s) vers Cloudinary...`);
             const imageReports = await uploadReportImages(photos, docRef.id);
 
             // 3. Mettre à jour le document Firestore avec les références des images
