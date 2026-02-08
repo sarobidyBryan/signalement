@@ -285,10 +285,11 @@ export default defineComponent({
         status: await getStatus("SUBMITTED"),
         user : JSON.parse(localStorage.getItem('user')!) || null ,
         createdAt : new Date(),
-        photos: photos.value // Inclure les photos (même si pas encore stockées)
+        // Les photos sont transmises séparément pour upload vers Supabase Storage
+        _photos: [...photos.value],
       };
 
-      // Émettre l'événement au parent
+      // Émettre l'événement au parent (les photos seront uploadées après création du doc Firestore)
       emit('submit', payload);
       
       // Note: Ne pas réinitialiser isSubmitting ici, le parent doit le faire

@@ -106,8 +106,9 @@ import {
   IonChip,
   IonLabel
 } from '@ionic/vue';
-import { collection, getDocs, query, orderBy, setDoc, doc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { uploadReportImages } from '@/services/supabaseStorage';
 import { 
   add, 
   refresh, 
@@ -252,15 +253,40 @@ export default defineComponent({
       }
     },
 
-    async handleSubmit(payload) {
+    async handleSubmit(payload: any) {
       console.log("Nous allons sauvegarder le payload:", payload);
       try {
-        const docRef = await addDoc(collection(db, "reports"), payload);
+        // Extraire les photos du payload (elles ne doivent pas être stockées brutes dans Firestore)
+        const photos = payload._photos || [];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _photos, ...reportData } = payload;
+
+        // 1. Créer le document dans Firestore
+        const docRef = await addDoc(collection(db, "reports"), reportData);
         console.log("Signalement créé avec ID:", docRef.id);
+
+        // 2. Upload des images vers Supabase Storage (compressées)
+        if (photos.length > 0) {
+          try {
+            console.log(`Upload de ${photos.length} image(s) vers Supabase Storage...`);
+            const imageReports = await uploadReportImages(photos, docRef.id);
+
+            // 3. Mettre à jour le document Firestore avec les références des images
+            if (imageReports.length > 0) {
+              await updateDoc(doc(db, "reports", docRef.id), {
+                image_report: imageReports, // [{id, id_report, lien}, ...]
+              });
+              console.log(`${imageReports.length} image(s) enregistrée(s) dans le signalement`);
+            }
+          } catch (uploadError) {
+            console.error("Erreur lors de l'upload des images:", uploadError);
+            alert("Le signalement a été créé mais certaines images n'ont pas pu être uploadées.");
+          }
+        }
         
         // Reset le formulaire
         if (this.$refs.reportFormRef) {
-          this.$refs.reportFormRef.resetForm();
+          (this.$refs.reportFormRef as any).resetForm();
         }
         
         // Fermer le formulaire
@@ -270,7 +296,7 @@ export default defineComponent({
         await this.loadSignalements();
       } catch (error) {
         console.error("Erreur lors de la création du signalement:", error);
-        // Gérer l'erreur (afficher un message, etc.)
+        alert("Erreur lors de la création du signalement. Veuillez réessayer.");
       }
     },
     
