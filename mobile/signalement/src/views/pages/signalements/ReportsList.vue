@@ -18,14 +18,14 @@
       <!-- Filtres -->
       <div class="px-4 pt-4">
         <div class="flex space-x-2 mb-4 filter-chips">
-          <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'">
+          <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'; currentPage = 1">
             <ion-label>Tous</ion-label>
           </ion-chip>
           <ion-chip
             v-for="sf in statuses"
             :key="sf.statusCode"
             :outline="filter !== sf.statusCode"
-            @click="filter = sf.statusCode"
+            @click="filter = sf.statusCode; currentPage = 1"
           >
             <ion-label>{{ sf.label }}</ion-label>
           </ion-chip>
@@ -84,7 +84,7 @@
             </div>
             <div class="mt-3">
               <div class="flex items-center">
-                <ion-button v-if="signalement.image_report && signalement.image_report.length" fill="clear" size="small" @click.stop="openGalleryFor(signalement)" class="p-0">
+                <ion-button v-if="signalement.imageReport && signalement.imageReport.length" fill="clear" size="small" @click.stop="openGalleryFor(signalement)" class="p-0">
                   <ion-icon :icon="image" class="mr-2"></ion-icon>
                   <span>Voir photos</span>
                 </ion-button>
@@ -92,6 +92,36 @@
               </div>
             </div>
           </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex items-center justify-between mt-6 pb-4">
+          <ion-button
+            :disabled="currentPage === 1"
+            @click="previousPage"
+            fill="solid"
+            size="default"
+            class="pagination-btn"
+            aria-label="Précédent"
+          >
+            <ion-icon slot="icon-only" :icon="chevronBack" size="large"></ion-icon>
+          </ion-button>
+
+          <div class="text-sm text-gray-600 text-center">
+            Page {{ currentPage }} / {{ totalPages }}
+            <span class="block text-xs text-gray-500">{{ totalFiltered }} signalement(s)</span>
+          </div>
+
+          <ion-button
+            :disabled="currentPage === totalPages"
+            @click="nextPage"
+            fill="solid"
+            size="default"
+            class="pagination-btn"
+            aria-label="Suivant"
+          >
+            <ion-icon slot="icon-only" :icon="chevronForward" size="large"></ion-icon>
+          </ion-button>
         </div>
       </div>
     </ion-content>
@@ -130,6 +160,8 @@ import {
   warning, 
   checkmarkCircle,
   closeCircle,
+  chevronBack,
+  chevronForward,
   location,
   time,
   image
@@ -145,7 +177,11 @@ type Report = {
   status: string;
   budget?: number | null;
   companyName?: string | null;
-  image_report?: any[];
+  imageReport?: any[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  firebaseId?: string;
+  postgresId?: string;
 };
 
 export default defineComponent({
@@ -178,6 +214,10 @@ export default defineComponent({
       galleryVisible: false,
       galleryImages: [] as string[],
       galleryStartIndex: 0,
+      currentPage: 1,
+      itemsPerPage: 10,
+      chevronBack,
+      chevronForward,
       add,
       refresh,
       documentText,
@@ -191,8 +231,26 @@ export default defineComponent({
   
   computed: {
     signalementsFiltres() {
-      if (this.filter === 'tous') return this.signalements;
-      return this.signalements.filter(s => s.status === this.filter);
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return filtered.slice(start, end);
+    },
+    
+    totalPages() {
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      return Math.ceil(filtered.length / this.itemsPerPage);
+    },
+    
+    totalFiltered() {
+      return this.filter === 'tous' 
+        ? this.signalements.length 
+        : this.signalements.filter(s => s.status === this.filter).length;
     }
   },
   
@@ -253,7 +311,7 @@ export default defineComponent({
             titre,
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
-            image_report: d.image_report ?? [],
+            imageReport: d.imageReport ?? [],
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
@@ -284,21 +342,29 @@ export default defineComponent({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _photos, ...reportData } = payload;
 
+        // Ajouter les timestamps
+        reportData.createdAt = new Date();
+        reportData.updatedAt = new Date();
+
         // 1. Créer le document dans Firestore
         const docRef = await addDoc(collection(db, "reports"), reportData);
         console.log("Signalement créé avec ID:", docRef.id);
 
-        // 2. Upload des images vers Cloudinary (compressées)
+        // 2. Mettre à jour le document avec firebaseId et postgresId
+        const updateData: any = {
+          firebaseId: docRef.id,
+          postgresId: ''
+        };
+
+        // 3. Upload des images vers Cloudinary (compressées)
         if (photos.length > 0) {
           try {
             console.log(`Upload de ${photos.length} image(s) vers Cloudinary...`);
             const imageReports = await uploadReportImages(photos, docRef.id);
 
-            // 3. Mettre à jour le document Firestore avec les références des images
+            // Ajouter les références des images à la mise à jour
             if (imageReports.length > 0) {
-              await updateDoc(doc(db, "reports", docRef.id), {
-                image_report: imageReports, // [{id, id_report, lien}, ...]
-              });
+              updateData.imageReport = imageReports;
               console.log(`${imageReports.length} image(s) enregistrée(s) dans le signalement`);
             }
           } catch (uploadError) {
@@ -306,6 +372,9 @@ export default defineComponent({
             alert("Le signalement a été créé mais certaines images n'ont pas pu être uploadées.");
           }
         }
+
+        // 4. Mettre à jour le document avec tous les champs (firebaseId, postgresId, et images si présentes)
+        await updateDoc(doc(db, "reports", docRef.id), updateData);
         
         // Reset le formulaire
         if (this.$refs.reportFormRef) {
@@ -334,9 +403,23 @@ export default defineComponent({
     },
 
     async highlightAndScrollTo(id: string) {
+      // Trouver la page où se trouve le signalement
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      
+      const index = filtered.findIndex(s => s.id === id);
+      
+      if (index !== -1) {
+        // Calculer la page appropriée (les pages commencent à 1)
+        const targetPage = Math.floor(index / this.itemsPerPage) + 1;
+        this.currentPage = targetPage;
+      }
+      
       this.highlightedReportId = id;
-      // Attendre le rendu
+      // Attendre le rendu après le changement de page
       await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const tryScroll = () => {
         const el = (this.$el as HTMLElement).querySelector(`[data-report-id="${id}"]`) as HTMLElement | null;
@@ -382,6 +465,27 @@ export default defineComponent({
       await this.loadSignalements();
     },
     
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.scrollToTop();
+      }
+    },
+    
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.scrollToTop();
+      }
+    },
+    
+    scrollToTop() {
+      const content = (this.$el as HTMLElement).querySelector('ion-content');
+      if (content) {
+        (content as any).scrollToTop(300);
+      }
+    },
+    
     voirSignalement(id: number) {
       console.log('Voir signalement', id);
       // Navigation vers le détail
@@ -397,7 +501,7 @@ export default defineComponent({
     },
 
     openGalleryFor(signalement: Report, start = 0) {
-      const imgs = this.normalizeImages((signalement as any).image_report ?? (signalement as any).raw?.image_report ?? []);
+      const imgs = this.normalizeImages((signalement as any).imageReport ?? (signalement as any).raw?.imageReport ?? []);
       if (!imgs || imgs.length === 0) {
         alert('Aucune photo pour ce signalement');
         return;
@@ -552,5 +656,25 @@ export default defineComponent({
     --padding-start: 8px;
     --padding-end: 8px;
   }
+}
+
+/* Pagination buttons */
+:deep(.pagination-btn) {
+  --background: #ffffff;
+  --color: #333535;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  min-width: 30px;
+  height: 30px;
+}
+
+:deep(.pagination-btn[disabled]) {
+  --background: #E5E7EB;
+  --color: #9CA3AF;
+}
+
+:deep(.pagination-btn ion-icon) {
+  font-size: 28px !important;
 }
 </style>

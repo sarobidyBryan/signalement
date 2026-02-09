@@ -248,7 +248,7 @@ export default defineComponent({
     };
 
     const openGalleryFromSignalement = (signalement: any, start = 0) => {
-      const imgs = normalizeImagesArr(signalement.raw?.image_report ?? signalement.image_report ?? []);
+      const imgs = normalizeImagesArr(signalement.raw?.imageReport ?? signalement.imageReport ?? []);
       if (!imgs || imgs.length === 0) {
         alert('Aucune photo pour ce signalement');
         return;
@@ -567,7 +567,7 @@ export default defineComponent({
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
-            image_report: d.image_report ?? [],
+            imageReport: d.imageReport ?? [],
             raw: d
           };
         });
