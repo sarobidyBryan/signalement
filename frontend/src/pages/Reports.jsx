@@ -215,7 +215,6 @@ function Reports() {
             <Card className="filters-panel">
               <div className="panel-header">
                 <p>Filtrer</p>
-                <h2>Surface, statut, utilisateur ou date</h2>
               </div>
               <form className="filter-form" onSubmit={handleFilterSubmit}>
                 <div className="filter-grid">
@@ -334,7 +333,11 @@ function Reports() {
                       <span>{formatDate(report.reportDate)}</span>
                       <span>{report.user?.name || report.user?.email || '—'}</span>
                       <span>{formatNumber(report.area)} m²</span>
-                      <span>{report.status?.label || report.status?.statusCode}</span>
+                      <span>
+                        <span className={`status-badge ${report.status && (report.status.statusCode || '') ? 'status-' + report.status.statusCode.toString().toLowerCase().replace(/[^a-z0-9]+/g,'_') : 'status-default'}`}>
+                          {report.status?.label || report.status?.statusCode}
+                        </span>
+                      </span>
                       <span className="action-buttons">
                         <Button variant="ghost" size="sm" onClick={() => openDetailPanel(report.id, 'view')}>
                           Voir
