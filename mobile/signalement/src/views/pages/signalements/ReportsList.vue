@@ -18,14 +18,14 @@
       <!-- Filtres -->
       <div class="px-4 pt-4">
         <div class="flex space-x-2 mb-4 filter-chips">
-          <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'">
+          <ion-chip :outline="filter !== 'tous'" @click="filter = 'tous'; currentPage = 1">
             <ion-label>Tous</ion-label>
           </ion-chip>
           <ion-chip
             v-for="sf in statuses"
             :key="sf.statusCode"
             :outline="filter !== sf.statusCode"
-            @click="filter = sf.statusCode"
+            @click="filter = sf.statusCode; currentPage = 1"
           >
             <ion-label>{{ sf.label }}</ion-label>
           </ion-chip>
@@ -93,6 +93,36 @@
             </div>
           </div>
         </div>
+        
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex items-center justify-between mt-6 pb-4">
+          <ion-button
+            :disabled="currentPage === 1"
+            @click="previousPage"
+            fill="solid"
+            size="default"
+            class="pagination-btn"
+            aria-label="Précédent"
+          >
+            <ion-icon slot="icon-only" :icon="chevronBack" size="large"></ion-icon>
+          </ion-button>
+
+          <div class="text-sm text-gray-600 text-center">
+            Page {{ currentPage }} / {{ totalPages }}
+            <span class="block text-xs text-gray-500">{{ totalFiltered }} signalement(s)</span>
+          </div>
+
+          <ion-button
+            :disabled="currentPage === totalPages"
+            @click="nextPage"
+            fill="solid"
+            size="default"
+            class="pagination-btn"
+            aria-label="Suivant"
+          >
+            <ion-icon slot="icon-only" :icon="chevronForward" size="large"></ion-icon>
+          </ion-button>
+        </div>
       </div>
     </ion-content>
     <ImageGalleryModal v-model="galleryVisible" :images="galleryImages" :startIndex="galleryStartIndex" />
@@ -130,6 +160,8 @@ import {
   warning, 
   checkmarkCircle,
   closeCircle,
+  chevronBack,
+  chevronForward,
   location,
   time,
   image
@@ -178,6 +210,10 @@ export default defineComponent({
       galleryVisible: false,
       galleryImages: [] as string[],
       galleryStartIndex: 0,
+      currentPage: 1,
+      itemsPerPage: 10,
+      chevronBack,
+      chevronForward,
       add,
       refresh,
       documentText,
@@ -191,8 +227,26 @@ export default defineComponent({
   
   computed: {
     signalementsFiltres() {
-      if (this.filter === 'tous') return this.signalements;
-      return this.signalements.filter(s => s.status === this.filter);
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return filtered.slice(start, end);
+    },
+    
+    totalPages() {
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      return Math.ceil(filtered.length / this.itemsPerPage);
+    },
+    
+    totalFiltered() {
+      return this.filter === 'tous' 
+        ? this.signalements.length 
+        : this.signalements.filter(s => s.status === this.filter).length;
     }
   },
   
@@ -334,9 +388,23 @@ export default defineComponent({
     },
 
     async highlightAndScrollTo(id: string) {
+      // Trouver la page où se trouve le signalement
+      const filtered = this.filter === 'tous' 
+        ? this.signalements 
+        : this.signalements.filter(s => s.status === this.filter);
+      
+      const index = filtered.findIndex(s => s.id === id);
+      
+      if (index !== -1) {
+        // Calculer la page appropriée (les pages commencent à 1)
+        const targetPage = Math.floor(index / this.itemsPerPage) + 1;
+        this.currentPage = targetPage;
+      }
+      
       this.highlightedReportId = id;
-      // Attendre le rendu
+      // Attendre le rendu après le changement de page
       await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const tryScroll = () => {
         const el = (this.$el as HTMLElement).querySelector(`[data-report-id="${id}"]`) as HTMLElement | null;
@@ -380,6 +448,27 @@ export default defineComponent({
     async rafraichir() {
       console.log('Rafraîchir la liste');
       await this.loadSignalements();
+    },
+    
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.scrollToTop();
+      }
+    },
+    
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.scrollToTop();
+      }
+    },
+    
+    scrollToTop() {
+      const content = (this.$el as HTMLElement).querySelector('ion-content');
+      if (content) {
+        (content as any).scrollToTop(300);
+      }
     },
     
     voirSignalement(id: number) {
@@ -552,5 +641,25 @@ export default defineComponent({
     --padding-start: 8px;
     --padding-end: 8px;
   }
+}
+
+/* Pagination buttons */
+:deep(.pagination-btn) {
+  --background: #ffffff;
+  --color: #333535;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  min-width: 30px;
+  height: 30px;
+}
+
+:deep(.pagination-btn[disabled]) {
+  --background: #E5E7EB;
+  --color: #9CA3AF;
+}
+
+:deep(.pagination-btn ion-icon) {
+  font-size: 28px !important;
 }
 </style>
