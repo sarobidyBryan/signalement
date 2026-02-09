@@ -84,7 +84,7 @@
             </div>
             <div class="mt-3">
               <div class="flex items-center">
-                <ion-button v-if="signalement.image_report && signalement.image_report.length" fill="clear" size="small" @click.stop="openGalleryFor(signalement)" class="p-0">
+                <ion-button v-if="signalement.imageReport && signalement.imageReport.length" fill="clear" size="small" @click.stop="openGalleryFor(signalement)" class="p-0">
                   <ion-icon :icon="image" class="mr-2"></ion-icon>
                   <span>Voir photos</span>
                 </ion-button>
@@ -177,7 +177,11 @@ type Report = {
   status: string;
   budget?: number | null;
   companyName?: string | null;
-  image_report?: any[];
+  imageReport?: any[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  firebaseId?: string;
+  postgresId?: string;
 };
 
 export default defineComponent({
@@ -307,7 +311,7 @@ export default defineComponent({
             titre,
             area: d.area ? String(d.area) : null,
             description: d.description ?? '',
-            image_report: d.image_report ?? [],
+            imageReport: d.imageReport ?? [],
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
@@ -338,21 +342,29 @@ export default defineComponent({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _photos, ...reportData } = payload;
 
+        // Ajouter les timestamps
+        reportData.createdAt = new Date();
+        reportData.updatedAt = new Date();
+
         // 1. Créer le document dans Firestore
         const docRef = await addDoc(collection(db, "reports"), reportData);
         console.log("Signalement créé avec ID:", docRef.id);
 
-        // 2. Upload des images vers Cloudinary (compressées)
+        // 2. Mettre à jour le document avec firebaseId et postgresId
+        const updateData: any = {
+          firebaseId: docRef.id,
+          postgresId: ''
+        };
+
+        // 3. Upload des images vers Cloudinary (compressées)
         if (photos.length > 0) {
           try {
             console.log(`Upload de ${photos.length} image(s) vers Cloudinary...`);
             const imageReports = await uploadReportImages(photos, docRef.id);
 
-            // 3. Mettre à jour le document Firestore avec les références des images
+            // Ajouter les références des images à la mise à jour
             if (imageReports.length > 0) {
-              await updateDoc(doc(db, "reports", docRef.id), {
-                image_report: imageReports, // [{id, id_report, lien}, ...]
-              });
+              updateData.imageReport = imageReports;
               console.log(`${imageReports.length} image(s) enregistrée(s) dans le signalement`);
             }
           } catch (uploadError) {
@@ -360,6 +372,9 @@ export default defineComponent({
             alert("Le signalement a été créé mais certaines images n'ont pas pu être uploadées.");
           }
         }
+
+        // 4. Mettre à jour le document avec tous les champs (firebaseId, postgresId, et images si présentes)
+        await updateDoc(doc(db, "reports", docRef.id), updateData);
         
         // Reset le formulaire
         if (this.$refs.reportFormRef) {
@@ -486,7 +501,7 @@ export default defineComponent({
     },
 
     openGalleryFor(signalement: Report, start = 0) {
-      const imgs = this.normalizeImages((signalement as any).image_report ?? (signalement as any).raw?.image_report ?? []);
+      const imgs = this.normalizeImages((signalement as any).imageReport ?? (signalement as any).raw?.imageReport ?? []);
       if (!imgs || imgs.length === 0) {
         alert('Aucune photo pour ce signalement');
         return;
