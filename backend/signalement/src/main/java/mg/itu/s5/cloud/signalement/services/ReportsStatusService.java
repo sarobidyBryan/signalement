@@ -51,6 +51,8 @@ public class ReportsStatusService {
         }
         Status status = statusOpt.get();
 
+        String notificationBody = "Votre signalement [ID:"+reportId+"] est passe au statut '"+status.getLabel()+"'\n Les modifications seront visibles sur votre appareil après la prochaine synchronisation";
+
         // Mettre à jour le statut du report
         report.setStatus(status);
         reportService.saveReport(report);
@@ -64,7 +66,7 @@ public class ReportsStatusService {
         NotificationRequest notificationRequest = new NotificationRequest();
         notificationRequest.setTitle("Changement d'etat de signalement");
         //ceci devra etre deduit de notre table user_tokens
-        notificationRequest.setBody("Votre signalement [ID:"+reportId+"] est passe du statut '"+report.getStatus().getLabel()+"' au statut '"+status.getLabel()+"'\n Les modifications seront visibles sur votre appareil après la prochaine synchronisation");
+        notificationRequest.setBody(notificationBody);
 
         notificationService.sendNotificationToUser(notificationRequest,report.getUser().getId());
         return repository.save(rs);
