@@ -180,6 +180,7 @@
 
 .detail-inline.open {
   width: 450px;
+  overflow-y: auto;
 }
 
 /* ========== Responsive Design ========== */

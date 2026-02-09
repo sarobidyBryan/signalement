@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/auth';
 import { ApiError } from '../services/api';
 import { useTheme, THEMES } from '../contexts/ThemeContext';
@@ -16,12 +16,29 @@ function BackofficeLogin() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const location = useLocation();
 
   useEffect(() => {
-    // Si déjà connecté, rediriger vers le récapitulatif
-    if (authService.isAuthenticated()) {
-      navigate('/backoffice/summary');
-    }
+    const explicitShow = location.state && location.state.showLogin;
+
+    let mounted = true;
+    const validateStoredUser = async () => {
+      if (explicitShow) return; // user explicitly requested the login form
+      const stored = authService.getStoredUser();
+      if (!stored) return;
+      try {
+        const current = await authService.getCurrentUser();
+        if (!mounted) return;
+        if (current) {
+          navigate('/backoffice/summary');
+        }
+      } catch (e) {
+        
+      }
+    };
+
+    validateStoredUser();
+    return () => { mounted = false; };
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -29,7 +46,6 @@ function BackofficeLogin() {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Effacer l'erreur lors de la modification
     if (error) setError('');
   };
 
@@ -38,12 +54,10 @@ function BackofficeLogin() {
     setLoading(true);
     setError(null);
 
-    // Debug: log login attempt
     console.debug('Attempting login with email:', formData.email);
 
     try {
       await authService.login(formData.email, formData.password);
-      // Rediriger vers le récapitulatif après connexion réussie
       navigate('/backoffice/summary');
     } catch (err) {
       if (err instanceof ApiError) {

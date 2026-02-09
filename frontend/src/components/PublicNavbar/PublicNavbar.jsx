@@ -34,7 +34,7 @@ function PublicNavbar({ variant = 'default' }) {
         </button>
         <button 
           className="btn-nav btn-nav-primary" 
-          onClick={() => navigate('/backoffice')}
+          onClick={() => navigate('/backoffice', { state: { showLogin: true } })}
         >
           Se connecter
         </button>

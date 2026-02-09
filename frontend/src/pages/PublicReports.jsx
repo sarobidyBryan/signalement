@@ -54,7 +54,9 @@ function PublicReports() {
     loadStats();
   }, [loadReports, loadStats]);
 
-  const openDetail = async (reportId) => {
+  const [focusImagesForPanel, setFocusImagesForPanel] = useState(false);
+
+  const openDetail = async (reportId, options = {}) => {
     if (!reportId) {
       setSelectedDetail(null);
       return;
@@ -64,6 +66,8 @@ function PublicReports() {
     try {
       const detail = await reportService.getDetail(reportId);
       setSelectedDetail(detail || null);
+      if (options && options.focusImages) setFocusImagesForPanel(true);
+      else setFocusImagesForPanel(false);
     } catch (err) {
       console.error('Detail load error', err);
       setError({ message: 'Impossible de charger les détails' });
@@ -128,6 +132,8 @@ function PublicReports() {
             companies={[]}
             isOpen={!!selectedDetail}
             readOnly={true}
+            focusImages={focusImagesForPanel}
+            onFocusHandled={() => setFocusImagesForPanel(false)}
           />
         </div>
       </div>

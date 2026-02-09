@@ -41,7 +41,7 @@ function Landing() {
             </button>
             <button 
               className="btn-hero btn-hero-secondary" 
-              onClick={() => navigate('/backoffice')}
+              onClick={() => navigate('/backoffice', { state: { showLogin: true } })}
             >
               Se connecter
             </button>
