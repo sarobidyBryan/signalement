@@ -33,6 +33,7 @@ public class NotificationService {
             return response;
         } catch (FirebaseMessagingException e) {
             System.out.println("Erreur lors de l'envoi de la notification Firebase");
+            e.printStackTrace();
             throw new RuntimeException("Échec de l'envoi de la notification", e);
         }
     }
