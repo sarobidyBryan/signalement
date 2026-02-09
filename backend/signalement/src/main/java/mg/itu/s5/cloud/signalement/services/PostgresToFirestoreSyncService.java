@@ -26,6 +26,7 @@ public class PostgresToFirestoreSyncService {
     public static final String COLLECTION_STATUSES = "status";
     public static final String COLLECTION_USERS = "users";
     public static final String COLLECTION_REPORTS = "reports";
+    public static final String COLLECTION_USER_TOKENS = "user_tokens";
 
     @Autowired
     private FirestoreService firestoreService;
@@ -57,6 +58,9 @@ public class PostgresToFirestoreSyncService {
     @Autowired
     private ProgressionCalculationService progressionCalculationService;
 
+    @Autowired
+    private UserTokenRepository userTokenRepository;
+
     /**
      * Synchronise toutes les tables vers Firestore
      */
@@ -69,6 +73,7 @@ public class PostgresToFirestoreSyncService {
             results.put("companies", syncCompanies());
             // statuses synchronization intentionally skipped
             results.put("users", syncUsers());
+            results.put("userTokens", syncUserTokens());
             results.put("reports", syncReports());
             results.put("success", true);
             results.put("timestamp", LocalDateTime.now());
@@ -232,6 +237,31 @@ public class PostgresToFirestoreSyncService {
     }
 
     /**
+     * Synchronise les tokens utilisateurs
+     */
+    @Transactional
+    public Map<String, Object> syncUserTokens() {
+        String tableName = "user_tokens";
+        LocalDateTime lastSync = syncLogService.getLastSyncDateOrDefault(tableName, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
+        
+        List<UserToken> modifiedTokens = userTokenRepository.findModifiedSince(lastSync);
+        int synced = 0;
+        
+        for (UserToken token : modifiedTokens) {
+            try {
+                Map<String, Object> data = mapUserToken(token);
+                String firebaseId = syncToFirestore(COLLECTION_USER_TOKENS, null, token.getId(), data);
+                synced++;
+            } catch (Exception e) {
+                logger.error("Erreur sync user_token id={}", token.getId(), e);
+            }
+        }
+        
+        syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_POSTGRES_TO_FIREBASE);
+        return createSyncResult(tableName, modifiedTokens.size(), synced);
+    }
+
+    /**
      * Synchronise les rapports avec leurs assignations et progressions imbriquées
      * Collection unique "reports" contenant:
      * - Données du report
@@ -359,6 +389,23 @@ public class PostgresToFirestoreSyncService {
 
         if (user.getUserStatusType() != null) {
             data.put("userStatusType", mapUserStatusType(user.getUserStatusType()));
+        }
+
+        return data;
+    }
+
+    private Map<String, Object> mapUserToken(UserToken token) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("postgresId", token.getId());
+        data.put("id", token.getId());
+        data.put("token", token.getToken());
+        data.put("createdAt", toDate(token.getCreatedAt()));
+        data.put("updatedAt", toDate(token.getUpdatedAt()));
+
+        if (token.getUser() != null) {
+            data.put("userId", token.getUser().getId());
+            data.put("userEmail", token.getUser().getEmail());
+            data.put("userName", token.getUser().getName());
         }
 
         return data;
