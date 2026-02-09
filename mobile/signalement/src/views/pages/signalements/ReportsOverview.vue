@@ -449,7 +449,7 @@ export default defineComponent({
               <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
               <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
               <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
-              <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
+              <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay} Ar </div>
               <div class="flex items-center justify-between">
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                   ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}

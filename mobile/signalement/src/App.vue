@@ -27,12 +27,12 @@ function startSessionCheck() {
       const expiry = Number(expiryStr);
       const now = Date.now();
 
-      console.log('[App.vue] Check:', {
-        expiry: new Date(expiry).toLocaleString(),
-        now: new Date(now).toLocaleString(),
-        expiré: now >= expiry,
-        path: router.currentRoute.value.path
-      });
+      // console.log('[App.vue] Check:', {
+      //   expiry: new Date(expiry).toLocaleString(),
+      //   now: new Date(now).toLocaleString(),
+      //   expiré: now >= expiry,
+      //   path: router.currentRoute.value.path
+      // });
 
       if (now >= expiry) {
         console.log('[App.vue] 🔴 Session expirée! Déconnexion et redirection...');

@@ -47,7 +47,9 @@
           <div 
             v-for="signalement in signalementsFiltres" 
             :key="signalement.id"
-            class="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
+            :data-report-id="signalement.id"
+            :class="[{ 'highlight': signalement.id === highlightedReportId }, 'bg-white rounded-xl shadow-sm border border-gray-200 p-4']"
+            tabindex="-1"
             @click="voirSignalement(signalement.id)"
           >
             <div class="flex items-start justify-between mb-3">
@@ -101,7 +103,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import TabBar from '@/views/components/global/TabBar.vue';
 import ReportForm from '@/views/components/global/signalement/ReportForm.vue';
 import ImageGalleryModal from '@/views/components/global/signalement/ImageGalleryModal.vue';
@@ -171,6 +173,7 @@ export default defineComponent({
       filter: 'tous',
       statuses: [] as Array<{ id?: number; statusCode: string; label: string }>,
       signalements: [] as Report[],
+      highlightedReportId: null as string | null,
       reportFormRef: null,
       galleryVisible: false,
       galleryImages: [] as string[],
@@ -286,7 +289,6 @@ export default defineComponent({
         console.log("Signalement créé avec ID:", docRef.id);
 
         // 2. Upload des images vers Cloudinary (compressées)
-        // [ANCIEN] Upload vers Supabase Storage — maintenant remplacé par Cloudinary
         if (photos.length > 0) {
           try {
             console.log(`Upload de ${photos.length} image(s) vers Cloudinary...`);
@@ -315,9 +317,56 @@ export default defineComponent({
         
         // Recharger la liste des signalements
         await this.loadSignalements();
+        // Remettre le filtre sur 'tous' pour afficher le nouvel élément
+        try {
+          this.filter = 'tous';
+        } catch (e) { /* no-op */ }
+        // Mettre en surbrillance et focus sur le signalement créé
+        try {
+          if (docRef && docRef.id) {
+            this.highlightAndScrollTo(docRef.id);
+          }
+        } catch (e) { /* no-op */ }
       } catch (error) {
         console.error("Erreur lors de la création du signalement:", error);
         alert("Erreur lors de la création du signalement. Veuillez réessayer.");
+      }
+    },
+
+    async highlightAndScrollTo(id: string) {
+      this.highlightedReportId = id;
+      // Attendre le rendu
+      await nextTick();
+
+      const tryScroll = () => {
+        const el = (this.$el as HTMLElement).querySelector(`[data-report-id="${id}"]`) as HTMLElement | null;
+        if (el) {
+          try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // rendre focusable et focus
+            (el as HTMLElement).setAttribute('tabindex', '-1');
+            (el as HTMLElement).focus();
+          } catch (err) {
+            console.warn('Impossible de scroller/mettre au focus:', err);
+          }
+          // Supprimer la surbrillance après quelques secondes
+          setTimeout(() => {
+            if (this.highlightedReportId === id) this.highlightedReportId = null;
+          }, 7000);
+          return true;
+        }
+        return false;
+      };
+
+      // Essayer immédiatement, sinon retenter quelques fois (DOM lazy)
+      if (!tryScroll()) {
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts += 1;
+          if (tryScroll() || attempts >= 8) {
+            clearInterval(interval);
+          }
+        }, 250);
       }
     },
     
@@ -445,6 +494,13 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* Highlight recent created report */
+.highlight {
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
+  border-color: #3b82f6 !important;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
 /* Styles pour la page liste */
 :deep(.custom-btn) {
   --color: #000000;
