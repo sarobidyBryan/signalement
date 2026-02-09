@@ -6,5 +6,6 @@ import { dashboardService } from './dashboardService';
 import { reportService } from './reportService';
 import { statusService } from './statusService';
 import { userService } from './userService';
+import delayStatService from './delayStatService';
 
-export { assignationService, assignationProgressService, companyService, configurationService, dashboardService, reportService, statusService, userService };
+export { assignationService, assignationProgressService, companyService, configurationService, dashboardService, reportService, statusService, userService, delayStatService };

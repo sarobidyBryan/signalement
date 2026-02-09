@@ -496,6 +496,14 @@
   justify-content: flex-end;
 }
 
+/* Loading state */
+.stat-loading {
+  padding: var(--spacing-xxl);
+  text-align: center;
+  color: var(--theme-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .stat-filters {
