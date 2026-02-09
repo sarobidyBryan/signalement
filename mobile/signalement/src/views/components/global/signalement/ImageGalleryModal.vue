@@ -25,8 +25,8 @@
       </div>
 
       <div v-else class="flex flex-col items-center">
-        <div class="w-full max-w-3xl h-72 flex items-center justify-center mb-4">
-          <img :src="images[currentIndex]" alt="photo" class="max-h-full max-w-full object-contain rounded-lg shadow"/>
+        <div class="w-full max-w-3xl h-72 flex items-center justify-center mb-4 cursor-pointer" @click="openFullscreen">
+          <img :src="images[currentIndex]" alt="photo" class="max-h-full max-w-full object-contain rounded-lg shadow hover:opacity-90 transition-opacity"/>
         </div>
 
         <div class="w-full max-w-3xl flex overflow-x-auto space-x-2">
@@ -41,6 +41,27 @@
         </div>
       </div>
     </ion-content>
+
+    <!-- Fullscreen viewer -->
+    <div v-if="showFullscreen" class="fullscreen-overlay" @click="closeFullscreen">
+      <div class="fullscreen-header">
+        <span class="fullscreen-title">{{ currentIndex + 1 }} / {{ images.length }}</span>
+        <button @click.stop="closeFullscreen" class="fullscreen-close-btn">
+          <ion-icon :icon="closeIcon" class="text-white text-2xl"></ion-icon>
+        </button>
+      </div>
+      <div class="fullscreen-content">
+        <img :src="images[currentIndex]" alt="photo" class="fullscreen-image" @click.stop/>
+      </div>
+      <div class="fullscreen-nav">
+        <button @click.stop="prev" :disabled="images.length<=1" class="fullscreen-nav-btn">
+          <ion-icon :icon="chevBack" class="text-white text-3xl"></ion-icon>
+        </button>
+        <button @click.stop="next" :disabled="images.length<=1" class="fullscreen-nav-btn">
+          <ion-icon :icon="chevForward" class="text-white text-3xl"></ion-icon>
+        </button>
+      </div>
+    </div>
   </ion-modal>
 </template>
 
@@ -61,6 +82,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const internalShow = ref(props.modelValue);
     const currentIndex = ref(props.startIndex || 0);
+    const showFullscreen = ref(false);
 
     watch(() => props.modelValue, v => internalShow.value = v);
     watch(internalShow, v => emit('update:modelValue', v));
@@ -71,8 +93,24 @@ export default defineComponent({
     const prev = () => { if (currentIndex.value > 0) currentIndex.value -= 1; };
     const next = () => { if (currentIndex.value < props.images.length - 1) currentIndex.value += 1; };
     const goTo = (i: number) => { currentIndex.value = i; };
+    const openFullscreen = () => { showFullscreen.value = true; };
+    const closeFullscreen = () => { showFullscreen.value = false; };
 
-    return { internalShow, currentIndex, close, onClose, prev, next, goTo, closeIcon, chevBack, chevForward };
+    return { 
+      internalShow, 
+      currentIndex, 
+      showFullscreen,
+      close, 
+      onClose, 
+      prev, 
+      next, 
+      goTo, 
+      openFullscreen,
+      closeFullscreen,
+      closeIcon, 
+      chevBack, 
+      chevForward 
+    };
   }
 });
 </script>
@@ -123,5 +161,115 @@ export default defineComponent({
   .thumbnails-container.many-rows .thumb-btn {
     width: 100%;
   }
+}
+
+/* Fullscreen overlay */
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fullscreen-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  z-index: 10;
+}
+
+.fullscreen-title {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.fullscreen-close-btn {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.fullscreen-close-btn:hover {
+  opacity: 0.7;
+}
+
+.fullscreen-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fullscreen-nav {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.fullscreen-nav-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.2s;
+}
+
+.fullscreen-nav-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.fullscreen-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

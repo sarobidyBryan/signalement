@@ -76,20 +76,24 @@
       </div>
 
       <!-- Légende (masquée si le panneau de filtres est ouvert) -->
-      <div v-if="!showFiltres" class="absolute bottom-20 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 z-10">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-bold text-gray-900">Signalements</h4>
-          <span class="text-sm text-gray-600">{{ signalementsFiltres.length }} visible(s)</span>
+      <div v-if="!showFiltres" class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg z-10 legende-container">
+        <div class="p-4 pb-2">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-gray-900">Signalements</h4>
+            <span class="text-sm text-gray-600">{{ signalementsFiltres.length }} visible(s)</span>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div
-            v-for="item in compteurParStatus"
-            :key="item.statusCode"
-            class="flex items-center"
-          >
-            <div :style="{ background: item.color }" class="w-3 h-3 rounded-full mr-2"></div>
-            <span class="text-sm text-gray-700">{{ item.label }}</span>
-            <span class="ml-auto text-sm font-medium">{{ item.count }}</span>
+        <div class="px-4 pb-4 max-h-40 overflow-y-auto">
+          <div class="grid grid-cols-2 gap-3">
+            <div
+              v-for="item in compteurParStatus"
+              :key="item.statusCode"
+              class="flex items-center"
+            >
+              <div :style="{ background: item.color }" class="w-3 h-3 rounded-full mr-2 flex-shrink-0"></div>
+              <span class="text-sm text-gray-700 truncate">{{ item.label }}</span>
+              <span class="ml-auto text-sm font-medium flex-shrink-0">{{ item.count }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -778,5 +782,28 @@ export default defineComponent({
   --border-radius: 12px;
   --padding-top: 10px;
   --padding-bottom: 10px;
+}
+
+/* Légende scrollable pour mobile */
+.legende-container {
+  max-height: calc(100vh - 200px);
+}
+
+/* Scrollbar pour la légende sur mobile */
+.legende-container ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.legende-container ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.legende-container ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.legende-container ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 </style>
