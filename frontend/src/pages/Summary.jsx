@@ -10,6 +10,7 @@ function Summary() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
+  const [focusImagesForPanel, setFocusImagesForPanel] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState(null);
   const [companies, setCompanies] = useState([]);
@@ -55,7 +56,7 @@ function Summary() {
     companyService.getAll().then(setCompanies).catch(() => setCompanies([]));
   }, [loadReports, loadStats]);
 
-  const openDetail = async (reportId) => {
+  const openDetail = async (reportId, options = {}) => {
     if (!reportId) {
       setSelectedDetail(null);
       return;
@@ -65,6 +66,9 @@ function Summary() {
     try {
       const detail = await reportService.getDetail(reportId);
       setSelectedDetail(detail || null);
+      if (options && options.focusImages) {
+        setFocusImagesForPanel(true);
+      } else setFocusImagesForPanel(false);
     } catch (err) {
       console.error('Detail load error', err);
       setError({ message: 'Impossible de charger les détails' });
@@ -134,6 +138,8 @@ function Summary() {
             onRefresh={openDetail}
             companies={companies}
             isOpen={!!selectedDetail}
+            focusImages={focusImagesForPanel}
+            onFocusHandled={() => setFocusImagesForPanel(false)}
           />
         </div>
       </div>

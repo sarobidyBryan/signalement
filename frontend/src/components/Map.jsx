@@ -83,7 +83,6 @@ const Map = ({ reports = [], onReportClick = () => { }, className = '' }) => {
       const lon = Number(r.longitude);
       const lat = Number(r.latitude);
       if (!isFinite(lon) || !isFinite(lat)) {
-        console.warn('[Map] skipping report without valid coordinates', r?.id, r?.longitude, r?.latitude);
         return;
       }
 
@@ -160,7 +159,7 @@ const Map = ({ reports = [], onReportClick = () => { }, className = '' }) => {
           btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
             marker.closePopup();
-            onReportClick(r.id);
+            onReportClick(r.id, { focusImages: true });
           });
         }
 

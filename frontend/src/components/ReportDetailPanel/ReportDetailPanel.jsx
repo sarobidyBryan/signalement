@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Card from '../Card/Card';
 import Button from '../Button/Button';
 import ErrorBanner from '../ErrorBanner';
@@ -28,7 +27,7 @@ const ReportDetailPanel = ({
   companies = [],
   isOpen = false,
   readOnly = false
-}) => {
+  , focusImages = false, onFocusHandled = () => {} }) => {
   const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
   const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
@@ -40,6 +39,7 @@ const ReportDetailPanel = ({
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const panelRef = useRef(null);
 
   const formatNumber = (value) => {
     if (value == null) return '—';
@@ -150,8 +150,29 @@ const ReportDetailPanel = ({
     return () => { mounted = false; };
   }, [detail?.report?.id]);
 
+  useEffect(() => {
+    if (!focusImages) return;
+    if (!isOpen) return;
+    if (imagesLoading) return;
+
+    const timer = setTimeout(() => {
+      const panelEl = panelRef.current;
+      if (!panelEl) {
+        if (onFocusHandled) onFocusHandled();
+        return;
+      }
+      const imagesSection = panelEl.querySelector('.images-section');
+      if (imagesSection) {
+        imagesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      if (onFocusHandled) onFocusHandled();
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [focusImages, imagesLoading, images.length, isOpen, onFocusHandled]);
+
   return (
-    <section className={`report-detail-panel ${isOpen ? 'detail-open' : ''}`}>
+    <section ref={panelRef} className={`report-detail-panel ${isOpen ? 'detail-open' : ''}`}>
       <div className="detail-panel-inner">
         <div className="detail-panel-header">
           <div>
