@@ -1,5 +1,6 @@
 package mg.itu.s5.cloud.signalement.services;
 
+import mg.itu.s5.cloud.signalement.dto.NotificationRequest;
 import mg.itu.s5.cloud.signalement.entities.Report;
 import mg.itu.s5.cloud.signalement.entities.ReportsStatus;
 import mg.itu.s5.cloud.signalement.entities.Status;
@@ -22,6 +23,9 @@ public class ReportsStatusService {
 
     @Autowired
     private mg.itu.s5.cloud.signalement.repositories.StatusRepository statusRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public List<ReportsStatus> getAll() { return repository.findAll(); }
     public Optional<ReportsStatus> getById(int id) { return repository.findById(id); }
@@ -56,6 +60,13 @@ public class ReportsStatusService {
         rs.setReport(report);
         rs.setStatus(status);
         rs.setRegistrationDate(registrationDate);
+
+        NotificationRequest notificationRequest = new NotificationRequest();
+        notificationRequest.setTitle("Changement d'etat de signalement");
+        //ceci devra etre deduit de notre table user_tokens
+        notificationRequest.setBody("Votre signalement [ID:"+reportId+"] est passe du statut '"+report.getStatus().getLabel()+"' au statut '"+status.getLabel()+"'\n Les modifications seront visibles sur votre appareil après la prochaine synchronisation");
+
+        notificationService.sendNotificationToUser(notificationRequest,report.getUser().getId());
         return repository.save(rs);
     }
     
