@@ -1,0 +1,371 @@
+/* ReportDetailPanel.css - styles for the detail panel component */
+
+.report-detail-panel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 500px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--card-bg);
+  box-shadow: -2px 0 8px var(--card-shadow);
+  transition: right 0.3s ease, background 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.report-detail-panel.detail-open {
+  right: 0;
+}
+
+/* Inline usage: when panel is placed beside the map */
+.detail-inline .report-detail-panel {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  box-shadow: none;
+  transition: none;
+}
+
+.detail-panel-inner {
+  padding: 24px;
+}
+
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.panel-overline {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--theme-text-muted);
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.detail-panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--theme-text);
+}
+
+.detail-panel-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.detail-panel-close:hover {
+  color: var(--theme-text);
+}
+
+.detail-loading,
+.detail-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--theme-text-secondary);
+}
+
+.detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  background: var(--theme-bg-secondary);
+  padding: 16px;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .summary-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+}
+
+[data-theme="dark"] .summary-value {
+  color: #ffffff;
+}
+
+.detail-progress {
+  margin-top: 8px;
+}
+
+.progress-track {
+  height: 8px;
+  background: var(--theme-toggle-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+[data-theme="dark"] .progress-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--theme-highlight-bg);
+  transition: width 0.3s ease;
+}
+
+[data-theme="dark"] .progress-fill {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.progress-text {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  text-align: right;
+  margin: 0;
+}
+
+[data-theme="dark"] .progress-text {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.detail-grid>div {
+  padding: 12px;
+  background: var(--theme-bg-secondary);
+  border-radius: 6px;
+}
+
+.description-text {
+  color: var(--theme-text-secondary);
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  white-space: pre-wrap;
+}
+
+.assignations-section,
+.progress-section {
+  border-top: 1px solid var(--theme-border);
+  padding-top: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--theme-text);
+}
+
+.section-header span {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+}
+
+.assignations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.assignation-card {
+  padding: 12px;
+  background: var(--theme-bg-secondary);
+  border-left: 3px solid var(--theme-highlight-bg);
+}
+
+.assignation-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--theme-text);
+}
+
+[data-theme="dark"] .assignation-card h4 {
+  color: #ffffff;
+}
+
+.assignation-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+}
+
+[data-theme="dark"] .assignation-card p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.assignation-dates {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .assignation-dates {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.assignation-form,
+.progress-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--theme-bg-secondary);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.assignation-form label,
+.progress-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+.assignation-form input,
+.assignation-form select,
+.progress-form input,
+.progress-form select {
+  padding: 8px 12px;
+  border: 1px solid var(--theme-input-border);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.inline-hint {
+  font-size: 13px;
+  color: var(--theme-text-muted);
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress-card {
+  padding: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+}
+
+.progress-card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.detail-label {
+  color: var(--theme-text-secondary);
+}
+
+[data-theme="dark"] .detail-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.detail-value {
+  color: var(--theme-text);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .detail-value {
+  color: #ffffff;
+}
+
+.progress-card-body {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  padding: 8px;
+  background: var(--theme-bg-secondary);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .progress-card-body {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 768px) {
+  .report-detail-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .detail-summary {
+    grid-template-columns: 1fr;
+  }
+}

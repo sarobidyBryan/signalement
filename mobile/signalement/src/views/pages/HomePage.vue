@@ -4,32 +4,24 @@
     <ion-header :translucent="true" class="ion-no-border">
       <ion-toolbar>
         <!-- Conteneur principal flex en colonne sur mobile -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between w-full px-2 sm:px-4 md:px-6 py-2 md:py-0">
+        <div class="flex flex-row md:items-center justify-between w-full px-2 sm:px-4 md:px-6 py-2 md:py-0">
           
           <!-- Titre - toujours en première ligne -->
-          <div class="text-black font-bold text-xl w-full md:w-auto text-center md:text-left mb-2 md:mb-0">
-            Signalements
+          <div class="flex align-middle justify-center text-black font-bold text-xl w-full md:w-auto text-center md:text-left mb-2 md:mb-0">
+            <p>
+              Signaleo
+            </p>
           </div>
           
           <!-- Boutons - passe à la ligne sur mobile -->
           <div class="flex items-center justify-center md:justify-end space-x-4 w-full md:w-auto">
             <ion-button 
               @click="goToLogin" 
-              class="custom-btn"
+              class="custom-primary-btn-mini"
               fill="outline"
               size="small"
             >
-              <span class="text-black font-medium text-sm md:text-base">Connexion</span>
-            </ion-button>
-            
-            <ion-button 
-              @click="goToRegister" 
-              class="custom-btn"
-              color="dark"
-              size="small"
-              fill="solid"
-            >
-              <span class="text-white font-medium text-sm md:text-base">S'inscrire</span>
+              <span class="text-white font-medium text-sm md:text-base">Connexion</span>
             </ion-button>
           </div>
         </div>
@@ -52,7 +44,7 @@
                 
                 <p class="text-xl text-gray-600 leading-relaxed">
                   Signalez en temps réel les problèmes routiers, 
-                  contribuez à l'amélioration de votre ville et 
+                  contribuez à l'amélioration d'Antananarivo et 
                   faites partie du changement.
                 </p>
                 
@@ -61,28 +53,16 @@
                   <!-- Bouton Register avec wrapper -->
                   <div class="w-full sm:w-auto">
                     <ion-button 
-                      @click="goToRegister"
-                      class="custom-primary-btn"
-                      expand="block"
-                      size="large"
-                    >
-                      <div class="flex items-center justify-center">
-                        <span>Commencer maintenant</span>
-                        <ion-icon :icon="arrowForward" class="ml-2"></ion-icon>
-                      </div>
-                    </ion-button>
-                  </div>
-                  
-                  <!-- Bouton Login avec wrapper -->
-                  <div class="w-full sm:w-auto">
-                    <ion-button 
                       @click="goToLogin"
                       class="custom-secondary-btn"
                       expand="block"
                       size="large"
                       fill="outline"
                     >
-                      <span>Se connecter</span>
+                      <div class="flex items-center justify-center">
+                        <span>Se connecter</span>
+                        <ion-icon :icon="arrowForward" class="ml-2"></ion-icon>
+                      </div>
                     </ion-button>
                   </div>
                 </div>
@@ -166,7 +146,7 @@
                 Comment ça marche ?
               </h2>
               <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                Une plateforme simple et efficace pour signaler les problèmes routiers
+                Une plateforme simple et efficace pour signaler les problèmes routiers dans la ville d'Antananarivo
               </p>
             </div>
             
@@ -178,10 +158,10 @@
                 </div>
                 <h3 class="text-2xl font-bold text-gray-900 mb-4">Signalez</h3>
                 <p class="text-gray-600 mb-6">
-                  Prenez une photo et décrivez le problème routier que vous avez rencontré.
+                  Identifiez et décrivez le problème routier que vous avez rencontré.
                 </p>
                 <div class="bg-gray-100 rounded-xl p-4 inline-block">
-                  <ion-icon :icon="camera" class="text-3xl text-gray-700"></ion-icon>
+                  <ion-icon :icon="eye" class="text-3xl text-gray-700"></ion-icon>
                 </div>
               </div>
               
@@ -228,16 +208,7 @@
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <!-- Bouton Register -->
-              <div>
-                <ion-button 
-                  @click="goToRegister"
-                  class="cta-primary-btn"
-                  size="large"
-                >
-                  <span class="text-black font-medium">Créer un compte gratuit</span>
-                </ion-button>
-              </div>
+              
               
               <!-- Bouton Login -->
               <div>
@@ -263,7 +234,7 @@
           <div class="max-w-7xl mx-auto px-4 md:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
               <div class="mb-8 md:mb-0">
-                <h3 class="text-2xl font-bold mb-4">Signalements</h3>
+                <h3 class="text-2xl font-bold mb-4">Signaleo</h3>
                 <p class="text-gray-400">
                   Construisons ensemble des routes plus sûres
                 </p>
@@ -283,7 +254,7 @@
             </div>
             
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-              © 2024 Signalements. Tous droits réservés.
+              © 2024 Signaleo. Tous droits réservés.
             </div>
           </div>
         </footer>
@@ -311,7 +282,8 @@ import {
   time, 
   camera, 
   location, 
-  notifications 
+  notifications, 
+  eye
 } from 'ionicons/icons';
 
 export default defineComponent({
@@ -335,7 +307,8 @@ export default defineComponent({
       time,
       camera,
       location,
-      notifications
+      notifications,
+      eye
     };
   },
   
@@ -344,9 +317,7 @@ export default defineComponent({
       this.$router.push('/login');
     },
     
-    goToRegister() {
-      this.$router.push('/register');
-    }
+    
   }
 });
 </script>
@@ -382,6 +353,15 @@ export default defineComponent({
   --padding-top: 1rem !important;
   --padding-bottom: 1rem !important;
   height: 56px !important;
+}
+
+
+:deep(.custom-primary-btn-mini) {
+  --background: #000000 !important;
+  --background-hover: #1a1a1a !important;
+  --color: #ffffff !important;
+  --border-radius: 8px !important;
+  height: 36px !important;
 }
 
 :deep(.custom-secondary-btn) {

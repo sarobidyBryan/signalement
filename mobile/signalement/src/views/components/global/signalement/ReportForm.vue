@@ -100,12 +100,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, ref } from 'vue';
+import { defineComponent, onMounted, onBeforeUnmount, ref, defineExpose } from 'vue';
 import { 
   IonList, IonItem, IonLabel, IonInput, IonTextarea, IonButton,
   IonIcon, IonSpinner 
 } from '@ionic/vue';
 import { closeOutline, navigateOutline } from 'ionicons/icons';
+import { db } from '@/config/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default defineComponent({
   name: 'ReportFormModal',
@@ -200,8 +202,9 @@ export default defineComponent({
         latitude: Number(latitude.value),
         longitude: Number(longitude.value),
         description: description.value || '',
-        status: "SUBMITTED",
-        user_id : localStorage.getItem('uid') || '' 
+        status: await getStatus("SUBMITTED"),
+        user : JSON.parse(localStorage.getItem('user')!) || null ,
+        createdAt : new Date()
       };
 
       // Émettre l'événement au parent
@@ -209,6 +212,25 @@ export default defineComponent({
       
       // Note: Ne pas réinitialiser isSubmitting ici, le parent doit le faire
       // après avoir traité la soumission
+    };
+
+    const getStatus = async (statusCode: string) => {
+      try {
+        // Essayer le nouveau champ `statusCode` puis tomber en backfill sur `status_code`
+        let querySnapshot = await getDocs(query(collection(db, 'status'), where('statusCode', '==', statusCode)));
+        if (querySnapshot.empty) {
+          querySnapshot = await getDocs(query(collection(db, 'status'), where('status_code', '==', statusCode)));
+        }
+        if (!querySnapshot.empty) {
+          const doc = querySnapshot.docs[0];
+          return { id: doc.id, ...doc.data() };
+        }
+        console.warn(`Aucun statut trouvé pour le code: ${statusCode}`);
+        return null;
+      } catch (error) {
+        console.error('Erreur lors de la récupération du statut:', error);
+        return null;
+      }
     };
 
     // Réinitialiser le formulaire
@@ -237,6 +259,8 @@ export default defineComponent({
       map = null;
       marker = null;
     });
+
+    defineExpose({ resetForm });
 
     return {
       area,

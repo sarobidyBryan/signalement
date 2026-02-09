@@ -1,0 +1,30 @@
+.backoffice-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--theme-bg-secondary);
+  transition: background-color 0.3s ease;
+}
+
+.backoffice-main {
+  flex: 1;
+  margin-left: 280px;
+  transition: margin-left var(--transition-base), background-color 0.3s ease;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background-color: var(--theme-bg-secondary);
+}
+
+.backoffice-main.sidebar-closed {
+  margin-left: 0;
+}
+
+@media (max-width: 768px) {
+  .backoffice-main {
+    margin-left: 0;
+    padding: var(--spacing-md);
+  }
+
+  .backoffice-main.sidebar-open {
+    margin-left: 250px;
+  }
+}

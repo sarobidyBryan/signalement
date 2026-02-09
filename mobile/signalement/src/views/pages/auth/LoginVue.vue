@@ -13,7 +13,14 @@ import {
   IonCol,
   IonIcon 
 } from '@ionic/vue';
-import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+
+// Type for user status entries in Firestore
+interface UserStatusType {
+  id: number;
+  label: string;
+  statusCode: string;
+}
 
 export default defineComponent({
   name: 'LoginPage',
@@ -33,7 +40,8 @@ export default defineComponent({
     return {
       email: '',
       password: '',
-      errorMessage: ''
+      errorMessage: '',
+      isLoading: false
     };
   },
   
@@ -54,6 +62,7 @@ export default defineComponent({
       }
       
       try {
+        this.isLoading = true ;
         const userCred = await signInWithEmailAndPassword(auth, this.email, this.password);
         const uid = userCred.user.uid;
 
@@ -66,23 +75,55 @@ export default defineComponent({
           console.log("Données utilisateur:", userData);
           
           // 4. Vérification du statut
-          if (userData.status === 'ACTIVE') {
+          if (userData.userStatusType.statusCode === 'ACTIVE') {
             // Réinitialiser les tentatives de mot de passe après connexion réussie
             try {
               const attemptsRef = doc(db, 'password_attempts', uid);
               const attemptsSnap = await getDoc(attemptsRef);
               if (attemptsSnap.exists()) {
-                await updateDoc(attemptsRef, { nb_attempt: 0 });
+                await updateDoc(attemptsRef, { nbAttempt: 0 });
               } else {
-                await setDoc(attemptsRef, { nb_attempt: 0, user_id: uid });
+                await setDoc(attemptsRef, { nbAttempt: 0, userId: uid });
               }
             } catch (e) {
               console.warn('Impossible de réinitialiser password_attempts:', e);
             }
-            
-            localStorage.setItem('uid',uid);
-            localStorage.setItem('user',JSON.stringify(userData));
-            this.$router.push('/map');
+
+              // Charger la configuration `session_duration` (en secondes)
+              let sessionDurationSec = 1800; // fallback 30min
+              try {
+                const confQ = query(collection(db, 'configurations'), where('key', '==', 'session_duration'));
+                const confSnap = await getDocs(confQ);
+                if (!confSnap.empty) {
+                  const conf = confSnap.docs[0].data();
+                  if (conf && conf.value) {
+                    const parsed = parseInt(conf.value, 10);
+                    if (!isNaN(parsed)) sessionDurationSec = parsed;
+                  }
+                }
+
+                console.log('session_duration chargée:', sessionDurationSec);
+              } catch (confErr) {
+                console.warn('Impossible de charger session_duration:', confErr);
+              }
+
+              // Calculer l'expiration et stocker en localStorage
+              const expiry = Date.now() + sessionDurationSec * 1000;
+              localStorage.setItem('uid', uid);
+              localStorage.setItem('user', JSON.stringify(userData));
+              localStorage.setItem('sessionExpiry', String(expiry));
+              localStorage.setItem('sessionDuration', String(sessionDurationSec));
+
+              // Notifier l'application dans le même onglet que la session a démarré
+              try {
+                window.dispatchEvent(new Event('userLoggedIn'));
+              } catch (e) {
+                // no-op
+              }
+
+              console.log('[LoginVue] Session créée, expiration:', new Date(expiry).toLocaleString());
+
+              this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
             alert("Votre compte est suspendu. Contactez l'administrateur.");
@@ -119,7 +160,7 @@ export default defineComponent({
                 // Charger la configuration max_password_attempts
                 let maxAttempts = 3; // fallback
                 try {
-                  const confQ = query(collection(db, 'configurations'), where('key', '==', 'max_password_attempts'));
+                  const confQ = query(collection(db, 'configurations'), where('key', '==', 'maxPasswordAttempts'));
                   const confSnap = await getDocs(confQ);
                   if (!confSnap.empty) {
                     const conf = confSnap.docs[0].data();
@@ -132,17 +173,32 @@ export default defineComponent({
                   console.warn('Impossible de charger la configuration:', confErr);
                 }
 
-                const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nb_attempt || 0) : 0;
+                const currentAttempts = attemptsSnap.exists() ? (attemptsSnap.data().nbAttempt || 0) : 0;
 
                 // N'incrémenter que si on n'a pas encore atteint la limite
-                if (currentAttempts >= maxAttempts) {
+                    if (currentAttempts >= maxAttempts) {
                   alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
                   try {
                     const userRef = doc(db, 'users', userId);
                     const userSnap2 = await getDoc(userRef);
-                    const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                    const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                     if (currentStatus !== 'SUSPENDED') {
-                      await updateDoc(userRef, { status: 'SUSPENDED' });
+                      try {
+                        const statusQ = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                        const statusSnap = await getDocs(statusQ);
+                        let suspendedStatus: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                        if (!statusSnap.empty) {
+                          const docData = statusSnap.docs[0].data() as any;
+                          suspendedStatus = {
+                            id: typeof docData.id === 'number' ? docData.id : suspendedStatus.id,
+                            label: typeof docData.label === 'string' ? docData.label : suspendedStatus.label,
+                            statusCode: typeof docData.statusCode === 'string' ? docData.statusCode : suspendedStatus.statusCode,
+                          };
+                        }
+                        await updateDoc(userRef, { userStatusType: suspendedStatus, updatedAt: serverTimestamp() });
+                      } catch (sErr) {
+                        console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                      }
                     }
                   } catch (sErr) {
                     console.error('Impossible de suspendre l\'utilisateur:', sErr);
@@ -150,7 +206,7 @@ export default defineComponent({
                 } else {
                   // Incrémenter
                   if (attemptsSnap.exists()) {
-                    await updateDoc(attemptsRef, { nb_attempt: increment(1) });
+                    await updateDoc(attemptsRef, { nbAttempt: increment(1) });
                     // augmenter la valeur locale
                     const newAttempts = currentAttempts + 1;
                     if (newAttempts < maxAttempts) {
@@ -160,22 +216,52 @@ export default defineComponent({
                       try {
                         const userRef = doc(db, 'users', userId);
                         const userSnap2 = await getDoc(userRef);
-                        const currentStatus = userSnap2.exists() ? userSnap2.data().status : null;
+                        const currentStatus = userSnap2.exists() ? userSnap2.data().userStatusType?.statusCode : null;
                         if (currentStatus !== 'SUSPENDED') {
-                          await updateDoc(userRef, { status: 'SUSPENDED' });
+                          try {
+                            const statusQ2 = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                            const statusSnap2 = await getDocs(statusQ2);
+                            let suspendedStatus2: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                            if (!statusSnap2.empty) {
+                              const docData2 = statusSnap2.docs[0].data() as any;
+                              suspendedStatus2 = {
+                                id: typeof docData2.id === 'number' ? docData2.id : suspendedStatus2.id,
+                                label: typeof docData2.label === 'string' ? docData2.label : suspendedStatus2.label,
+                                statusCode: typeof docData2.statusCode === 'string' ? docData2.statusCode : suspendedStatus2.statusCode,
+                              };
+                            }
+                            await updateDoc(userRef, { userStatusType: suspendedStatus2, updatedAt: serverTimestamp() });
+                          } catch (sErr) {
+                            console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                          }
                         }
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
                       }
                     }
                   } else {
-                    await setDoc(attemptsRef, { nb_attempt: 1, user_id: userId });
+                    await setDoc(attemptsRef, { nbAttempt: 1, userId: userId });
                     if (1 < maxAttempts) {
                       alert('Les informations que vous avez entrées sont incorrectes. Il vous reste ' + (maxAttempts - 1) + ' tentative(s).');
                     } else {
                       alert('Nombre maximum de tentatives atteint. Contactez l\'administrateur.');
-                      try {
-                        await updateDoc(doc(db, 'users', userId), { status: 'SUSPENDED' });
+                        try {
+                        try {
+                          const statusQ3 = query(collection(db, 'userStatusType'), where('statusCode', '==', 'SUSPENDED'));
+                          const statusSnap3 = await getDocs(statusQ3);
+                          let suspendedStatus3: UserStatusType = { id: 3, label: 'Suspendu', statusCode: 'SUSPENDED' };
+                          if (!statusSnap3.empty) {
+                            const docData3 = statusSnap3.docs[0].data() as any;
+                            suspendedStatus3 = {
+                              id: typeof docData3.id === 'number' ? docData3.id : suspendedStatus3.id,
+                              label: typeof docData3.label === 'string' ? docData3.label : suspendedStatus3.label,
+                              statusCode: typeof docData3.statusCode === 'string' ? docData3.statusCode : suspendedStatus3.statusCode,
+                            };
+                          }
+                          await updateDoc(doc(db, 'users', userId), { userStatusType: suspendedStatus3, updatedAt: serverTimestamp() });
+                        } catch (sErr) {
+                          console.error('Impossible de suspendre l\'utilisateur:', sErr);
+                        }
                       } catch (sErr) {
                         console.error('Impossible de suspendre l\'utilisateur:', sErr);
                       }
@@ -196,6 +282,31 @@ export default defineComponent({
             this.errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
         }
       }
+      finally{
+        this.isLoading = false;
+      }
+    }
+  },
+  watch: {
+    '$route.query.reason'(newVal) {
+      try {
+        if (newVal === 'session_expired') {
+          alert('La session a expiré');
+        }
+      } catch (e) {
+        // no-op
+      }
+    }
+  },
+  mounted() {
+    try {
+      const reason = (this as any).$route?.query?.reason as string | undefined;
+      if (reason === 'session_expired') {
+        // Afficher une alerte native à la place du message inline
+        alert('La session a expiré');
+      }
+    } catch (e) {
+      // no-op
     }
   }
 });
@@ -210,7 +321,7 @@ export default defineComponent({
             <!-- Logo / Titre -->
             <div class="text-center mb-8">
               <div class="h-16 bg-black flex items-center justify-center mx-auto mb-4 rounded-lg">
-                <p class="text-2xl font-bold text-white">Signalements</p>
+                <p class="text-2xl font-bold text-white">Signaleo</p>
               </div>
               <h1 class="text-3xl font-bold text-gray-900 mb-2">Bienvenue</h1>
               <p class="text-gray-600">Connectez-vous à votre compte</p>
@@ -269,9 +380,17 @@ export default defineComponent({
                 type="submit"
                 expand="block"
                 class="font-medium h-12"
-                color="dark" 
+                color="dark"
+                :disabled="isLoading" 
               >
-                Se connecter
+                <span v-if="!isLoading">Se connecter</span>
+                <span v-else class="flex items-center justify-center">
+                  <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Connexion...
+                </span>
               </ion-button>
 
               <!-- Lien d'inscription -->

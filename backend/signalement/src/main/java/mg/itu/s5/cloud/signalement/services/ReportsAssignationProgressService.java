@@ -1,0 +1,174 @@
+package mg.itu.s5.cloud.signalement.services;
+
+import mg.itu.s5.cloud.signalement.entities.Report;
+import mg.itu.s5.cloud.signalement.entities.ReportsAssignationProgress;
+import mg.itu.s5.cloud.signalement.entities.Status;
+import mg.itu.s5.cloud.signalement.repositories.ReportsAssignationProgressRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class ReportsAssignationProgressService {
+
+    @Autowired
+    private ReportsAssignationProgressRepository repository;
+
+    @Autowired
+    private ReportsAssignationService reportsAssignationService;
+
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
+    private StatusService statusService;
+
+    @Autowired
+    private ReportsStatusService reportsStatusService;
+
+    public List<ReportsAssignationProgress> getAll() { return repository.findAll(); }
+    public Optional<ReportsAssignationProgress> getById(int id) { return repository.findById(id); }
+    public ReportsAssignationProgress save(ReportsAssignationProgress r) {
+        if (r.getId() == 0) {
+            r.setCreatedAt(java.time.LocalDateTime.now());
+        }
+        r.setUpdatedAt(java.time.LocalDateTime.now());
+        return repository.save(r);
+    }
+    public void delete(int id) { repository.deleteById(id); }
+
+    public java.math.BigDecimal sumTreatedAreaByReportId(int reportId) {
+        java.math.BigDecimal v = repository.sumTreatedAreaByReportId(reportId);
+        return v == null ? java.math.BigDecimal.ZERO : v;
+    }
+
+    public List<Map<String, Object>> getAllWithPercentage() {
+        List<ReportsAssignationProgress> all = repository.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (ReportsAssignationProgress p : all) {
+            result.add(createProgressMap(p));
+        }
+        return result;
+    }
+
+    public Optional<Map<String, Object>> getByIdWithPercentage(int id) {
+        return repository.findById(id).map(this::createProgressMap);
+    }
+
+    public List<Map<String, Object>> getByReportIdWithPercentage(int reportId) {
+        List<ReportsAssignationProgress> entries = repository.findByReportsAssignation_Report_Id(reportId);
+        return entries.stream().map(this::createProgressMap).collect(Collectors.toList());
+    }
+
+    public Map<String, Object> saveWithPercentage(ReportsAssignationProgress p) {
+        if (p.getReportsAssignation() == null) {
+            throw new IllegalArgumentException("ID d'assignation requis");
+        }
+
+        Optional<Integer> reportIdOpt = reportsAssignationService.getReportIdByAssignationId(p.getReportsAssignation().getId());
+        if (!reportIdOpt.isPresent()) {
+            throw new IllegalArgumentException("Assignation non trouvée");
+        }
+
+        int reportId = reportIdOpt.get();
+        Optional<mg.itu.s5.cloud.signalement.entities.Report> reportOpt = reportService.getReportById(reportId);
+        if (!reportOpt.isPresent()) {
+            throw new IllegalArgumentException("Rapport non trouvé");
+        }
+
+        BigDecimal reportArea = reportOpt.get().getArea();
+        if (reportArea == null) reportArea = BigDecimal.ZERO;
+
+        int existingProgressCount = repository.findByReportsAssignation_Id(p.getReportsAssignation().getId()).size();
+        BigDecimal targetPercentage;
+        if (existingProgressCount == 0) {
+            targetPercentage = BigDecimal.valueOf(50);
+        } else {
+            targetPercentage = BigDecimal.valueOf(100);
+        }
+
+        // Calculer du treatedArea en fonction du pourcentage
+        BigDecimal treatedArea = reportArea.multiply(targetPercentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        p.setTreatedArea(treatedArea);
+
+        if (p.getId() == 0) {
+            p.setCreatedAt(LocalDateTime.now());
+        }
+        p.setUpdatedAt(LocalDateTime.now());
+
+        ReportsAssignationProgress saved = repository.save(p);
+        
+        try {
+            String newStatusCode = null;
+            if (targetPercentage.compareTo(BigDecimal.valueOf(50)) == 0) {
+                newStatusCode = "IN_PROGRESS";
+            } else if (targetPercentage.compareTo(BigDecimal.valueOf(100)) == 0) {
+                newStatusCode = "COMPLETED";
+            }
+            
+            if (newStatusCode != null) {
+                Optional<Status> newStatusOpt = statusService.getStatusByStatusCode(newStatusCode);
+                if (newStatusOpt.isPresent()) {
+                    if (reportOpt.isPresent()) {
+                        Report report = reportOpt.get();
+                        report.setStatus(newStatusOpt.get());
+                        reportService.saveReport(report);
+                        
+                        reportsStatusService.addStatusToReport(
+                            report.getId(),
+                            newStatusOpt.get().getId(),
+                            java.time.LocalDateTime.now()
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour du statut du rapport: " + e.getMessage());
+        }
+        
+        return createProgressMap(saved);
+    }
+
+    private Map<String, Object> createProgressMap(ReportsAssignationProgress p) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", p.getId());
+        map.put("reportsAssignation", p.getReportsAssignation());
+        map.put("treatedArea", p.getTreatedArea());
+        map.put("comment", p.getComment());
+        map.put("registrationDate", p.getRegistrationDate());
+
+        // Compute percentage
+        BigDecimal percentage = BigDecimal.ZERO;
+        try {
+            Optional<Integer> reportIdOpt = reportsAssignationService.getReportIdByAssignationId(p.getReportsAssignation().getId());
+            if (reportIdOpt.isPresent()) {
+                Optional<mg.itu.s5.cloud.signalement.entities.Report> reportOpt = reportService.getReportById(reportIdOpt.get());
+                if (reportOpt.isPresent() && reportOpt.get().getArea() != null && reportOpt.get().getArea().compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal treated = p.getTreatedArea() != null ? p.getTreatedArea() : BigDecimal.ZERO;
+                    percentage = treated.divide(reportOpt.get().getArea(), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+                }
+            }
+        } catch (Exception e) {
+            // Keep percentage as 0
+        }
+        map.put("percentage", percentage);
+        return map;
+    }
+
+    public Optional<ReportsAssignationProgress> getByFirebaseId(String firebaseId) {
+        return repository.findByFirebaseId(firebaseId);
+    }
+
+    public List<ReportsAssignationProgress> findModifiedSince(java.time.LocalDateTime since) {
+        return repository.findModifiedSince(since);
+    }
+}

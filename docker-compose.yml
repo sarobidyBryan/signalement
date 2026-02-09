@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - apt-cache:/var/cache/apt
+      - apt-cache:/var/lib/apt
     ports:
       - "5532:5432"
     healthcheck:
@@ -20,7 +22,10 @@ services:
   backend:
     build: 
       context: ./backend/signalement
-      network: host
+      cache_from:
+        - maven-cache
+    volumes:
+      - maven-cache:/root/.m2
     ports:
       - "8180:8080"
     depends_on:
@@ -30,6 +35,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS}
     healthcheck: 
       test: ["CMD-SHELL", "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/8080' || exit 1"]
       interval: 10s
@@ -41,14 +48,18 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: "http://backend:8080"
+        VITE_API_URL: "/api"
+      cache_from:
+        - npm-cache
+    volumes:
+      - npm-cache:/root/.npm
     ports:
       - "3000:80"
     depends_on:
       backend:
         condition: service_healthy
     environment:
-      - VITE_API_URL=http://backend:8080
+      - VITE_API_URL=/api
 
   tileserver:
     image: maptiler/tileserver-gl
@@ -60,3 +71,6 @@ services:
 
 volumes:
   pgdata:
+  maven-cache:
+  npm-cache:
+  apt-cache:

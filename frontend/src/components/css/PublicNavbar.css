@@ -1,0 +1,144 @@
+/* ========== Public Navbar (shared between Landing and PublicReports) ========== */
+
+.public-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark theme (default) */
+.public-navbar.dark {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Light theme */
+.public-navbar.light {
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.public-navbar-logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.public-navbar.dark .public-navbar-logo {
+  color: #ffffff;
+}
+
+.public-navbar.light .public-navbar-logo {
+  color: #0a0a0a;
+}
+
+.public-navbar .public-navbar-logo .logo-exclamation {
+  color: #9ca3af;
+  filter: blur(0.5px);
+  opacity: 0.7;
+  margin-left: 1px;
+}
+
+.public-navbar-buttons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.public-navbar .btn-nav {
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ghost button */
+.public-navbar.dark .btn-nav-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.public-navbar.light .btn-nav-ghost {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: #0a0a0a;
+}
+
+.public-navbar.dark .btn-nav-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.public-navbar.light .btn-nav-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Primary button */
+.public-navbar.dark .btn-nav-primary {
+  background: #ffffff;
+  border: none;
+  color: #0a0a0a;
+}
+
+.public-navbar.light .btn-nav-primary {
+  background: #0a0a0a;
+  border: none;
+  color: #ffffff;
+}
+
+.public-navbar.dark .btn-nav-primary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
+}
+
+.public-navbar.light .btn-nav-primary:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .public-navbar {
+    padding: 16px 24px;
+  }
+
+  .public-navbar-logo {
+    font-size: 1.4rem;
+  }
+
+  .public-navbar .btn-nav {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .public-navbar-buttons {
+    gap: 8px;
+  }
+
+  .public-navbar .btn-nav-ghost {
+    display: none;
+  }
+}

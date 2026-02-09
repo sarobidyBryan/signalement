@@ -1,0 +1,24 @@
+User-agent: duggmirror
+User-agent: discobot
+User-agent: Jobboerse.com
+User-agent: AhrefsBot
+User-agent: dotbot
+Disallow: /
+
+User-agent: *
+Disallow: /fl
+Disallow: /intern
+Disallow: /piwik
+Disallow: /resources
+Disallow: /services
+Disallow: /hochschulschriften
+Disallow: /diss-abstracts
+Disallow: /Keyword
+Disallow: /netman
+Disallow: /ResourceList
+Disallow: /pubdb/author
+Disallow: /pubdb/journal
+Disallow: /pubdb/login
+Disallow: /pubdb/user
+Sitemap: https://bib.vetmed.fu-berlin.de/pubdb/sitemap.xml
+Sitemap: https://bib.vetmed.fu-berlin.de/vetbiogramm/sitemap.txt

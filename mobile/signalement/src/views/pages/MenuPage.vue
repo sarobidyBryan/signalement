@@ -226,6 +226,33 @@ export default defineComponent({
     },
 
     methods: {
+        handleStorageChange(event: StorageEvent) {
+            // Vérifier si c'est le localStorage 'user' qui a changé
+            if (event.key === 'user' && event.newValue) {
+                try {
+                    const parsedUser = JSON.parse(event.newValue);
+                    this.utilisateur.name = parsedUser.name || this.utilisateur.name;
+                    this.utilisateur.email = parsedUser.email || this.utilisateur.email;
+                    console.log('Données utilisateur mises à jour depuis localStorage');
+                } catch (e) {
+                    console.error('Erreur parsing user localStorage:', e);
+                }
+            }
+        },
+
+        handleUserUpdated(event: any) {
+            // Gérer l'événement personnalisé déclenché après mise à jour du localStorage
+            if (event.detail) {
+                try {
+                    this.utilisateur.name = event.detail.name || this.utilisateur.name;
+                    this.utilisateur.email = event.detail.email || this.utilisateur.email;
+                    console.log('Données utilisateur mises à jour depuis événement personnalisé');
+                } catch (e) {
+                    console.error('Erreur lors de la mise à jour depuis événement:', e);
+                }
+            }
+        },
+
         async chargerDonneesUtilisateur() {
             this.isLoading = true;
             try {
@@ -237,13 +264,13 @@ export default defineComponent({
 
                 const myReportsQuery = query(
                     collection(db, 'reports'),
-                    where("user_id", "==", uid),
+                    where("user.firebaseUid", "==", uid),
                 );
 
                 const myEndedReportsQuery = query(
                     collection(db, 'reports'),
-                    where("user_id", "==", uid),
-                    where("status", "==", "DONE")
+                    where("user.firebaseUid", "==", uid),
+                    where("status.statusCode", "==", "COMPLETED")
                 );
 
                 const reports = await getDocs(myReportsQuery);
@@ -277,11 +304,26 @@ export default defineComponent({
             }
         },
 
-        deconnexion() {
-            signOut(auth);
+        async deconnexion() {
+            try {
+                await signOut(auth);
+            } catch (e) {
+                console.warn('Erreur lors du signOut:', e);
+            }
+
+            // Nettoyage localStorage (inclut la session)
             localStorage.removeItem('uid');
             localStorage.removeItem('user');
-            
+            localStorage.removeItem('sessionExpiry');
+            localStorage.removeItem('sessionDuration');
+
+            // Notifier l'application dans le même onglet
+            try {
+                window.dispatchEvent(new Event('userLoggedOut'));
+            } catch (e) {
+                // no-op
+            }
+
             this.$router.push('/');
         }
     },
@@ -292,12 +334,25 @@ export default defineComponent({
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
+                console.log("parsed user",parsedUser);
                 this.utilisateur.name = parsedUser.name || this.utilisateur.name;
                 this.utilisateur.email = parsedUser.email || this.utilisateur.email;
             } catch (e) {
                 console.error('Erreur parsing user localStorage:', e);
             }
         }
+
+        // Écouter les changements du localStorage depuis d'autres onglets
+        window.addEventListener('storage', this.handleStorageChange);
+
+        // Écouter l'événement personnalisé pour les mises à jour dans le même onglet
+        window.addEventListener('userStorageUpdated', this.handleUserUpdated);
+    },
+
+    beforeUnmount() {
+        // Nettoyer les écouteurs d'événements
+        window.removeEventListener('storage', this.handleStorageChange);
+        window.removeEventListener('userStorageUpdated', this.handleUserUpdated);
     }
 });
 </script>

@@ -19,16 +19,6 @@
               <ion-label position="stacked">Nom complet</ion-label>
               <ion-input v-model="form.name" placeholder="Votre nom"></ion-input>
             </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Téléphone</ion-label>
-              <ion-input v-model="form.phone" type="tel" placeholder="+261 XX XX XXX"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Adresse</ion-label>
-              <ion-textarea v-model="form.address" rows="3" placeholder="Votre adresse..."></ion-textarea>
-            </ion-item>
           </ion-list>
         </div>
 
@@ -123,8 +113,6 @@ export default defineComponent({
     return {
       form: {
         name: '',
-        phone: '',
-        address: ''
       } as FormData,
       isSubmitting: false,
       successMessage: '',
@@ -134,6 +122,33 @@ export default defineComponent({
   },
 
   methods: {
+    handleStorageChange(event: StorageEvent) {
+      // Vérifier si c'est le localStorage 'user' qui a changé
+      if (event.key === 'user' && event.newValue) {
+        try {
+          const parsedUser = JSON.parse(event.newValue);
+          this.form.name = parsedUser.name || this.form.name;
+          console.log('Formulaire mis à jour depuis localStorage');
+        } catch (e) {
+          console.error('Erreur parsing user localStorage:', e);
+        }
+      }
+    },
+
+    handleUserUpdated(event: any) {
+      // Gérer l'événement personnalisé déclenché après mise à jour du localStorage
+      if (event.detail) {
+        try {
+          this.form.name = event.detail.name || this.form.name;
+          this.form.phone = event.detail.phone || this.form.phone;
+          this.form.address = event.detail.address || this.form.address;
+          console.log('Formulaire mis à jour depuis événement personnalisé');
+        } catch (e) {
+          console.error('Erreur lors de la mise à jour depuis événement:', e);
+        }
+      }
+    },
+
     async chargerDonneesUtilisateur() {
       try {
         const uid = localStorage.getItem('uid');
@@ -148,8 +163,6 @@ export default defineComponent({
         if (userSnap.exists()) {
           const userData = userSnap.data() as any;
           this.form.name = userData.name || '';
-          this.form.phone = userData.phone || '';
-          this.form.address = userData.address || '';
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -178,10 +191,17 @@ export default defineComponent({
         const userRef = doc(db, 'users', uid);
         await updateDoc(userRef, {
           name: this.form.name.trim(),
-          phone: this.form.phone.trim(),
-          address: this.form.address.trim(),
           updatedAt: new Date()
         });
+
+        const userDoc = await getDoc(doc(db, "users", uid));
+        const userData = userDoc.data();
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        // Déclencher un événement personnalisé pour notifier les autres composants
+        window.dispatchEvent(new CustomEvent('userStorageUpdated', { 
+          detail: userData 
+        }));
 
         this.successMessage = 'Informations mises à jour avec succès!';
 
@@ -204,6 +224,18 @@ export default defineComponent({
 
   mounted() {
     this.chargerDonneesUtilisateur();
+
+    // Écouter les changements du localStorage depuis d'autres onglets
+    window.addEventListener('storage', this.handleStorageChange);
+
+    // Écouter l'événement personnalisé pour les mises à jour dans le même onglet
+    window.addEventListener('userStorageUpdated', this.handleUserUpdated);
+  },
+
+  beforeUnmount() {
+    // Nettoyer les écouteurs d'événements
+    window.removeEventListener('storage', this.handleStorageChange);
+    window.removeEventListener('userStorageUpdated', this.handleUserUpdated);
   }
 });
 </script>
