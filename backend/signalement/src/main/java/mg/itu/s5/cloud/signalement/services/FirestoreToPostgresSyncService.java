@@ -328,9 +328,10 @@ public class FirestoreToPostgresSyncService {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> imgData = (Map<String, Object>) imgObj;
                         
-                        String lien = getStringValue(imgData, "lien");
+                        // Firebase uses "link", PostgreSQL uses "lien"
+                        String lien = getStringValue(imgData, "link");
                         if (lien == null || lien.isBlank()) {
-                            continue; // Pas de lien, skip
+                            continue; // Pas de link, skip
                         }
                         
                         // Vérifier si l'image existe déjà (éviter les doublons)
