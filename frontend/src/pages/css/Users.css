@@ -126,6 +126,12 @@
   border-bottom: 1px solid var(--theme-border);
 }
 
+/* ID column: right-aligned */
+.users-table th:first-child,
+.users-table td:first-child {
+  text-align: right;
+}
+
 .users-table th {
   background: var(--theme-toggle-bg);
   font-size: 12px;
@@ -165,13 +171,15 @@
 }
 
 .status-badge.active {
-  background: #d4edda;
-  color: #155724;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status-badge.blocked {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* Modal */
@@ -263,8 +271,9 @@
 }
 
 .form-error {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: var(--spacing-md, 16px);
@@ -277,7 +286,7 @@
   justify-content: flex-end;
   margin-top: var(--spacing-lg, 24px);
   padding-top: var(--spacing-md, 16px);
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--theme-border);
 }
 
 /* Responsive */

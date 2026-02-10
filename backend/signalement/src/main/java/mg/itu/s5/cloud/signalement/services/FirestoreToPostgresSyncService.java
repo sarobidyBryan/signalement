@@ -51,6 +51,9 @@ public class FirestoreToPostgresSyncService {
     private ReportsStatusService reportsStatusService;
 
     @Autowired
+    private ImageReportRepository imageReportRepository;
+
+    @Autowired
     private UserTokenRepository userTokenRepository;
 
     /**
@@ -64,6 +67,7 @@ public class FirestoreToPostgresSyncService {
             results.put("users", syncUsersFromFirestore());
             results.put("userTokens", syncUserTokensFromFirestore());
             results.put("reports", syncReportsFromFirestore());
+            results.put("image_reports", syncImageReportsFromFirestore());
             results.put("success", true);
             results.put("timestamp", LocalDateTime.now());
         } catch (Exception e) {
@@ -255,6 +259,116 @@ public class FirestoreToPostgresSyncService {
     }
 
     // ===================== USER HELPERS =====================
+
+    /**
+     * Synchronise les images de rapports depuis Firestore vers PostgreSQL.
+     * Lit le champ imageReport (array) de chaque document report dans Firestore,
+     * utilise le postgresId du document report comme report_id,
+     * et insère chaque image (lien) dans la table image_report.
+     */
+    @Transactional
+    public Map<String, Object> syncImageReportsFromFirestore() {
+        String tableName = "image_report";
+        
+        int synced = 0;
+        int created = 0;
+        int skipped = 0;
+        int total = 0;
+        
+        try {
+            List<QueryDocumentSnapshot> documents = firestoreService.getAllDocuments(COLLECTION_REPORTS);
+            
+            for (QueryDocumentSnapshot doc : documents) {
+                try {
+                    Map<String, Object> data = doc.getData();
+                    
+                    // Récupérer le postgresId du report
+                    Object postgresIdObj = data.get("postgresId");
+                    if (postgresIdObj == null) {
+                        continue; // Pas de postgresId, skip
+                    }
+                    int reportPostgresId = convertToInt(postgresIdObj);
+                    if (reportPostgresId <= 0) {
+                        continue;
+                    }
+                    
+                    // Vérifier que le report existe en PG
+                    Optional<Report> reportOpt = reportRepository.findById(reportPostgresId);
+                    if (reportOpt.isEmpty()) {
+                        logger.warn("Report PG id={} non trouvé pour sync image_report, doc={}", reportPostgresId, doc.getId());
+                        continue;
+                    }
+                    Report report = reportOpt.get();
+                    
+                    // Récupérer le champ imageReport (array)
+                    Object imageReportObj = data.get("imageReport");
+                    if (imageReportObj == null || !(imageReportObj instanceof List)) {
+                        continue; // Pas d'images
+                    }
+                    
+                    @SuppressWarnings("unchecked")
+                    List<Object> imageReportList = (List<Object>) imageReportObj;
+                    total += imageReportList.size();
+                    
+                    // Récupérer createdAt et updatedAt du document report
+                    LocalDateTime reportCreatedAt = getLocalDateTimeValue(data, "createdAt");
+                    LocalDateTime reportUpdatedAt = getLocalDateTimeValue(data, "updatedAt");
+                    if (reportCreatedAt == null) {
+                        reportCreatedAt = LocalDateTime.now();
+                    }
+                    if (reportUpdatedAt == null) {
+                        reportUpdatedAt = LocalDateTime.now();
+                    }
+                    
+                    for (Object imgObj : imageReportList) {
+                        if (!(imgObj instanceof Map)) {
+                            continue;
+                        }
+                        
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> imgData = (Map<String, Object>) imgObj;
+                        
+                        String lien = getStringValue(imgData, "lien");
+                        if (lien == null || lien.isBlank()) {
+                            continue; // Pas de lien, skip
+                        }
+                        
+                        // Vérifier si l'image existe déjà (éviter les doublons)
+                        if (imageReportRepository.existsByLienAndReport_Id(lien, report.getId())) {
+                            skipped++;
+                            continue;
+                        }
+                        
+                        // Créer l'ImageReport
+                        ImageReport imageReport = new ImageReport();
+                        imageReport.setLien(lien);
+                        imageReport.setReport(report);
+                        imageReport.setCreatedAt(reportCreatedAt);
+                        imageReport.setUpdatedAt(reportUpdatedAt);
+                        
+                        imageReportRepository.save(imageReport);
+                        created++;
+                        synced++;
+                    }
+                } catch (Exception e) {
+                    logger.error("Erreur sync image_report depuis Firestore doc={}", doc.getId(), e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Erreur récupération documents Firestore pour image_report", e);
+        }
+        
+        syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_FIREBASE_TO_POSTGRES);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("table", tableName);
+        result.put("totalImages", total);
+        result.put("synced", synced);
+        result.put("created", created);
+        result.put("skipped", skipped);
+        result.put("timestamp", LocalDateTime.now());
+        return result;
+    }
 
     private User findExistingUser(Map<String, Object> data, String firebaseDocId) {
         // 1. Chercher par postgresId
