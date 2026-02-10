@@ -43,7 +43,9 @@ export default defineComponent({
       password: '',
       errorMessage: '',
       isLoading: false,
-      isShowingPassword:false
+      isShowingPassword:false,
+      eyeOff,
+      eyeSharp
     };
   },
   
@@ -385,15 +387,16 @@ export default defineComponent({
                     fill="solid"
                     :class="{ 'border-red-500': errorMessage && !password }"
                   ></ion-input>
-                  <ion-icon 
-                    :icon="eyeOff" 
-                  ></ion-icon>
+                  
                   <button 
                   @click.prevent="togglePassword" 
                   type="button" 
                   class="absolute right-3 top-5 z-50 p-1 rounded text-gray-600"
                 >
-                  {{ isShowingPassword ? 'Cacher' : 'Afficher' }}
+                  <ion-icon 
+                      :icon="isShowingPassword ? eyeOff : eyeSharp" 
+                  >
+                  </ion-icon>
                 </button>
                 </div>
               </div>
