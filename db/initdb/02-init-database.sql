@@ -133,6 +133,7 @@ CREATE TABLE reports(
     description TEXT,
     status_id INTEGER NOT NULL REFERENCES status(id),
     firebase_id VARCHAR(100),
+    niveau INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
