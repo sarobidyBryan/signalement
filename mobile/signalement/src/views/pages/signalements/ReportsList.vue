@@ -62,6 +62,7 @@
                 </div>
                 <div>
                   <h3 class="font-bold text-gray-900">{{ signalement.titre }}</h3>
+                  <div class="text-sm text-gray-600 p-1.5 bg-orange-50 rounded w-20" >Niveau: {{ signalement.level }} </div>
                   <p class="text-sm text-gray-600" v-if="signalement.area">{{ signalement.area }} m²</p>
                 </div>
               </div>
@@ -182,6 +183,7 @@ type Report = {
   updatedAt?: Date;
   firebaseId?: string;
   postgresId?: string;
+  level?: number | null;
 };
 
 export default defineComponent({
@@ -316,7 +318,8 @@ export default defineComponent({
             companyName: d.assignation?.company?.name ?? null,
             adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
             date: formatDate(d.createdAt),
-            status: d.status?.statusCode ?? 'SUBMITTED'
+            status: d.status?.statusCode ?? 'SUBMITTED',
+            level: parseInt(d.level) || 0
           } as Report;
         });
         

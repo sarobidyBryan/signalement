@@ -451,6 +451,7 @@ export default defineComponent({
             <div class="p-2">
               <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
               <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
+                <div class="text-sm text-gray-600 mb-1 p-1.5 bg-orange-50 rounded w-20" ><b>Niveau:</b> ${ signalement.level } </div>
               <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
               <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
               <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay} Ar </div>
@@ -572,6 +573,7 @@ export default defineComponent({
             companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
             imageReport: d.imageReport ?? [],
+            level: parseInt(d.level) || 0,
             raw: d
           };
         });
