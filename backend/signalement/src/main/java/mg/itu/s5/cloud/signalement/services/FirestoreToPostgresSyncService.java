@@ -52,6 +52,8 @@ public class FirestoreToPostgresSyncService {
 
     @Autowired
     private ImageReportRepository imageReportRepository;
+
+    @Autowired
     private UserTokenRepository userTokenRepository;
 
     /**
