@@ -116,7 +116,7 @@
   min-width: 0;
   height: 100%;
   /* Fill parent container height */
-  border: 2px solid var(--color-secondary);
+  border: 2px solid var(--theme-border-strong);
   border-radius: 12px;
   background: var(--card-bg);
   padding: 16px;

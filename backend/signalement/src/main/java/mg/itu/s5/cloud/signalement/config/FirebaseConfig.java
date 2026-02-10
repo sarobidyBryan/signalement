@@ -9,56 +9,48 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
-import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 @Configuration
 public class FirebaseConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FirebaseConfig.class);
 
-    @Value("${firebase.project-id:}")
-    private String projectId;
-
-    @Value("${firebase.credentials:}")
-    private String firebaseCredentialsJson;
+    @Value("${firebase.credentials-file:/app/config/firebase-credentials.json}")
+    private String firebaseCredentialsFile;
 
     private boolean firebaseInitialized = false;
 
     @PostConstruct
     public void initializeFirebase() {
-        if (firebaseCredentialsJson == null || firebaseCredentialsJson.isEmpty() || firebaseCredentialsJson.equals("{}")) {
-            logger.warn("Firebase credentials not configured. Firebase features will be disabled.");
-            return;
-        }
-
-        if (projectId == null || projectId.isEmpty()) {
-            logger.warn("Firebase project ID not configured. Firebase features will be disabled.");
-            return;
-        }
-
         try {
-            // Créer les credentials à partir du JSON
+            // Créer les credentials à partir du fichier JSON avec les scopes nécessaires
             GoogleCredentials credentials = GoogleCredentials.fromStream(
-                new ByteArrayInputStream(firebaseCredentialsJson.getBytes(StandardCharsets.UTF_8))
-            );
+                new FileInputStream(firebaseCredentialsFile)
+            ).createScoped(Arrays.asList(
+                "https://www.googleapis.com/auth/firebase.messaging",
+                "https://www.googleapis.com/auth/cloud-platform"
+            ));
 
             // Configurer les options Firebase
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(credentials)
-                    .setProjectId(projectId)
                     .build();
 
             // Initialiser Firebase
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
                 firebaseInitialized = true;
-                logger.info("Firebase initialized successfully for project: {}", projectId);
+                logger.info("Firebase initialized successfully from file: {}", firebaseCredentialsFile);
             } else {
                 firebaseInitialized = true;
                 logger.info("Firebase already initialized");
             }
+        } catch (FileNotFoundException e) {
+            logger.warn("Firebase credentials file not found: {}. Firebase features will be disabled.", firebaseCredentialsFile);
         } catch (IOException e) {
             logger.error("Failed to initialize Firebase: {}", e.getMessage());
         }

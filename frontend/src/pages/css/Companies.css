@@ -120,6 +120,12 @@
   border-bottom: 1px solid var(--theme-border);
 }
 
+/* ID column: right-aligned */
+.companies-table th:first-child,
+.companies-table td:first-child {
+  text-align: right;
+}
+
 .companies-table th {
   background: var(--theme-toggle-bg);
   font-size: 12px;
