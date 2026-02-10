@@ -11,7 +11,7 @@ export interface ImageReport {
   id: string;
   fireBaseReportId: string;
   postgresReportId: string;
-  lien: string;
+  link: string;
 }
 
 /**
@@ -69,7 +69,7 @@ async function uploadSingleImage(
     id: imageId,
     fireBaseReportId: reportId,
     postgresReportId: '',
-    lien: data.secure_url,
+    link: data.secure_url,
   };
 }
 
@@ -79,7 +79,7 @@ async function uploadSingleImage(
  *
  * @param photos    - Tableau de UserPhoto à uploader
  * @param reportId  - ID du signalement Firestore
- * @returns Tableau d'ImageReport avec {id, fireBaseReportId, postgresReportId, lien}
+ * @returns Tableau d'ImageReport avec {id, fireBaseReportId, postgresReportId, link}
  */
 export async function uploadReportImages(
   photos: UserPhoto[],

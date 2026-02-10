@@ -247,7 +247,7 @@ export default defineComponent({
       return imageArr.map((it: any) => {
         if (!it) return '';
         if (typeof it === 'string') return it;
-        return it.lien ?? it.url ?? it.path ?? '';
+        return it.link ?? it.url ?? it.path ?? '';
       }).filter((u: string) => !!u);
     };
 

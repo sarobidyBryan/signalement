@@ -18,7 +18,7 @@ export interface ImageReport {
   id: string;
   fireBaseReportId: string;
   postgresReportId: string;
-  lien: string;
+  link: string;
 }
 
 function generateId(): string {
@@ -59,7 +59,7 @@ async function uploadSingleImage(
     id: imageId,
     fireBaseReportId: reportId,
     postgresReportId: '',
-    lien: urlData.publicUrl,
+    link: urlData.publicUrl,
   };
 }
 
