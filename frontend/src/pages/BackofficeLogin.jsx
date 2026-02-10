@@ -11,7 +11,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import './css/BackofficeLogin.css';
 
 function BackofficeLogin() {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: 'manager@example.com', password: 'managerpass' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
