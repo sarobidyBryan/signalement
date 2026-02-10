@@ -57,3 +57,5 @@ coverage/
 # If node_modules were previously committed, remove them from the index:
 #   git rm -r --cached node_modules
 #   git commit -m "Remove node_modules from repo"
+backend/signalement/signalement-cloud-s5-firebase-adminsdk-fbsvc-56c957d58f.json
+backend/signalement/signalement-cloud-s5-firebase-adminsdk-fbsvc-56c957d58f.json

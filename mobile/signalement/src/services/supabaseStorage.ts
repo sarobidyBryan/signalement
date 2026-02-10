@@ -16,7 +16,8 @@ import type { UserPhoto } from '@/composables/usePhotoGallery';
 
 export interface ImageReport {
   id: string;
-  id_report: string;
+  fireBaseReportId: string;
+  postgresReportId: string;
   lien: string;
 }
 
@@ -56,7 +57,8 @@ async function uploadSingleImage(
 
   return {
     id: imageId,
-    id_report: reportId,
+    fireBaseReportId: reportId,
+    postgresReportId: '',
     lien: urlData.publicUrl,
   };
 }

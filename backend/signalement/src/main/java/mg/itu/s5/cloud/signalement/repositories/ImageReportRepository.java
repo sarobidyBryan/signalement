@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ImageReportRepository extends JpaRepository<ImageReport, Integer> {
     List<ImageReport> findByReport_IdOrderByCreatedAtDesc(int reportId);
+    boolean existsByLienAndReport_Id(String lien, int reportId);
 }

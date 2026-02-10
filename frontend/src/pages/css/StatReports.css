@@ -139,6 +139,14 @@
   white-space: nowrap;
 }
 
+/* Numeric columns: right-aligned (Avancement #5, Délai Total #6) */
+.stat-table th:nth-child(5),
+.stat-table td:nth-child(5),
+.stat-table th:nth-child(6),
+.stat-table td:nth-child(6) {
+  text-align: right;
+}
+
 .stat-table tbody tr {
   border-bottom: 1px solid var(--theme-border);
   transition: background 0.2s ease;
@@ -159,7 +167,7 @@
 
 .stat-report-id {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--theme-text);
 }
 
 .stat-description {

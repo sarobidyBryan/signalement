@@ -107,19 +107,11 @@
   font-weight: 500;
 }
 
-[data-theme="dark"] .summary-label {
-  color: rgba(255, 255, 255, 0.85);
-}
-
 .summary-value {
   font-size: 18px;
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
-}
-
-[data-theme="dark"] .summary-value {
-  color: #ffffff;
 }
 
 .detail-progress {
@@ -134,18 +126,10 @@
   margin-bottom: 8px;
 }
 
-[data-theme="dark"] .progress-track {
-  background: rgba(255, 255, 255, 0.15);
-}
-
 .progress-fill {
   height: 100%;
   background: var(--theme-highlight-bg);
   transition: width 0.3s ease;
-}
-
-[data-theme="dark"] .progress-fill {
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .progress-text {
@@ -153,10 +137,6 @@
   color: var(--theme-text-secondary);
   text-align: right;
   margin: 0;
-}
-
-[data-theme="dark"] .progress-text {
-  color: rgba(255, 255, 255, 0.75);
 }
 
 .detail-grid {
@@ -221,18 +201,10 @@
   color: var(--theme-text);
 }
 
-[data-theme="dark"] .assignation-card h4 {
-  color: #ffffff;
-}
-
 .assignation-card p {
   margin: 0;
   font-size: 13px;
   color: var(--theme-text-secondary);
-}
-
-[data-theme="dark"] .assignation-card p {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .assignation-dates {
@@ -241,10 +213,6 @@
   margin-top: 8px;
   font-size: 12px;
   color: var(--theme-text-muted);
-}
-
-[data-theme="dark"] .assignation-dates {
-  color: rgba(255, 255, 255, 0.75);
 }
 
 .assignation-form,
@@ -332,17 +300,9 @@
   color: var(--theme-text-secondary);
 }
 
-[data-theme="dark"] .detail-label {
-  color: rgba(255, 255, 255, 0.85);
-}
-
 .detail-value {
   color: var(--theme-text);
   font-weight: 500;
-}
-
-[data-theme="dark"] .detail-value {
-  color: #ffffff;
 }
 
 .progress-card-body {
@@ -353,10 +313,6 @@
   padding: 8px;
   background: var(--theme-bg-secondary);
   border-radius: 4px;
-}
-
-[data-theme="dark"] .progress-card-body {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 @media (max-width: 768px) {

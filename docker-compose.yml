@@ -26,6 +26,7 @@ services:
         - maven-cache
     volumes:
       - maven-cache:/root/.m2
+      - ./backend/signalement/signalement-cloud-s5-firebase-adminsdk-fbsvc-56c957d58f.json:/app/config/firebase-credentials.json:ro
     ports:
       - "8180:8080"
     depends_on:

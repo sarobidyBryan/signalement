@@ -9,7 +9,8 @@ import type { UserPhoto } from '@/composables/usePhotoGallery';
 
 export interface ImageReport {
   id: string;
-  id_report: string;
+  fireBaseReportId: string;
+  postgresReportId: string;
   lien: string;
 }
 
@@ -66,7 +67,8 @@ async function uploadSingleImage(
   // 5. Récupérer l'URL publique sécurisée
   return {
     id: imageId,
-    id_report: reportId,
+    fireBaseReportId: reportId,
+    postgresReportId: '',
     lien: data.secure_url,
   };
 }
@@ -77,7 +79,7 @@ async function uploadSingleImage(
  *
  * @param photos    - Tableau de UserPhoto à uploader
  * @param reportId  - ID du signalement Firestore
- * @returns Tableau d'ImageReport avec les URLs publiques Cloudinary
+ * @returns Tableau d'ImageReport avec {id, fireBaseReportId, postgresReportId, lien}
  */
 export async function uploadReportImages(
   photos: UserPhoto[],
