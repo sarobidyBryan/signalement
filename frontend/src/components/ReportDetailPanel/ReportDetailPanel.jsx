@@ -196,6 +196,23 @@ const ReportDetailPanel = ({
           <ErrorBanner error={detailError} />
         ) : detail ? (
           <div className="detail-body">
+              <div className="niveau-widget">
+                <p className="summary-label">Niveau de dégâts</p>
+                {(() => {
+                  const niveauVal = Number(detail.report?.niveau) || 0;
+                  const pct = Math.max(0, Math.min(100, Math.round((niveauVal / 10) * 100)));
+                  return (
+                    <>
+                      <div className="niveau-meter" aria-hidden>
+                        <div className="niveau-fill" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="niveau-meta">
+                        <span className="niveau-text">{niveauVal}/10</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             <div className="detail-summary">
               <div>
                 <p className="summary-label">Statut actuel</p>
