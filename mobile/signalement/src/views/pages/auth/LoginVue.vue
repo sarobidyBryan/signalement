@@ -39,8 +39,8 @@ export default defineComponent({
   
   data() {
     return {
-      email: '',
-      password: '',
+      email: 'alice@example.com',
+      password: 'alicepass',
       errorMessage: '',
       isLoading: false,
       isShowingPassword:false,
