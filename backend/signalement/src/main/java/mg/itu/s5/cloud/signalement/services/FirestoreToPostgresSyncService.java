@@ -24,6 +24,7 @@ public class FirestoreToPostgresSyncService {
     // Collections Firestore
     public static final String COLLECTION_USERS = "users";
     public static final String COLLECTION_REPORTS = "reports";
+    public static final String COLLECTION_USER_TOKENS = "userTokens";
 
     @Autowired
     private FirestoreService firestoreService;
@@ -49,6 +50,9 @@ public class FirestoreToPostgresSyncService {
     @Autowired
     private ReportsStatusService reportsStatusService;
 
+    @Autowired
+    private UserTokenRepository userTokenRepository;
+
     /**
      * Synchronise toutes les tables depuis Firestore vers PostgreSQL
      */
@@ -58,6 +62,7 @@ public class FirestoreToPostgresSyncService {
         
         try {
             results.put("users", syncUsersFromFirestore());
+            results.put("userTokens", syncUserTokensFromFirestore());
             results.put("reports", syncReportsFromFirestore());
             results.put("success", true);
             results.put("timestamp", LocalDateTime.now());
@@ -120,6 +125,60 @@ public class FirestoreToPostgresSyncService {
             }
         } catch (Exception e) {
             logger.error("Erreur récupération documents Firestore users", e);
+        }
+        
+        syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_FIREBASE_TO_POSTGRES);
+        return createSyncResult(tableName, total, synced, created, updated);
+    }
+
+    /**
+     * Synchronise les tokens utilisateurs depuis Firestore vers PostgreSQL
+     */
+    @Transactional
+    public Map<String, Object> syncUserTokensFromFirestore() {
+        String tableName = "user_tokens";
+        LocalDateTime lastSync = syncLogService.getLastSyncDateOrDefault(tableName, SynchronizationLogService.SYNC_TYPE_FIREBASE_TO_POSTGRES);
+        
+        int synced = 0;
+        int created = 0;
+        int updated = 0;
+        int total = 0;
+        
+        try {
+            List<QueryDocumentSnapshot> documents = firestoreService.getAllDocuments(COLLECTION_USER_TOKENS);
+            total = documents.size();
+            
+            for (QueryDocumentSnapshot doc : documents) {
+                try {
+                    Map<String, Object> data = doc.getData();
+                    
+                    // Vérifier si le document a été modifié après le dernier sync
+                    LocalDateTime docUpdatedAt = getDocumentUpdatedAt(data);
+                    if (docUpdatedAt != null && docUpdatedAt.isBefore(lastSync)) {
+                        continue; // Skip si pas modifié depuis le dernier sync
+                    }
+                    
+                    UserToken existingToken = findExistingUserToken(data);
+                    
+                    if (existingToken != null) {
+                        // Update
+                        updateUserTokenFromFirestore(existingToken, data);
+                        userTokenRepository.save(existingToken);
+                        updated++;
+                    } else {
+                        UserToken newToken = createUserTokenFromFirestore(data);
+                        if (newToken != null) {
+                            userTokenRepository.save(newToken);
+                            created++;
+                        }
+                    }
+                    synced++;
+                } catch (Exception e) {
+                    logger.error("Erreur sync user_token depuis Firestore doc={}", doc.getId(), e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Erreur récupération documents Firestore user_tokens", e);
         }
         
         syncLogService.logSync(tableName, synced, SynchronizationLogService.SYNC_TYPE_FIREBASE_TO_POSTGRES);
@@ -345,6 +404,71 @@ public class FirestoreToPostgresSyncService {
                 return userStatusTypeRepository.findByStatusCode(statusCodeObj.toString()).orElse(null);
             }
         }
+        return null;
+    }
+
+    // ===================== USER_TOKEN HELPERS =====================
+
+    private UserToken findExistingUserToken(Map<String, Object> data) {
+        // Chercher par token
+        String tokenStr = getStringValue(data, "token");
+        if (tokenStr != null) {
+            Optional<UserToken> tokenByValue = userTokenRepository.findByToken(tokenStr);
+            if (tokenByValue.isPresent()) {
+                return tokenByValue.get();
+            }
+        }
+        
+        return null;
+    }
+
+    private UserToken createUserTokenFromFirestore(Map<String, Object> data) {
+        UserToken token = new UserToken();
+        
+        // User (obligatoire)
+        User user = getUserFromUserIdInData(data);
+        if (user == null) {
+            logger.error("User non trouvé pour le token, impossible de créer");
+            return null;
+        }
+        token.setUser(user);
+        
+        // Token
+        token.setToken(getStringValue(data, "fcmToken"));
+        // Dates
+        token.setCreatedAt(LocalDateTime.now());
+        token.setUpdatedAt(LocalDateTime.now());
+        
+        return token;
+    }
+
+    private void updateUserTokenFromFirestore(UserToken token, Map<String, Object> data) {
+        // Mettre à jour les champs modifiables
+        String tokenValue = getStringValue(data, "fcmToken");
+        if (tokenValue != null) {
+            token.setToken(tokenValue);
+        }
+        
+        // Mettre à jour l'utilisateur si nécessaire
+        User user = getUserFromUserIdInData(data);
+        if (user != null) {
+            token.setUser(user);
+        }
+        
+        token.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private User getUserFromUserIdInData(Map<String, Object> data) {
+        // Chercher par userId
+        Object userIdObj = data.get("userId");
+        if (userIdObj != null) {
+            String  userId = (String) userIdObj;
+            Optional<User> user = userRepository.findByFirebaseUid(userId);
+            if (user.isPresent()) {
+                return user.get();
+            }
+        }
+        
         return null;
     }
 
