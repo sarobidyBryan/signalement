@@ -43,7 +43,11 @@ public class NotificationService {
         List<UserToken> userTokens = userTokenRepository.findByUserId(userId);
         for (UserToken userToken : userTokens) {
             request.setToken(userToken.getToken());
-            sendNotification(request);
+            try {
+                sendNotification(request);
+            } catch (Exception e) {
+                System.out.println("La notification n'a pas pu etre envoyee au fcmToken:"+userToken.getToken()+"\nerror:"+e.getMessage());
+            }
         }
     }
 
