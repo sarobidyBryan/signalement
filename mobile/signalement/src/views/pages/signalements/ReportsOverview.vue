@@ -448,21 +448,53 @@ export default defineComponent({
           // Ajouter un popup
           const resolved = isResolved(signalement.status);
           marker.bindPopup(`
-            <div class="p-2">
-              <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
-              <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
-              <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
-              <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
-              <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay} Ar </div>
-              <div class="flex items-center justify-between">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            <div class="p-4 space-y-3" style="max-width: 300px;">
+              <div>
+                <h3 class="font-bold text-base text-gray-900 mb-1">${signalement.titre}</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">${signalement.description}</p>
+              </div>
+              
+              <div class="border-t border-gray-200 pt-3">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Priorité</div>
+                ${signalement.level != 0 ? `
+                  <div class="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-medium text-amber-900">Niveau de priorité</span>
+                    </div>
+                    <div class="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-lg text-sm font-bold shadow-sm">${signalement.level}</div>
+                  </div>
+                ` : `
+                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <div class="w-2 h-2 bg-slate-400 rounded-full flex-shrink-0"></div>
+                    <span class="text-sm text-slate-700 font-medium">Niveau en attente d'assignation</span>
+                  </div>
+                `}
+              </div>
+              
+              <div class="grid grid-cols-2 gap-3 border-t border-gray-200 pt-3">
+                <div>
+                  <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Surface</div>
+                  <div class="text-sm font-semibold text-gray-900">${areaDisplay}</div>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Budget</div>
+                  <div class="text-sm font-semibold text-gray-900">${budgetDisplay}</div>
+                </div>
+              </div>
+              
+              <div class="border-t border-gray-200 pt-3">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Entreprise</div>
+                <div class="text-sm font-medium text-gray-900">${company}</div>
+              </div>
+              
+              <div class="flex items-center justify-between border-t border-gray-200 pt-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${resolved ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
                   ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}
                 </span>
-                <span class="text-xs text-gray-500">${signalement.date}</span>
+                <span class="text-xs text-gray-500 font-medium">${signalement.date}</span>
               </div>
-              <div class="mt-2">
-                <button id="view-photos-${signalement.id}" style="background:#ffffff;color:#000000;padding:8px 10px;border-radius:8px;font-size:13px;border:1px solid #000000;width:100%;display:block;text-align:center;">Voir photos</button>
-              </div>
+              
+              <button id="view-photos-${signalement.id}" style="background:#000000;color:#ffffff;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;border:none;width:100%;display:block;text-align:center;cursor:pointer;">Voir photos</button>
             </div>
           `);
           
@@ -572,6 +604,7 @@ export default defineComponent({
             companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
             imageReport: d.imageReport ?? [],
+            level: parseInt(d.level) || 0,
             raw: d
           };
         });

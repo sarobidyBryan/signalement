@@ -52,20 +52,32 @@
             tabindex="-1"
             @click="voirSignalement(signalement.id)"
           >
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center space-x-3">
-                <div :class="`p-2 rounded-lg ${statusPillBg(signalement.status)}`">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center space-x-3 flex-1">
+                <div :class="`p-2.5 rounded-lg flex-shrink-0 ${statusPillBg(signalement.status)}`">
                   <ion-icon
                     :icon="statusIcon(signalement.status)"
                     :class="statusIconClass(signalement.status) + ' text-xl'"
                   ></ion-icon>
                 </div>
-                <div>
-                  <h3 class="font-bold text-gray-900">{{ signalement.titre }}</h3>
-                  <p class="text-sm text-gray-600" v-if="signalement.area">{{ signalement.area }} m²</p>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900 mb-3">{{ signalement.titre }}</h3>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <div v-if="signalement.level != 0" class="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg px-3 py-2 flex-shrink-0">
+                        <span class="text-xs font-semibold text-amber-900">Niveau:</span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded text-xs font-bold">{{ signalement.level }}</span>
+                      </div>
+                      <div v-else class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-shrink-0">
+                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                        <span class="text-xs text-slate-700 font-medium">Niveau en attente d'assignation</span>
+                      </div>
+                    </div>
+                    <p v-if="signalement.area" class="text-xs text-gray-500 font-medium">Surface: {{ signalement.area }} m²</p>
+                  </div>
                 </div>
               </div>
-              <span :class="statusPillClass(signalement.status)">
+              <span :class="statusPillClass(signalement.status)" class="flex-shrink-0 ml-2">
                 {{ statusLabel(signalement.status) }}
               </span>
             </div>
@@ -182,6 +194,7 @@ type Report = {
   updatedAt?: Date;
   firebaseId?: string;
   postgresId?: string;
+  level?: number | null;
 };
 
 export default defineComponent({
@@ -316,7 +329,8 @@ export default defineComponent({
             companyName: d.assignation?.company?.name ?? null,
             adresse: (latTxt && lngTxt) ? `${latTxt}, ${lngTxt}` : '',
             date: formatDate(d.createdAt),
-            status: d.status?.statusCode ?? 'SUBMITTED'
+            status: d.status?.statusCode ?? 'SUBMITTED',
+            level: parseInt(d.level) || 0
           } as Report;
         });
         
@@ -345,6 +359,9 @@ export default defineComponent({
         // Ajouter les timestamps
         reportData.createdAt = new Date();
         reportData.updatedAt = new Date();
+        
+        // Ajouter le champ level vide
+        reportData.level = "";
 
         // 1. Créer le document dans Firestore
         const docRef = await addDoc(collection(db, "reports"), reportData);

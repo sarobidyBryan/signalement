@@ -10,7 +10,8 @@ CREATE TABLE configurations(
 
 INSERT INTO configurations (key, value, type) VALUES
 ('max_attempt', '3', 'integer'),
-('session_duration', '1800', 'integer');
+('session_duration', '1800', 'integer'),
+('price_m2', '100000', 'integer');
 
 
 -- Trigger pour updated_at
