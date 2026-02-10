@@ -28,7 +28,7 @@ function Reports() {
   const [statuses, setStatuses] = useState([]);
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
+  const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '', niveau: 5 });
   const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
@@ -152,6 +152,15 @@ function Reports() {
     setAssignationLoading(true);
     setDetailError(null);
     try {
+      // First update the report with the selected "niveau"
+      try {
+        await reportService.update(detail.report.id, { niveau: parseInt(assignationForm.niveau, 10) });
+      } catch (uErr) {
+        // non-blocking: if report update fails, still attempt to create assignation but surface error
+        console.warn('Report update (niveau) failed', uErr);
+      }
+
+      // Then create the assignation
       await assignationService.create({
         company: { id: companyId },
         report: { id: detail.report.id },
@@ -159,7 +168,7 @@ function Reports() {
         startDate: assignationForm.startDate || undefined,
         deadline: assignationForm.deadline || undefined,
       });
-      setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '' });
+      setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '', niveau: 5 });
       await loadReports();
       await openDetail(detail.report.id);
     } catch (err) {
@@ -456,6 +465,22 @@ function Reports() {
                           ))}
                         </select>
                       </label>
+
+                      <label className="niveau-label">
+                        Niveau de degats
+                        <div className="niveau-control">
+                          <input
+                            type="range"
+                            min="1"
+                            max="10"
+                            step="1"
+                            value={assignationForm.niveau}
+                            onChange={(e) => setAssignationForm({ ...assignationForm, niveau: parseInt(e.target.value, 10) })}
+                          />
+                          <div className="niveau-display">Niveau: {assignationForm.niveau}</div>
+                        </div>
+                      </label> 
+
                       <label>
                         Budget (Ar)
                         <input

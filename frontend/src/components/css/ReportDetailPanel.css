@@ -236,9 +236,9 @@
   color: var(--theme-text-secondary);
 }
 
-.assignation-form input,
+.assignation-form input:not([type="range"]),
 .assignation-form select,
-.progress-form input,
+.progress-form input:not([type="range"]),
 .progress-form select {
   padding: 8px 12px;
   border: 1px solid var(--theme-input-border);
@@ -248,6 +248,40 @@
   background: var(--theme-input-bg);
   color: var(--theme-text);
 }
+
+/* Slider styling for niveau */
+.niveau-label { grid-column: 1 / -1; }
+.niveau-control { display:flex; align-items:center; gap:10px; }
+.niveau-control input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--theme-toggle-bg);
+  border-radius: 999px;
+  outline: none;
+}
+.niveau-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-bg);
+  border: 2px solid var(--theme-highlight-bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.niveau-control input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-bg);
+  border: 2px solid var(--theme-highlight-bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.niveau-display { min-width:64px; text-align:center; font-weight:600; color:var(--theme-text); }
 
 .form-actions {
   display: flex;

@@ -76,6 +76,9 @@ public class ReportService {
         if (reportData.getReportDate() != null) {
             existingReport.setReportDate(reportData.getReportDate());
         }
+        if (reportData.getNiveau() != null) {
+            existingReport.setNiveau(reportData.getNiveau());
+        }
 
         // Mettre à jour la date de modification
         existingReport.setUpdatedAt(LocalDateTime.now());
