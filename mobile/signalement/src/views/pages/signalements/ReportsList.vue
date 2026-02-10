@@ -345,6 +345,9 @@ export default defineComponent({
         // Ajouter les timestamps
         reportData.createdAt = new Date();
         reportData.updatedAt = new Date();
+        
+        // Ajouter le champ level vide
+        reportData.level = "";
 
         // 1. Créer le document dans Firestore
         const docRef = await addDoc(collection(db, "reports"), reportData);
