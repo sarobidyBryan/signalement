@@ -10,7 +10,8 @@ CREATE TABLE configurations(
 
 INSERT INTO configurations (key, value, type) VALUES
 ('max_attempt', '3', 'integer'),
-('session_duration', '1800', 'integer');
+('session_duration', '1800', 'integer'),
+('price_m2', '100000', 'integer');
 
 
 -- Trigger pour updated_at
@@ -133,6 +134,7 @@ CREATE TABLE reports(
     description TEXT,
     status_id INTEGER NOT NULL REFERENCES status(id),
     firebase_id VARCHAR(100),
+    niveau INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -171,6 +173,16 @@ CREATE TABLE reports_assignation_progress(
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE image_report(
+    id SERIAL PRIMARY KEY,
+    lien VARCHAR(1000) NOT NULL,
+    report_id INTEGER NOT NULL REFERENCES reports(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER update_image_report_updated_at BEFORE UPDATE ON image_report FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TABLE synchronization_logs(
     id SERIAL PRIMARY KEY,
     sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -195,3 +207,13 @@ VALUES ('Bob','bob@example.com','bobpass',
   (SELECT id FROM user_status_types WHERE status_code='SUSPENDED'));
 
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE user_tokens(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    token TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER update_user_tokens_updated_at BEFORE UPDATE ON user_tokens FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

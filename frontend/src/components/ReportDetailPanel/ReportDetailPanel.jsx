@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Card from '../Card/Card';
 import Button from '../Button/Button';
 import ErrorBanner from '../ErrorBanner';
-import { assignationProgressService, assignationService } from '../../services';
+import { assignationProgressService, assignationService, configurationService } from '../../services';
+import { reportService } from '../../services/reportService';
 import '../css/ReportDetailPanel.css';
 
 /**
@@ -26,14 +27,36 @@ const ReportDetailPanel = ({
   companies = [],
   isOpen = false,
   readOnly = false
-}) => {
-  const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '' });
+  , focusImages = false, onFocusHandled = () => {} }) => {
+  const [assignationForm, setAssignationForm] = useState({ companyId: '', startDate: '', deadline: '', niveau: 5 });
   const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
   const [showAssignationForm, setShowAssignationForm] = useState(false);
   const [showProgressForm, setShowProgressForm] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [images, setImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [imagesError, setImagesError] = useState(null);
+  const [priceM2, setPriceM2] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const panelRef = useRef(null);
+
+  // Charger price_m2 depuis les configurations
+  useEffect(() => {
+    configurationService.getAll().then(configs => {
+      const pc = configs.find(c => c.key === 'price_m2');
+      if (pc) setPriceM2(parseFloat(pc.value));
+    }).catch(() => {});
+  }, []);
+
+  // Budget calculé automatiquement : price_m2 × niveau × area
+  const computedBudget = (() => {
+    const area = detail?.report?.area ? parseFloat(detail.report.area) : null;
+    const niveau = assignationForm.niveau;
+    if (priceM2 && niveau && area) return priceM2 * niveau * area;
+    return null;
+  })();
 
   const formatNumber = (value) => {
     if (value == null) return '—';
@@ -66,14 +89,20 @@ const ReportDetailPanel = ({
     setAssignationLoading(true);
     setFormError(null);
     try {
+      // Update report niveau first
+      try {
+        await reportService.update(detail.report.id, { niveau: parseInt(assignationForm.niveau, 10) });
+      } catch (uErr) {
+        console.warn('Report update (niveau) failed', uErr);
+      }
+
       await assignationService.create({
         company: { id: companyId },
         report: { id: detail.report.id },
-        budget: assignationForm.budget ? parseFloat(assignationForm.budget) : 0,
         startDate: assignationForm.startDate || undefined,
         deadline: assignationForm.deadline || undefined,
       });
-      setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '' });
+      setAssignationForm({ companyId: '', startDate: '', deadline: '', niveau: 5 });
       setShowAssignationForm(false);
       onRefresh(detail.report.id);
     } catch (err) {
@@ -121,8 +150,52 @@ const ReportDetailPanel = ({
     }
   });
 
+  useEffect(() => {
+    let mounted = true;
+    const loadImages = async () => {
+      setImages([]);
+      setImagesError(null);
+      if (!detail?.report?.id) return;
+      setImagesLoading(true);
+      try {
+        const imgs = await reportService.getImages(detail.report.id);
+        if (!mounted) return;
+        setImages(Array.isArray(imgs) ? imgs : []);
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Error loading images', err);
+        setImagesError({ message: 'Impossible de charger les images' });
+      } finally {
+        if (mounted) setImagesLoading(false);
+      }
+    };
+    loadImages();
+    return () => { mounted = false; };
+  }, [detail?.report?.id]);
+
+  useEffect(() => {
+    if (!focusImages) return;
+    if (!isOpen) return;
+    if (imagesLoading) return;
+
+    const timer = setTimeout(() => {
+      const panelEl = panelRef.current;
+      if (!panelEl) {
+        if (onFocusHandled) onFocusHandled();
+        return;
+      }
+      const imagesSection = panelEl.querySelector('.images-section');
+      if (imagesSection) {
+        imagesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      if (onFocusHandled) onFocusHandled();
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [focusImages, imagesLoading, images.length, isOpen, onFocusHandled]);
+
   return (
-    <section className={`report-detail-panel ${isOpen ? 'detail-open' : ''}`}>
+    <section ref={panelRef} className={`report-detail-panel ${isOpen ? 'detail-open' : ''}`}>
       <div className="detail-panel-inner">
         <div className="detail-panel-header">
           <div>
@@ -139,6 +212,23 @@ const ReportDetailPanel = ({
           <ErrorBanner error={detailError} />
         ) : detail ? (
           <div className="detail-body">
+              <div className="niveau-widget">
+                <p className="summary-label">Niveau de dégâts</p>
+                {(() => {
+                  const niveauVal = Number(detail.report?.niveau) || 0;
+                  const pct = Math.max(0, Math.min(100, Math.round((niveauVal / 10) * 100)));
+                  return (
+                    <>
+                      <div className="niveau-meter" aria-hidden>
+                        <div className="niveau-fill" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="niveau-meta">
+                        <span className="niveau-text">{niveauVal}/10</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             <div className="detail-summary">
               <div>
                 <p className="summary-label">Statut actuel</p>
@@ -191,6 +281,38 @@ const ReportDetailPanel = ({
               </div>
             </div>
 
+            <div className="images-section">
+              <div className="section-header">
+                <h3>Images</h3>
+                {imagesLoading ? <span>Chargement...</span> : <span>{images.length} photo(s)</span>}
+              </div>
+              {imagesError && <ErrorBanner error={imagesError} />}
+              <div className="images-grid">
+                {images && images.length > 0 ? (
+                  images.map((img, idx) => (
+                    <button key={img.id || idx} className="image-thumb" onClick={() => setLightboxIndex(idx)} aria-label={`Ouvrir l'image ${idx + 1}`}>
+                      <img src={img.lien} alt={`Photo ${idx + 1}`} />
+                    </button>
+                  ))
+                ) : (
+                  !imagesLoading && <p className="inline-hint">Aucune image pour ce signalement.</p>
+                )}
+              </div>
+
+              {lightboxIndex >= 0 && images[lightboxIndex] && (
+                <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setLightboxIndex(-1)}>
+                  <button className="lightbox-close" onClick={() => setLightboxIndex(-1)}>×</button>
+                  <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
+                    <img src={images[lightboxIndex].lien} alt={`Photo ${lightboxIndex + 1}`} />
+                    <div className="lightbox-controls">
+                      <button disabled={lightboxIndex <= 0} onClick={() => setLightboxIndex((i) => Math.max(0, i - 1))}>‹</button>
+                      <button disabled={lightboxIndex >= images.length - 1} onClick={() => setLightboxIndex((i) => Math.min(images.length - 1, i + 1))}>›</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {formError && <ErrorBanner error={formError} />}
 
             <div className="assignations-section">
@@ -236,15 +358,29 @@ const ReportDetailPanel = ({
                       ))}
                     </select>
                   </label>
+                  <label className="niveau-label">
+                    Niveau de degats
+                    <div className="niveau-control">
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        step="1"
+                        value={assignationForm.niveau}
+                        onChange={(e) => setAssignationForm({ ...assignationForm, niveau: parseInt(e.target.value, 10) })}
+                      />
+                      <div className="niveau-display">Niveau: {assignationForm.niveau}</div>
+                    </div>
+                  </label>
                   <label>
-                    Budget (Ar)
+                    Budget estimé (Ar)
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={assignationForm.budget}
-                      onChange={(e) => setAssignationForm({ ...assignationForm, budget: e.target.value })}
+                      type="text"
+                      value={computedBudget != null ? formatNumber(computedBudget) + ' Ar' : 'Non calculable'}
+                      disabled
+                      className="form-input-disabled"
                     />
+                    <span className="form-hint">Calculé : prix/m² × niveau × surface</span>
                   </label>
                   <label>
                     Début

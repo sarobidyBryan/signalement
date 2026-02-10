@@ -7,6 +7,7 @@ import mg.itu.s5.cloud.signalement.repositories.ReportsAssignationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,9 @@ public class ReportsAssignationService {
     @Autowired
     private ReportService reportService;
 
+    @Autowired
+    private ConfigurationService configurationService;
+
     public List<ReportsAssignation> getAll() { return repository.findAll(); }
     public Optional<ReportsAssignation> getById(int id) { return repository.findById(id); }
 
@@ -34,6 +38,32 @@ public class ReportsAssignationService {
         if (isNewAssignation) {
             r.setCreatedAt(LocalDateTime.now());
         }
+
+        // Auto-calculate budget = price_m2 * niveau * area
+        try {
+            int reportId = 0;
+            if (r.getReport() != null) {
+                reportId = r.getReport().getId();
+            }
+            if (reportId > 0) {
+                Optional<Report> reportOpt = reportService.getReportById(reportId);
+                if (reportOpt.isPresent()) {
+                    Report report = reportOpt.get();
+                    BigDecimal area = report.getArea();
+                    Integer niveau = report.getNiveau();
+                    String priceM2Str = configurationService.getConfigurationValue("price_m2");
+
+                    if (area != null && niveau != null && priceM2Str != null) {
+                        BigDecimal priceM2 = new BigDecimal(priceM2Str);
+                        BigDecimal budget = priceM2.multiply(BigDecimal.valueOf(niveau)).multiply(area);
+                        r.setBudget(budget);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du calcul automatique du budget: " + e.getMessage());
+        }
+
         ReportsAssignation saved = repository.save(r);
         
         if (isNewAssignation) {

@@ -35,6 +35,9 @@ import '@ionic/vue/css/palettes/dark.system.css';
 import './theme/variables.css';
 import './theme/index.css';
 
+/*PWA Elements pour la caméra web */
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
@@ -42,3 +45,6 @@ const app = createApp(App)
 router.isReady().then(() => {
   app.mount('#app');
 });
+
+/* Initialiser PWA Elements */
+defineCustomElements(window);

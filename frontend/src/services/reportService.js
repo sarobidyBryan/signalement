@@ -18,6 +18,11 @@ export const reportService = {
     return response.data?.reportDetail ?? null;
   },
 
+  async getImages(id) {
+    const response = await fetchAPI(`/reports/${id}/images`);
+    return response.data?.images ?? [];
+  },
+
   async updateStatus(reportId, statusId) {
     const response = await fetchAPI(`/reports/${reportId}/status`, {
       method: 'POST',

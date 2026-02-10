@@ -55,6 +55,55 @@
           </ion-item>
         </ion-list>
 
+        <!-- Section Photos -->
+        <div class="photos-section">
+          <h3>Photos du signalement</h3>
+          <div class="photo-buttons">
+            <ion-button 
+              expand="block" 
+              fill="outline"
+              color="dark" 
+              @click="handleTakePhoto" 
+              :disabled="isSubmitting"
+            >
+              <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
+              Prendre une photo
+            </ion-button>
+            <ion-button 
+              expand="block" 
+              fill="outline"
+              color="dark" 
+              @click="handlePickPhoto" 
+              :disabled="isSubmitting"
+            >
+              <ion-icon :icon="imagesOutline" slot="start"></ion-icon>
+              Importer depuis galerie
+            </ion-button>
+          </div>
+
+          <!-- Affichage des photos sélectionnées -->
+          <div v-if="photos.length > 0" class="photos-grid">
+            <div 
+              v-for="(photo, index) in photos" 
+              :key="photo.filepath" 
+              class="photo-item"
+            >
+              <img :src="photo.webviewPath" :alt="`Photo ${index + 1}`" />
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                color="danger"
+                class="delete-photo-btn"
+                @click="deletePhoto(photo)"
+                :disabled="isSubmitting"
+              >
+                <ion-icon :icon="closeCircleOutline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+          <p v-else class="no-photos">Aucune photo ajoutée</p>
+        </div>
+
         <div class="map-container">
           <div id="report-map" class="report-map" aria-label="Carte de sélection"></div>
           <div class="map-instruction">
@@ -105,7 +154,8 @@ import {
   IonList, IonItem, IonLabel, IonInput, IonTextarea, IonButton,
   IonIcon, IonSpinner 
 } from '@ionic/vue';
-import { closeOutline, navigateOutline } from 'ionicons/icons';
+import { closeOutline, navigateOutline, cameraOutline, imagesOutline, closeCircleOutline } from 'ionicons/icons';
+import { usePhotoGallery } from '@/composables/usePhotoGallery';
 import { db } from '@/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -124,6 +174,9 @@ export default defineComponent({
     const longitude = ref<number | string>('');
     const description = ref('');
     const isSubmitting = ref(false);
+
+    // Gestion des photos
+    const { photos, takePhoto, pickPhoto, deletePhoto: removePhoto, resetPhotos } = usePhotoGallery();
 
     let map: any = null;
     let marker: any = null;
@@ -188,6 +241,33 @@ export default defineComponent({
       );
     };
 
+    // Gestion des photos
+    const handleTakePhoto = async () => {
+      if (isSubmitting.value) return;
+      try {
+        await takePhoto();
+      } catch (error: any) {
+        console.error('Erreur lors de la prise de photo:', error);
+        // Si l'utilisateur annule, ne pas afficher d'erreur
+        if (error?.message && !error.message.includes('cancel')) {
+          alert('Impossible d\'accéder à la caméra. Veuillez vérifier les permissions ou tester sur un appareil Android/iOS.');
+        }
+      }
+    };
+
+    const handlePickPhoto = async () => {
+      if (isSubmitting.value) return;
+      try {
+        await pickPhoto();
+      } catch (error: any) {
+        console.error('Erreur lors de l\'import de photo:', error);
+        // Si l'utilisateur annule, ne pas afficher d'erreur
+        if (error?.message && !error.message.includes('cancel')) {
+          alert('Impossible d\'accéder à la galerie. Veuillez réessayer.');
+        }
+      }
+    };
+
     const submit = async () => {
       // Validation côté client
       if (!area.value || !latitude.value || !longitude.value) {
@@ -204,10 +284,12 @@ export default defineComponent({
         description: description.value || '',
         status: await getStatus("SUBMITTED"),
         user : JSON.parse(localStorage.getItem('user')!) || null ,
-        createdAt : new Date()
+        createdAt : new Date(),
+        // Les photos sont transmises séparément pour upload vers Cloudinary
+        _photos: [...photos.value],
       };
 
-      // Émettre l'événement au parent
+      // Émettre l'événement au parent (les photos seront uploadées après création du doc Firestore)
       emit('submit', payload);
       
       // Note: Ne pas réinitialiser isSubmitting ici, le parent doit le faire
@@ -240,6 +322,7 @@ export default defineComponent({
       longitude.value = '';
       description.value = '';
       isSubmitting.value = false;
+      resetPhotos(); // Réinitialiser les photos
       
       if (marker && L) {
         marker.remove();
@@ -268,10 +351,17 @@ export default defineComponent({
       longitude,
       description,
       isSubmitting,
+      photos,
       closeOutline,
       navigateOutline,
+      cameraOutline,
+      imagesOutline,
+      closeCircleOutline,
       locateMe,
       submit,
+      handleTakePhoto,
+      handlePickPhoto,
+      deletePhoto: removePhoto,
       resetForm
     };
   }
@@ -405,6 +495,68 @@ export default defineComponent({
   }
 }
 
+/* Section Photos */
+.photos-section {
+  margin-top: 24px;
+}
+
+.photos-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--ion-color-dark);
+}
+
+.photo-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.delete-photo-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+}
+
+.no-photos {
+  text-align: center;
+  color: var(--ion-color-medium);
+  font-size: 0.875rem;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
 /* Responsive */
 @media (max-width: 576px) {
   .report-form-overlay {
@@ -429,6 +581,14 @@ export default defineComponent({
   
   .action-buttons ion-button {
     max-width: 100%;
+  }
+  
+  .photo-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
 }
 </style>

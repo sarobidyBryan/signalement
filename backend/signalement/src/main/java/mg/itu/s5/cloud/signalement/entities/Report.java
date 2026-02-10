@@ -50,6 +50,8 @@ public class Report {
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
 
+    private Integer niveau;
+
     public Report() {}
 
     public int getId() { return id; }
@@ -84,4 +86,7 @@ public class Report {
 
     public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Integer getNiveau() { return niveau; }
+    public void setNiveau(Integer niveau) { this.niveau = niveau; }
 }

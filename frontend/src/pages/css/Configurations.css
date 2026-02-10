@@ -126,6 +126,12 @@
   border-bottom: 1px solid var(--theme-border);
 }
 
+/* ID column: right-aligned */
+.configurations-table th:first-child,
+.configurations-table td:first-child {
+  text-align: right;
+}
+
 .configurations-table th {
   background: var(--theme-toggle-bg);
   font-size: 12px;
@@ -162,7 +168,8 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: rgba(102, 126, 234, 0.15);
-  color: #667eea;
+  color: #818cf8;
+  border: 1px solid rgba(102, 126, 234, 0.3);
 }
 
 /* Actions cell */

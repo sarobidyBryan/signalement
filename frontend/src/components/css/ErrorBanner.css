@@ -2,9 +2,9 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  background-color: var(--color-gray-100);
-  border: 1px solid var(--color-gray-400);
-  color: var(--color-secondary);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
   padding: 12px 16px;
   border-radius: 8px;
   margin: 8px 0;
@@ -26,6 +26,6 @@
 
 .error-banner-code {
   font-size: 0.85rem;
-  color: var(--color-gray-600);
+  color: var(--theme-text-secondary);
   margin-top: 4px;
 }

@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue';
 import { auth,db } from '../../../config/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { lockClosed, mail } from 'ionicons/icons';
+import { eyeOff ,eyeSharp , lockClosed, mail } from 'ionicons/icons';
 import { 
   IonPage, 
   IonContent, 
@@ -11,9 +11,10 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonIcon 
+  IonIcon
 } from '@ionic/vue';
 import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { notificationService } from '../../../services/notificationService';
 
 // Type for user status entries in Firestore
 interface UserStatusType {
@@ -38,10 +39,13 @@ export default defineComponent({
   
   data() {
     return {
-      email: '',
-      password: '',
+      email: 'alice@example.com',
+      password: 'alicepass',
       errorMessage: '',
-      isLoading: false
+      isLoading: false,
+      isShowingPassword:false,
+      eyeOff,
+      eyeSharp
     };
   },
   
@@ -54,6 +58,10 @@ export default defineComponent({
   },
   
   methods: {
+    togglePassword()
+    {
+      this.isShowingPassword = ! this.isShowingPassword;
+    },
     async handleLogin() {
       // Validation basique
       if (!this.email || !this.password) {
@@ -122,7 +130,14 @@ export default defineComponent({
               }
 
               console.log('[LoginVue] Session créée, expiration:', new Date(expiry).toLocaleString());
-
+              
+              try {
+                await notificationService.initialize();
+                console.log('[LoginVue] Service de notifications initialisé');
+              } catch (error) {
+                console.warn('[LoginVue] Erreur lors de l\'initialisation des notifications:', error);
+              }
+              
               this.$router.push('/map');
           } else {
             console.log("Cet utilisateur est suspendu");
@@ -366,12 +381,23 @@ export default defineComponent({
                   ></ion-icon>
                   <ion-input
                     v-model="password"
-                    type="password"
+                    :type="isShowingPassword? 'password' : 'text'"
                     placeholder="••••••••"
                     class="pl-10"
                     fill="solid"
                     :class="{ 'border-red-500': errorMessage && !password }"
                   ></ion-input>
+                  
+                  <button 
+                  @click.prevent="togglePassword" 
+                  type="button" 
+                  class="absolute right-3 top-5 z-50 p-1 rounded text-gray-600"
+                >
+                  <ion-icon 
+                      :icon="isShowingPassword ? eyeOff : eyeSharp" 
+                  >
+                  </ion-icon>
+                </button>
                 </div>
               </div>
 

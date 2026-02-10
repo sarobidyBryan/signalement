@@ -1,7 +1,8 @@
 .report-edit-page {
-  background: #ffffff;
+  background: var(--theme-bg);
   min-height: 100vh;
-  color: #000000;
+  color: var(--theme-text);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .report-edit-page * {
@@ -20,7 +21,7 @@
   padding: var(--spacing-xl);
   margin-left: 280px;
   transition: margin-left var(--transition-base);
-  background: #ffffff;
+  background: var(--theme-bg);
   position: relative;
   min-height: 100vh;
   width: calc(100vw - 280px);
@@ -32,18 +33,30 @@
 }
 
 .report-edit-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  display: block;
+  margin-bottom: var(--spacing-lg);
+}
+
+.report-edit-header > div {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.report-edit-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--theme-text);
+  background: transparent;
 }
 
 .report-edit-hamburger {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--theme-border);
+  background: var(--theme-bg-secondary);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -56,53 +69,60 @@
 .report-edit-hamburger span {
   height: 3px;
   border-radius: 2px;
-  background: #000000;
+  background: var(--theme-text);
 }
 
 .report-edit-hamburger:hover {
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--theme-toggle-hover);
 }
 
 .report-edit-welcome {
   margin: 0;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--theme-text-secondary);
   font-size: var(--font-size-sm);
 }
 
 .report-edit-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-lg);
-  max-width: 800px;
+  gap: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: var(--spacing-xl);
 }
 
 .report-form-card,
 .assignation-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--theme-border);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(22, 28, 37, 0.06);
+  overflow: hidden;
+  width: 100%;
 }
 
 .card-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--theme-border);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: transparent;
 }
 
 .card-header h2 {
   margin: 0;
   font-size: var(--font-size-xl);
-  color: #000000;
+  font-weight: 600;
+  color: var(--theme-text);
 }
 
 .report-form,
 .assignation-form {
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xl);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
@@ -120,17 +140,17 @@
 .form-group label {
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.75);
+  color: var(--theme-text-secondary);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   padding: var(--spacing-sm);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--theme-input-border);
   border-radius: var(--border-radius-md);
-  background: rgba(0, 0, 0, 0.04);
-  color: #000000;
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
   font-size: var(--font-size-base);
 }
 
@@ -138,8 +158,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: rgba(0, 0, 0, 0.8);
-  background: #ffffff;
+  border-color: var(--theme-text);
+  background: var(--theme-input-bg);
 }
 
 .form-group textarea {
@@ -152,7 +172,7 @@
   gap: var(--spacing-md);
   justify-content: flex-start;
   padding-top: var(--spacing-md);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--theme-border);
 }
 
 .assignation-info {
@@ -160,7 +180,7 @@
 }
 
 .assignation-status {
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--theme-text-secondary);
   margin-bottom: var(--spacing-md);
   font-weight: 500;
 }
@@ -172,27 +192,27 @@
 }
 
 .assignation-item {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--theme-bg-secondary);
   padding: var(--spacing-md);
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--theme-border);
 }
 
 .assignation-item h4 {
   margin: 0 0 var(--spacing-xs) 0;
-  color: #000000;
+  color: var(--theme-text);
   font-size: var(--font-size-base);
 }
 
 .assignation-item p {
   margin: 2px 0;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--theme-text-secondary);
   font-size: var(--font-size-sm);
 }
 
 .no-assignation {
   padding: var(--spacing-lg);
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--theme-text-secondary);
   font-style: italic;
 }
 
@@ -207,12 +227,12 @@
 }
 
 .loading-state {
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--theme-text-secondary);
   font-size: var(--font-size-lg);
 }
 
 .error-state {
-  color: rgba(0, 0, 0, 0.8);
+  color: var(--theme-text);
 }
 
 /* Responsive */
@@ -238,3 +258,45 @@
     max-width: none;
   }
 }
+
+/* Keep single column layout for clean, focused design */
+@media (min-width: 1200px) {
+  .report-edit-grid {
+    max-width: 1200px;
+  }
+}
+
+/* Slider styling for niveau */
+.niveau-control { display:flex; align-items:center; gap:10px; }
+.niveau-control input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--theme-toggle-bg);
+  border-radius: 999px;
+  outline: none;
+}
+.niveau-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-bg);
+  border: 2px solid var(--theme-highlight-bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.niveau-control input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-bg);
+  border: 2px solid var(--theme-highlight-bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.niveau-display { min-width:64px; text-align:center; font-weight:600; color:var(--theme-text); }
+.form-input-disabled { opacity: 0.7; cursor: not-allowed; }
+.form-hint { font-size: 0.8rem; color: var(--theme-secondary-text); margin-top: 4px; }

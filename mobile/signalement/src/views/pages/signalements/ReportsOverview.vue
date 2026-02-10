@@ -76,24 +76,29 @@
       </div>
 
       <!-- Légende (masquée si le panneau de filtres est ouvert) -->
-      <div v-if="!showFiltres" class="absolute bottom-20 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 z-10">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-bold text-gray-900">Signalements</h4>
-          <span class="text-sm text-gray-600">{{ signalementsFiltres.length }} visible(s)</span>
+      <div v-if="!showFiltres" class="absolute bottom-24 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg z-10 legende-container">
+        <div class="p-4 pb-2">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-gray-900">Signalements</h4>
+            <span class="text-sm text-gray-600">{{ signalementsFiltres.length }} visible(s)</span>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div
-            v-for="item in compteurParStatus"
-            :key="item.statusCode"
-            class="flex items-center"
-          >
-            <div :style="{ background: item.color }" class="w-3 h-3 rounded-full mr-2"></div>
-            <span class="text-sm text-gray-700">{{ item.label }}</span>
-            <span class="ml-auto text-sm font-medium">{{ item.count }}</span>
+        <div class="px-4 pb-4 max-h-40 overflow-y-auto">
+          <div class="grid grid-cols-2 gap-3">
+            <div
+              v-for="item in compteurParStatus"
+              :key="item.statusCode"
+              class="flex items-center"
+            >
+              <div :style="{ background: item.color }" class="w-3 h-3 rounded-full mr-2 flex-shrink-0"></div>
+              <span class="text-sm text-gray-700 truncate">{{ item.label }}</span>
+              <span class="ml-auto text-sm font-medium flex-shrink-0">{{ item.count }}</span>
+            </div>
           </div>
         </div>
       </div>
     </ion-content>
+    <ImageGalleryModal v-model="galleryVisible" :images="galleryImages" :startIndex="galleryStartIndex" />
     <TabBar active-tab="carte" />
   </ion-page>
 </template>
@@ -130,9 +135,11 @@ import {
   warning,
   checkmarkCircle,
   filter,
-  close
+  close,
+  image
 } from 'ionicons/icons';
 import TableauRecapitulatif from '@/views/components/global/TableauRecapitulatif.vue';
+import ImageGalleryModal from '@/views/components/global/signalement/ImageGalleryModal.vue';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/config/firebase';
@@ -180,7 +187,8 @@ export default defineComponent({
       IonChip,
       IonLabel,
     TabBar,
-    TableauRecapitulatif
+    TableauRecapitulatif,
+    ImageGalleryModal
   },
   
   setup() {
@@ -226,6 +234,32 @@ export default defineComponent({
 
     const isResolved = (status: string) => {
       return status === 'COMPLETED' || status === 'VERIFIED';
+    };
+
+    // Gallery state
+    const galleryVisible = ref(false);
+    const galleryImages = ref<string[]>([]);
+    const galleryStartIndex = ref(0);
+    const pinnedMarkerId = ref<number | null>(null);
+
+    const normalizeImagesArr = (imageArr: any[]) => {
+      if (!imageArr || !Array.isArray(imageArr)) return [];
+      return imageArr.map((it: any) => {
+        if (!it) return '';
+        if (typeof it === 'string') return it;
+        return it.link ?? it.url ?? it.path ?? '';
+      }).filter((u: string) => !!u);
+    };
+
+    const openGalleryFromSignalement = (signalement: any, start = 0) => {
+      const imgs = normalizeImagesArr(signalement.raw?.imageReport ?? signalement.imageReport ?? []);
+      if (!imgs || imgs.length === 0) {
+        alert('Aucune photo pour ce signalement');
+        return;
+      }
+      galleryImages.value = imgs;
+      galleryStartIndex.value = start;
+      galleryVisible.value = true;
     };
 
     const statusLabel = (status: string) => {
@@ -414,37 +448,103 @@ export default defineComponent({
           // Ajouter un popup
           const resolved = isResolved(signalement.status);
           marker.bindPopup(`
-            <div class="p-2">
-              <h3 class="font-bold text-lg mb-1">${signalement.titre}</h3>
-              <p class="text-gray-600 text-sm mb-2">${signalement.description}</p>
-              <div class="text-sm text-gray-700 mb-2"><strong>Surface:</strong> ${areaDisplay}</div>
-              <div class="text-sm text-gray-700 mb-2"><strong>Entreprise:</strong> ${company}</div>
-              <div class="text-sm text-gray-700 mb-2"><strong>Budget:</strong> ${budgetDisplay}</div>
-              <div class="flex items-center justify-between">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            <div class="p-4 space-y-3" style="max-width: 300px;">
+              <div>
+                <h3 class="font-bold text-base text-gray-900 mb-1">${signalement.titre}</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">${signalement.description}</p>
+              </div>
+              
+              <div class="border-t border-gray-200 pt-3">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Priorité</div>
+                ${signalement.level != 0 ? `
+                  <div class="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-medium text-amber-900">Niveau de priorité</span>
+                    </div>
+                    <div class="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-lg text-sm font-bold shadow-sm">${signalement.level}</div>
+                  </div>
+                ` : `
+                  <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <div class="w-2 h-2 bg-slate-400 rounded-full flex-shrink-0"></div>
+                    <span class="text-sm text-slate-700 font-medium">Niveau en attente d'assignation</span>
+                  </div>
+                `}
+              </div>
+              
+              <div class="grid grid-cols-2 gap-3 border-t border-gray-200 pt-3">
+                <div>
+                  <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Surface</div>
+                  <div class="text-sm font-semibold text-gray-900">${areaDisplay}</div>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Budget</div>
+                  <div class="text-sm font-semibold text-gray-900">${budgetDisplay}</div>
+                </div>
+              </div>
+              
+              <div class="border-t border-gray-200 pt-3">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Entreprise</div>
+                <div class="text-sm font-medium text-gray-900">${company}</div>
+              </div>
+              
+              <div class="flex items-center justify-between border-t border-gray-200 pt-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${resolved ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
                   ${resolved ? '✓ ' + statusLabel(signalement.status) : statusLabel(signalement.status)}
                 </span>
-                <span class="text-xs text-gray-500">${signalement.date}</span>
+                <span class="text-xs text-gray-500 font-medium">${signalement.date}</span>
               </div>
+              
+              <button id="view-photos-${signalement.id}" style="background:#000000;color:#ffffff;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;border:none;width:100%;display:block;text-align:center;cursor:pointer;">Voir photos</button>
             </div>
           `);
           
-          // Ouvrir le popup au survol (desktop) et le fermer au mouseout
+          // Ouvrir le popup au survol (desktop)
           marker.on('mouseover', () => {
             try { marker.openPopup(); } catch (e) { /* no-op */ }
           });
+
+          // Fermer le popup au mouseout seulement si il n'est pas "pinned" par un clic
+          // Nous utilisons une variable locale stockée dans closure via pinnedMarkerId
           marker.on('mouseout', () => {
-            try { marker.closePopup(); } catch (e) { /* no-op */ }
+            try {
+              if (pinnedMarkerId.value === signalement.id) return;
+              marker.closePopup();
+            } catch (e) { /* no-op */ }
           });
 
-          // Sur mobile/tactile, le clic ouvrira toujours le popup
+          // Sur mobile/tactile, le clic fixera (pinné) le popup pour permettre d'interagir avec son contenu
           marker.on('click', () => {
-            try { marker.openPopup(); } catch (e) { /* no-op */ }
+            try {
+              pinnedMarkerId.value = signalement.id;
+              marker.openPopup();
+            } catch (e) { /* no-op */ }
+          });
+
+          // Quand le popup se ferme, on débloque le pinned state
+          marker.on('popupclose', () => {
+            try {
+              if (pinnedMarkerId.value === signalement.id) pinnedMarkerId.value = null;
+            } catch (e) { /* no-op */ }
           });
 
           if (map) {
             marker.addTo(map);
             markers.push(marker);
+
+            // Attacher l'écouteur sur l'ouverture du popup pour le bouton 'Voir photos'
+            marker.on('popupopen', () => {
+              try {
+                const el = document.getElementById(`view-photos-${signalement.id}`);
+                if (el) {
+                  // Remplacer onclick pour éviter doublons
+                  (el as any).onclick = () => {
+                    try { openGalleryFromSignalement(signalement); } catch (e) { console.warn(e); }
+                  };
+                }
+              } catch (e) {
+                console.warn('Erreur liaison bouton photos popup:', e);
+              }
+            });
           }
         } catch (err) {
           console.error('Erreur ajout marqueur pour signalement', signalement.id, err);
@@ -503,6 +603,8 @@ export default defineComponent({
             budget: d.assignation?.budget ?? null,
             companyName: d.assignation?.company?.name ?? null,
             area: d.area ?? null,
+            imageReport: d.imageReport ?? [],
+            level: parseInt(d.level) || 0,
             raw: d
           };
         });
@@ -634,6 +736,7 @@ export default defineComponent({
       checkmarkCircle,
       filter,
       close,
+      image,
       centrerSurPosition,
       changerTypeCarte,
       nouveauSignalement,
@@ -641,6 +744,7 @@ export default defineComponent({
       filtrerSignalements,
       reinitialiserFiltres
       ,selectedStatus,isStatusSelected,toggleStatus,selectAllStatuses
+      ,galleryVisible,galleryImages,galleryStartIndex,openGalleryFromSignalement,normalizeImagesArr
     };
   }
 });
@@ -711,5 +815,28 @@ export default defineComponent({
   --border-radius: 12px;
   --padding-top: 10px;
   --padding-bottom: 10px;
+}
+
+/* Légende scrollable pour mobile */
+.legende-container {
+  max-height: calc(100vh - 200px);
+}
+
+/* Scrollbar pour la légende sur mobile */
+.legende-container ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.legende-container ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.legende-container ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.legende-container ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 </style>
