@@ -642,6 +642,16 @@ public class FirestoreToPostgresSyncService {
         report.setReportDate(getLocalDateTimeValue(data, "reportDate"));
         report.setFirebaseId(firebaseDocId);
         
+        // Niveau (stocké comme "level" en String dans Firestore)
+        String levelStr = getStringValue(data, "level");
+        if (levelStr != null && !levelStr.isEmpty()) {
+            try {
+                report.setNiveau(Integer.parseInt(levelStr));
+            } catch (NumberFormatException e) {
+                logger.warn("Valeur level invalide '{}' pour le report firebaseId={}", levelStr, firebaseDocId);
+            }
+        }
+        
         // Dates
         report.setCreatedAt(LocalDateTime.now());
         report.setUpdatedAt(LocalDateTime.now());
@@ -682,6 +692,16 @@ public class FirestoreToPostgresSyncService {
         LocalDateTime reportDate = getLocalDateTimeValue(data, "reportDate");
         if (reportDate != null) {
             report.setReportDate(reportDate);
+        }
+        
+        // Niveau (stocké comme "level" en String dans Firestore)
+        String levelStr = getStringValue(data, "level");
+        if (levelStr != null && !levelStr.isEmpty()) {
+            try {
+                report.setNiveau(Integer.parseInt(levelStr));
+            } catch (NumberFormatException e) {
+                logger.warn("Valeur level invalide '{}' pour le report firebaseId={}", levelStr, firebaseDocId);
+            }
         }
         
         // Mettre à jour firebase_id si nécessaire
@@ -743,13 +763,20 @@ public class FirestoreToPostgresSyncService {
     // ===================== UTILITY METHODS =====================
 
     private LocalDateTime getDocumentUpdatedAt(Map<String, Object> data) {
-        // Vérifier updated_at ou synced_at
-        Object updatedAt = data.get("updated_at");
+        // Vérifier updatedAt (camelCase, écrit par mapUser/mapReport) ou updated_at (snake_case)
+        Object updatedAt = data.get("updatedAt");
+        if (updatedAt == null) {
+            updatedAt = data.get("updated_at");
+        }
         if (updatedAt != null) {
             return convertToLocalDateTime(updatedAt);
         }
         
-        Object syncedAt = data.get("synced_at");
+        // Vérifier syncedAt (camelCase) ou synced_at (snake_case)
+        Object syncedAt = data.get("syncedAt");
+        if (syncedAt == null) {
+            syncedAt = data.get("synced_at");
+        }
         if (syncedAt != null) {
             return convertToLocalDateTime(syncedAt);
         }

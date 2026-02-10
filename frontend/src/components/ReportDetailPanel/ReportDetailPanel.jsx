@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Card from '../Card/Card';
 import Button from '../Button/Button';
 import ErrorBanner from '../ErrorBanner';
-import { assignationProgressService, assignationService } from '../../services';
+import { assignationProgressService, assignationService, configurationService } from '../../services';
 import { reportService } from '../../services/reportService';
 import '../css/ReportDetailPanel.css';
 
@@ -28,7 +28,7 @@ const ReportDetailPanel = ({
   isOpen = false,
   readOnly = false
   , focusImages = false, onFocusHandled = () => {} }) => {
-  const [assignationForm, setAssignationForm] = useState({ companyId: '', budget: '', startDate: '', deadline: '', niveau: 5 });
+  const [assignationForm, setAssignationForm] = useState({ companyId: '', startDate: '', deadline: '', niveau: 5 });
   const [progressForm, setProgressForm] = useState({ assignationId: '', comment: '', registrationDate: '' });
   const [assignationLoading, setAssignationLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
@@ -38,8 +38,25 @@ const ReportDetailPanel = ({
   const [images, setImages] = useState([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState(null);
+  const [priceM2, setPriceM2] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const panelRef = useRef(null);
+
+  // Charger price_m2 depuis les configurations
+  useEffect(() => {
+    configurationService.getAll().then(configs => {
+      const pc = configs.find(c => c.key === 'price_m2');
+      if (pc) setPriceM2(parseFloat(pc.value));
+    }).catch(() => {});
+  }, []);
+
+  // Budget calculé automatiquement : price_m2 × niveau × area
+  const computedBudget = (() => {
+    const area = detail?.report?.area ? parseFloat(detail.report.area) : null;
+    const niveau = assignationForm.niveau;
+    if (priceM2 && niveau && area) return priceM2 * niveau * area;
+    return null;
+  })();
 
   const formatNumber = (value) => {
     if (value == null) return '—';
@@ -82,11 +99,10 @@ const ReportDetailPanel = ({
       await assignationService.create({
         company: { id: companyId },
         report: { id: detail.report.id },
-        budget: assignationForm.budget ? parseFloat(assignationForm.budget) : 0,
         startDate: assignationForm.startDate || undefined,
         deadline: assignationForm.deadline || undefined,
       });
-      setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '', niveau: 5 });
+      setAssignationForm({ companyId: '', startDate: '', deadline: '', niveau: 5 });
       setShowAssignationForm(false);
       onRefresh(detail.report.id);
     } catch (err) {
@@ -355,16 +371,16 @@ const ReportDetailPanel = ({
                       />
                       <div className="niveau-display">Niveau: {assignationForm.niveau}</div>
                     </div>
-                  </label> 
+                  </label>
                   <label>
-                    Budget (Ar)
+                    Budget estimé (Ar)
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={assignationForm.budget}
-                      onChange={(e) => setAssignationForm({ ...assignationForm, budget: e.target.value })}
+                      type="text"
+                      value={computedBudget != null ? formatNumber(computedBudget) + ' Ar' : 'Non calculable'}
+                      disabled
+                      className="form-input-disabled"
                     />
+                    <span className="form-hint">Calculé : prix/m² × niveau × surface</span>
                   </label>
                   <label>
                     Début

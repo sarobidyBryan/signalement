@@ -4,7 +4,7 @@ import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import ErrorBanner from '../components/ErrorBanner';
 import { ApiError } from '../services/api';
-import { reportService, statusService, userService, companyService, assignationService } from '../services';
+import { reportService, statusService, userService, companyService, assignationService, configurationService } from '../services';
 import { authService } from '../services/auth';
 import './css/ReportEdit.css';
 
@@ -20,12 +20,13 @@ const ReportEdit = () => {
   const [companies, setCompanies] = useState([]);
   const [assignationForm, setAssignationForm] = useState({
     companyId: '',
-    budget: '',
     startDate: '',
-    deadline: ''
+    deadline: '',
+    niveau: 5
   });
   const [showAssignationForm, setShowAssignationForm] = useState(false);
   const [hasExistingAssignation, setHasExistingAssignation] = useState(false);
+  const [priceM2, setPriceM2] = useState(null);
 
   const currentUser = authService.getStoredUser();
 
@@ -39,19 +40,31 @@ const ReportEdit = () => {
       setError(null);
 
       // Charger les données de référence
-      const [statusList, userList, companyList] = await Promise.all([
+      const [statusList, userList, companyList, configList] = await Promise.all([
         statusService.getAll(),
         userService.getAll(),
-        companyService.getAll()
+        companyService.getAll(),
+        configurationService.getAll()
       ]);
 
       setStatuses(statusList);
       setUsers(userList);
       setCompanies(companyList);
 
+      // Récupérer price_m2 depuis les configurations
+      const priceConfig = configList.find(c => c.key === 'price_m2');
+      const pM2 = priceConfig ? parseFloat(priceConfig.value) : null;
+      setPriceM2(pM2);
+
       // Charger les détails du report
       const reportDetail = await reportService.getDetail(parseInt(id));
       setReport(reportDetail.report);
+
+      // Initialiser le niveau du formulaire avec la valeur du report si disponible
+      const rpt = reportDetail.report;
+      if (rpt.niveau != null) {
+        setAssignationForm(prev => ({ ...prev, niveau: rpt.niveau }));
+      }
 
       // Vérifier s'il y a déjà une assignation
       const hasAssignation = reportDetail.assignations && reportDetail.assignations.length > 0;
@@ -103,10 +116,16 @@ const ReportEdit = () => {
     setError(null);
 
     try {
+      // Mettre à jour le niveau du report avant de créer l'assignation
+      try {
+        await reportService.update(parseInt(id), { niveau: parseInt(assignationForm.niveau, 10) });
+      } catch (uErr) {
+        console.warn('Report update (niveau) failed', uErr);
+      }
+
       await assignationService.create({
         company: { id: companyId },
         report: { id: parseInt(id) },
-        budget: assignationForm.budget ? parseFloat(assignationForm.budget) : 0,
         startDate: assignationForm.startDate || undefined,
         deadline: assignationForm.deadline || undefined,
       });
@@ -114,7 +133,7 @@ const ReportEdit = () => {
       // Recharger les données pour mettre à jour l'état
       await loadData();
       setShowAssignationForm(false);
-      setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '' });
+      setAssignationForm({ companyId: '', startDate: '', deadline: '', niveau: 5 });
 
     } catch (err) {
       handleError(err, setError);
@@ -298,16 +317,37 @@ const ReportEdit = () => {
                       </select>
                     </div>
 
+                    <div className="form-group form-group-full">
+                      <label htmlFor="niveau">Niveau de dégâts</label>
+                      <div className="niveau-control">
+                        <input
+                          id="niveau"
+                          type="range"
+                          min="1"
+                          max="10"
+                          step="1"
+                          value={assignationForm.niveau}
+                          onChange={(e) => setAssignationForm(prev => ({ ...prev, niveau: parseInt(e.target.value, 10) }))}
+                        />
+                        <div className="niveau-display">Niveau: {assignationForm.niveau}</div>
+                      </div>
+                    </div>
+
                     <div className="form-group">
-                      <label htmlFor="budget">Budget (Ar)</label>
+                      <label htmlFor="budget">Budget estimé (Ar)</label>
                       <input
                         id="budget"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={assignationForm.budget}
-                        onChange={(e) => setAssignationForm(prev => ({ ...prev, budget: e.target.value }))}
+                        type="text"
+                        value={(() => {
+                          const area = report?.area ? parseFloat(report.area) : null;
+                          const niveau = assignationForm.niveau;
+                          if (priceM2 && niveau && area) return (priceM2 * niveau * area).toLocaleString('fr-FR') + ' Ar';
+                          return 'Non calculable (niveau ou surface manquant)';
+                        })()}
+                        disabled
+                        className="form-input-disabled"
                       />
+                      <span className="form-hint">Calculé automatiquement : prix/m² × niveau × surface</span>
                     </div>
 
                     <div className="form-group">
@@ -340,7 +380,7 @@ const ReportEdit = () => {
                       variant="ghost"
                       onClick={() => {
                         setShowAssignationForm(false);
-                        setAssignationForm({ companyId: '', budget: '', startDate: '', deadline: '' });
+                        setAssignationForm({ companyId: '', startDate: '', deadline: '', niveau: 5 });
                       }}
                     >
                       Annuler

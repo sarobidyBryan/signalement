@@ -212,6 +212,5 @@ http://localhost:8180/swagger-ui.html
 
 
 ## Licence
-
-Projet universitaire — ITU  — Semestre 5 Cloud
-
+Projet universitaire — Signaleo — ITU  — Semestre 5 Cloud 
+3331 — 3251 — 3335 — 3293

@@ -1,5 +1,6 @@
 package mg.itu.s5.cloud.signalement.services;
 
+import com.google.cloud.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserRecord;
 import mg.itu.s5.cloud.signalement.entities.*;
@@ -171,10 +172,17 @@ public class PostgresToFirestoreSyncService {
         return createSyncResult(tableName, modifiedStatuses.size(), synced);
     }
 
+    @Autowired
+    private UserStatusTypeRepository userStatusTypeRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
     /**
      * Synchronise les utilisateurs
      * Crée les utilisateurs dans Firebase Authentication s'ils n'existent pas
-     * Évite les duplications en utilisant l'email comme clé unique
+     * Compare les timestamps updatedAt pour déterminer la source de vérité
+     * Si Firestore est plus récent, on met à jour PostgreSQL depuis Firestore
      */
     @Transactional
     public Map<String, Object> syncUsers() {
@@ -185,6 +193,7 @@ public class PostgresToFirestoreSyncService {
         int synced = 0;
         int authCreated = 0;
         int authExisting = 0;
+        int pulledFromFirestore = 0;
 
         for (User user : modifiedUsers) {
             try {
@@ -202,25 +211,46 @@ public class PostgresToFirestoreSyncService {
                     try {
                         FirebaseAuth.getInstance().getUser(firebaseUid);
                         authExisting++;
-                        logger.debug("Utilisateur existant confirmé dans Firebase Auth: {} (UID: {})", user.getEmail(), firebaseUid);
                     } catch (Exception e) {
-                        // L'UID n'existe plus, recréer l'utilisateur
                         logger.warn("UID Firebase {} n'existe plus pour {}, recréation", firebaseUid, user.getEmail());
                         firebaseUid = createFirebaseAuthUser(user);
                         user.setFirebaseUid(firebaseUid);
                         userRepository.save(user);
                         authCreated++;
-                        logger.info("Utilisateur recréé dans Firebase Auth: {} (nouvel UID: {})", user.getEmail(), firebaseUid);
                     }
                 }
 
-                // Synchroniser dans Firestore avec l'UID comme ID du document
-                Map<String, Object> data = mapUser(user);
-                String firebaseDocId = syncToFirestore(COLLECTION_USERS, firebaseUid, user.getId(), data);
+                // Comparer les timestamps avant de pousser vers Firestore
+                // Lire le document Firestore existant pour cet utilisateur
+                boolean shouldPushToFirestore = true;
+                try {
+                    Map<String, Object> firestoreData = firestoreService.getDocument(COLLECTION_USERS, firebaseUid);
+                    if (firestoreData != null) {
+                        LocalDateTime firestoreUpdatedAt = getFirestoreUpdatedAt(firestoreData);
+                        LocalDateTime pgUpdatedAt = user.getUpdatedAt();
 
-                // Le document Firestore utilise l'UID Firebase comme ID
-                if (!firebaseUid.equals(firebaseDocId)) {
-                    logger.warn("Incohérence ID document Firestore pour user {}: attendu {}, obtenu {}", user.getEmail(), firebaseUid, firebaseDocId);
+                        if (firestoreUpdatedAt != null && pgUpdatedAt != null && firestoreUpdatedAt.isAfter(pgUpdatedAt)) {
+                            // Firestore est plus récent → mettre à jour PostgreSQL depuis Firestore
+                            logger.info("Firestore plus récent pour user {} (Firestore: {}, PG: {}), pull vers PG",
+                                    user.getEmail(), firestoreUpdatedAt, pgUpdatedAt);
+                            updateUserFromFirestoreData(user, firestoreData);
+                            userRepository.save(user);
+                            shouldPushToFirestore = false;
+                            pulledFromFirestore++;
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Impossible de lire le document Firestore pour user {}: {}", user.getEmail(), e.getMessage());
+                }
+
+                if (shouldPushToFirestore) {
+                    // Synchroniser dans Firestore avec l'UID comme ID du document
+                    Map<String, Object> data = mapUser(user);
+                    String firebaseDocId = syncToFirestore(COLLECTION_USERS, firebaseUid, user.getId(), data);
+
+                    if (!firebaseUid.equals(firebaseDocId)) {
+                        logger.warn("Incohérence ID document Firestore pour user {}: attendu {}, obtenu {}", user.getEmail(), firebaseUid, firebaseDocId);
+                    }
                 }
 
                 synced++;
@@ -233,7 +263,79 @@ public class PostgresToFirestoreSyncService {
         Map<String, Object> result = createSyncResult(tableName, modifiedUsers.size(), synced);
         result.put("authCreated", authCreated);
         result.put("authExisting", authExisting);
+        result.put("pulledFromFirestore", pulledFromFirestore);
         return result;
+    }
+
+    /**
+     * Extrait le updatedAt d'un document Firestore (supporte camelCase et snake_case)
+     */
+    private LocalDateTime getFirestoreUpdatedAt(Map<String, Object> data) {
+        Object updatedAt = data.get("updatedAt");
+        if (updatedAt == null) updatedAt = data.get("updated_at");
+        if (updatedAt == null) updatedAt = data.get("syncedAt");
+        if (updatedAt == null) updatedAt = data.get("synced_at");
+        if (updatedAt != null) {
+            return convertFirestoreTimestamp(updatedAt);
+        }
+        return null;
+    }
+
+    /**
+     * Convertit un timestamp Firestore en LocalDateTime
+     */
+    private LocalDateTime convertFirestoreTimestamp(Object value) {
+        if (value == null) return null;
+        if (value instanceof com.google.cloud.Timestamp) {
+            com.google.cloud.Timestamp ts = (com.google.cloud.Timestamp) value;
+            return LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochSecond(ts.getSeconds(), ts.getNanos()),
+                    ZoneId.systemDefault());
+        }
+        if (value instanceof Date) {
+            return LocalDateTime.ofInstant(((Date) value).toInstant(), ZoneId.systemDefault());
+        }
+        if (value instanceof Long) {
+            return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli((Long) value), ZoneId.systemDefault());
+        }
+        return null;
+    }
+
+    /**
+     * Met à jour un utilisateur PostgreSQL depuis les données Firestore (quand Firestore est plus récent)
+     */
+    private void updateUserFromFirestoreData(User user, Map<String, Object> firestoreData) {
+        // Mettre à jour le nom
+        Object nameObj = firestoreData.get("name");
+        if (nameObj != null) user.setName(nameObj.toString());
+
+        // Mettre à jour l'email
+        Object emailObj = firestoreData.get("email");
+        if (emailObj != null) user.setEmail(emailObj.toString());
+
+        // Mettre à jour le rôle
+        Object roleObj = firestoreData.get("role");
+        if (roleObj instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> roleMap = (Map<String, Object>) roleObj;
+            Object roleCodeObj = roleMap.get("roleCode");
+            if (roleCodeObj != null) {
+                roleRepository.findByRoleCode(roleCodeObj.toString()).ifPresent(user::setRole);
+            }
+        }
+
+        // Mettre à jour le statut utilisateur (clé du problème blocked/active)
+        Object statusObj = firestoreData.get("userStatusType");
+        if (statusObj instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> statusMap = (Map<String, Object>) statusObj;
+            Object statusCodeObj = statusMap.get("statusCode");
+            if (statusCodeObj != null) {
+                userStatusTypeRepository.findByStatusCode(statusCodeObj.toString()).ifPresent(user::setUserStatusType);
+            }
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
     }
 
     /**
@@ -455,6 +557,7 @@ public class PostgresToFirestoreSyncService {
         data.put("latitude", report.getLatitude());
         data.put("description", report.getDescription());
         data.put("firebaseId", report.getFirebaseId());
+        data.put("level", report.getNiveau() != null ? String.valueOf(report.getNiveau()) : null);
         data.put("createdAt", toDate(report.getCreatedAt()));
         data.put("updatedAt", toDate(report.getUpdatedAt()));
 
