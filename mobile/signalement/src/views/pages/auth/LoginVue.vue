@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue';
 import { auth,db } from '../../../config/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { lockClosed, mail } from 'ionicons/icons';
+import { eyeOff ,eyeSharp , lockClosed, mail } from 'ionicons/icons';
 import { 
   IonPage, 
   IonContent, 
@@ -11,7 +11,7 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonIcon 
+  IonIcon
 } from '@ionic/vue';
 import { doc, getDoc, collection, query, where, getDocs, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { notificationService } from '../../../services/notificationService';
@@ -42,7 +42,8 @@ export default defineComponent({
       email: '',
       password: '',
       errorMessage: '',
-      isLoading: false
+      isLoading: false,
+      isShowingPassword:false
     };
   },
   
@@ -55,6 +56,10 @@ export default defineComponent({
   },
   
   methods: {
+    togglePassword()
+    {
+      this.isShowingPassword = ! this.isShowingPassword;
+    },
     async handleLogin() {
       // Validation basique
       if (!this.email || !this.password) {
@@ -374,12 +379,22 @@ export default defineComponent({
                   ></ion-icon>
                   <ion-input
                     v-model="password"
-                    type="password"
+                    :type="isShowingPassword? 'password' : 'text'"
                     placeholder="••••••••"
                     class="pl-10"
                     fill="solid"
                     :class="{ 'border-red-500': errorMessage && !password }"
                   ></ion-input>
+                  <ion-icon 
+                    :icon="eyeOff" 
+                  ></ion-icon>
+                  <button 
+                  @click.prevent="togglePassword" 
+                  type="button" 
+                  class="absolute right-3 top-5 z-50 p-1 rounded text-gray-600"
+                >
+                  {{ isShowingPassword ? 'Cacher' : 'Afficher' }}
+                </button>
                 </div>
               </div>
 
